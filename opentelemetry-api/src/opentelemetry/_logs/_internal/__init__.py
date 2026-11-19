@@ -38,6 +38,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
+from opentelemetry.util._compat import SignatureCompatABC
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, Attributes
@@ -52,6 +53,21 @@ class LogRecord(ABC):
     every time something is logged. They contain all the information
     pertinent to the event being logged.
     """
+
+    __slots__ = (
+        "timestamp",
+        "observed_timestamp",
+        "context",
+        "trace_id",
+        "span_id",
+        "trace_flags",
+        "severity_text",
+        "severity_number",
+        "body",
+        "attributes",
+        "event_name",
+        "exception",
+    )
 
     @overload
     def __init__(
@@ -121,7 +137,7 @@ class LogRecord(ABC):
         self.exception = exception
 
 
-class Logger(ABC):
+class Logger(SignatureCompatABC):
     """Handles emitting events and logs via `LogRecord`."""
 
     def __init__(
@@ -340,7 +356,7 @@ class ProxyLogger(Logger):
         )
 
 
-class LoggerProvider(ABC):
+class LoggerProvider(SignatureCompatABC):
     """
     LoggerProvider is the entry point of the API. It provides access to Logger instances.
     """

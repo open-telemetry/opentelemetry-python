@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk.environment_variables import (
@@ -43,6 +43,22 @@ class TestLoggerProviderMetrics(TestCase):
         self.assert_created_logs(
             metric_data,
             2,
+            {},
+        )
+
+    def test_create_logs_counted_when_processors_disabled(self):
+        logger_provider = LoggerProvider(meter_provider=self.meter_provider)
+        processor = Mock()
+        processor.enabled.return_value = False
+        logger_provider.add_log_record_processor(processor)
+        logger = logger_provider.get_logger("test")
+
+        logger.emit(body="log1")
+
+        processor.on_emit.assert_not_called()
+        self.assert_created_logs(
+            self.metric_reader.get_metrics_data(),
+            1,
             {},
         )
 

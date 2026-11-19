@@ -8,37 +8,37 @@ from typing_extensions import deprecated
 
 RPC_CONNECT_RPC_ERROR_CODE: Final = "rpc.connect_rpc.error_code"
 """
-Deprecated: Replaced by `rpc.response.status_code`.
+Deprecated: Replaced by `rpc.status_code`.
 """
 
 RPC_CONNECT_RPC_REQUEST_METADATA_TEMPLATE: Final = "rpc.connect_rpc.request.metadata"
 """
-Deprecated: Replaced by `rpc.request.metadata`.
+Deprecated: Replaced by `rpc.request.header`.
 """
 
 RPC_CONNECT_RPC_RESPONSE_METADATA_TEMPLATE: Final = "rpc.connect_rpc.response.metadata"
 """
-Deprecated: Replaced by `rpc.response.metadata`.
+Deprecated: Split to `rpc.response.header` for metadata sent before the response payload and `rpc.response.trailer` for metadata sent after it.
 """
 
 RPC_GRPC_REQUEST_METADATA_TEMPLATE: Final = "rpc.grpc.request.metadata"
 """
-Deprecated: Replaced by `rpc.request.metadata`.
+Deprecated: Replaced by `rpc.request.header`.
 """
 
 RPC_GRPC_RESPONSE_METADATA_TEMPLATE: Final = "rpc.grpc.response.metadata"
 """
-Deprecated: Replaced by `rpc.response.metadata`.
+Deprecated: Split to `rpc.response.header` for metadata sent before the response payload and `rpc.response.trailer` for metadata sent after it.
 """
 
 RPC_GRPC_STATUS_CODE: Final = "rpc.grpc.status_code"
 """
-Deprecated: Use string representation of the gRPC status code on the `rpc.response.status_code` attribute.
+Deprecated: Use string representation of the gRPC status code on the `rpc.status_code` attribute.
 """
 
 RPC_JSONRPC_ERROR_CODE: Final = "rpc.jsonrpc.error_code"
 """
-Deprecated: Use string representation of the error code on the `rpc.response.status_code` attribute.
+Deprecated: Use string representation of the error code on the `rpc.status_code` attribute.
 """
 
 RPC_JSONRPC_ERROR_MESSAGE: Final = "rpc.jsonrpc.error_message"
@@ -78,65 +78,88 @@ Deprecated: Deprecated, no replacement at this time.
 
 RPC_METHOD: Final = "rpc.method"
 """
-The fully-qualified logical name of the method from the RPC interface perspective.
-Note: The method name MAY have unbounded cardinality in edge or error cases.
-
-Some RPC frameworks or libraries provide a fixed set of recognized methods
-for client stubs and server implementations. Instrumentations for such
-frameworks MUST set this attribute to the original method name only
-when the method is recognized by the framework or library.
-
-When the method is not recognized, for example, when the server receives
-a request for a method that is not predefined on the server, or when
-instrumentation is not able to reliably detect if the method is predefined,
-the attribute MUST be set to `_OTHER`.
-
-If the RPC instrumentation could end up converting valid RPC methods to
-`_OTHER`, then it SHOULD provide a way to configure the list of recognized
-RPC methods.
-
-The `rpc.method` can be different from the name of any implementing
-method/function.
-The `code.function.name` attribute may be used to record the fully-qualified
-method actually executing the call on the server side, or the
-RPC client stub method on the client side.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.rpc_attributes.RPC_METHOD`.
 """
 
 RPC_METHOD_ORIGINAL: Final = "rpc.method_original"
 """
-The original name of the method used by the client.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.rpc_attributes.RPC_METHOD_ORIGINAL`.
+"""
+
+RPC_REQUEST_HEADER_TEMPLATE: Final = "rpc.request.header"
+"""
+RPC request headers or metadata, `<key>` being the normalized header name (lowercase), the value being the header values.
+Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured.
+Including all request headers can be a security risk - explicit configuration helps avoid leaking sensitive information.
+
+For example, a header `my-custom-key` with value `["1.2.3.4", "1.2.3.5"]` SHOULD be recorded as
+the `rpc.request.header.my-custom-key` attribute with value `["1.2.3.4", "1.2.3.5"]`
+
+The attribute value MUST consist of either multiple header values as an array of
+strings or a single-item array containing a possibly comma-concatenated string,
+depending on the way the RPC library provides access to headers.
+
+Values that the RPC system exposes as binary data, or that are otherwise not valid
+UTF-8 strings, SHOULD be base64-encoded when recorded.
 """
 
 RPC_REQUEST_METADATA_TEMPLATE: Final = "rpc.request.metadata"
 """
-RPC request metadata, `<key>` being the normalized RPC metadata key (lowercase), the value being the metadata values.
-Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
-Including all request metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
+Deprecated: Replaced by `rpc.request.header`.
+"""
 
-For example, a property `my-custom-key` with value `["1.2.3.4", "1.2.3.5"]` SHOULD be recorded as
-`rpc.request.metadata.my-custom-key` attribute with value `["1.2.3.4", "1.2.3.5"]`.
+RPC_RESPONSE_HEADER_TEMPLATE: Final = "rpc.response.header"
+"""
+RPC response headers or metadata sent before the response payload, `<key>` being the normalized header name (lowercase), the value being the header values.
+Note: Instrumentations SHOULD require an explicit configuration of which headers are to be captured.
+Including all response headers can be a security risk - explicit configuration helps avoid leaking sensitive information.
+
+For example, a header `my-custom-key` with value `["attribute_value"]` SHOULD be recorded as
+the `rpc.response.header.my-custom-key` attribute with value `["attribute_value"]`
+
+The attribute value MUST consist of either multiple header values as an array of
+strings or a single-item array containing a possibly comma-concatenated string,
+depending on the way the RPC library provides access to headers.
+
+Values that the RPC system exposes as binary data, or that are otherwise not valid
+UTF-8 strings, SHOULD be base64-encoded when recorded.
 """
 
 RPC_RESPONSE_METADATA_TEMPLATE: Final = "rpc.response.metadata"
 """
-RPC response metadata, `<key>` being the normalized RPC metadata key (lowercase), the value being the metadata values.
-Note: Instrumentations SHOULD require an explicit configuration of which metadata values are to be captured.
-Including all response metadata values can be a security risk - explicit configuration helps avoid leaking sensitive information.
-
-For example, a property `my-custom-key` with value `["attribute_value"]` SHOULD be recorded as
-the `rpc.response.metadata.my-custom-key` attribute with value `["attribute_value"]`.
+Deprecated: Split to `rpc.response.header` for metadata sent before the response payload and `rpc.response.trailer` for metadata sent after it.
 """
 
 RPC_RESPONSE_STATUS_CODE: Final = "rpc.response.status_code"
 """
-Status code of the RPC returned by the RPC server or generated by the client.
-Note: Usually it represents an error code, but may also represent partial success, warning, or differentiate between various types of successful outcomes.
-Semantic conventions for individual RPC frameworks SHOULD document what `rpc.response.status_code` means in the context of that system and which values are considered to represent errors.
+Deprecated: Replaced by `rpc.status_code`.
+"""
+
+RPC_RESPONSE_TRAILER_TEMPLATE: Final = "rpc.response.trailer"
+"""
+RPC response trailers or metadata sent after the response payload, `<key>` being the normalized trailer name (lowercase), the value being the trailer values.
+Note: Instrumentations SHOULD require an explicit configuration of which trailers are to be captured.
+Including all response trailers can be a security risk - explicit configuration helps avoid leaking sensitive information.
+
+For example, a trailer `my-custom-key` with value `["attribute_value"]` SHOULD be recorded as
+the `rpc.response.trailer.my-custom-key` attribute with value `["attribute_value"]`
+
+The attribute value MUST consist of either multiple trailer values as an array of
+strings or a single-item array containing a possibly comma-concatenated string,
+depending on the way the RPC library provides access to trailers.
+
+Values that the RPC system exposes as binary data, or that are otherwise not valid
+UTF-8 strings, SHOULD be base64-encoded when recorded.
 """
 
 RPC_SERVICE: Final = "rpc.service"
 """
 Deprecated: Value should be included in `rpc.method` which is expected to be a fully-qualified name.
+"""
+
+RPC_STATUS_CODE: Final = "rpc.status_code"
+"""
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.rpc_attributes.RPC_STATUS_CODE`.
 """
 
 RPC_SYSTEM: Final = "rpc.system"
@@ -146,12 +169,11 @@ Deprecated: Replaced by `rpc.system.name`.
 
 RPC_SYSTEM_NAME: Final = "rpc.system.name"
 """
-The Remote Procedure Call (RPC) system.
-Note: The client and server RPC systems may differ for the same RPC interaction. For example, a client may use Apache Dubbo or Connect RPC to communicate with a server that uses gRPC since both protocols provide compatibility with gRPC.
+Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.rpc_attributes.RPC_SYSTEM_NAME`.
 """
 
 
-@deprecated("The attribute rpc.connect_rpc.error_code is deprecated - Replaced by `rpc.response.status_code`")
+@deprecated("The attribute rpc.connect_rpc.error_code is deprecated - Replaced by `rpc.status_code`")
 class RpcConnectRpcErrorCodeValues(Enum):
     CANCELLED = "cancelled"
     """cancelled."""
@@ -188,7 +210,7 @@ class RpcConnectRpcErrorCodeValues(Enum):
 
 
 @deprecated(
-    "The attribute rpc.grpc.status_code is deprecated - Use string representation of the gRPC status code on the `rpc.response.status_code` attribute"
+    "The attribute rpc.grpc.status_code is deprecated - Use string representation of the gRPC status code on the `rpc.status_code` attribute"
 )
 class RpcGrpcStatusCodeValues(Enum):
     OK = 0
@@ -253,11 +275,14 @@ class RpcSystemValues(Enum):
     """JSON-RPC."""
 
 
+@deprecated(
+    "Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.rpc_attributes.RpcSystemNameValues`."
+)
 class RpcSystemNameValues(Enum):
     GRPC = "grpc"
-    """[gRPC](https://grpc.io/)."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.rpc_attributes.RpcSystemNameValues.GRPC`."""
     DUBBO = "dubbo"
-    """[Apache Dubbo](https://dubbo.apache.org/)."""
+    """Deprecated in favor of stable :py:const:`opentelemetry.semconv.attributes.rpc_attributes.RpcSystemNameValues.DUBBO`."""
     CONNECTRPC = "connectrpc"
     """[Connect RPC](https://connectrpc.com/)."""
     JSONRPC = "jsonrpc"

@@ -97,6 +97,7 @@ from opentelemetry.trace.span import (
 )
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
+from opentelemetry.util._compat import SignatureCompatABC
 from opentelemetry.util._decorator import _agnosticcontextmanager
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
@@ -177,7 +178,7 @@ class SpanKind(Enum):
     CONSUMER = 4
 
 
-class TracerProvider(ABC):
+class TracerProvider(SignatureCompatABC):
     @abstractmethod
     def get_tracer(
         self,
@@ -264,7 +265,7 @@ class ProxyTracerProvider(TracerProvider):
         )
 
 
-class Tracer(ABC):
+class Tracer(SignatureCompatABC):
     """Handles span creation and in-process context propagation.
 
     This class provides methods for manipulating the context, creating spans,

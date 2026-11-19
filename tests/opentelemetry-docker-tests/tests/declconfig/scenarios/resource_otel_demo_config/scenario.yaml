@@ -1,0 +1,30 @@
+description: >
+  The OpenTelemetry Demo's shared config runs the container, host, process and
+  service detectors and exports all signals over OTLP/gRPC. `container` resolves
+  to the contrib `containerid` detector.
+env:
+  OTEL_SERVICE_NAME: declconfig-otel-demo
+  OTEL_RESOURCE_ATTRIBUTES: service.namespace=opentelemetry-demo
+until:
+  - spans:
+      name: demo-span
+  - metric:
+      name: demo.requests
+      field: value
+      min: 1
+  - logs:
+      body_pattern: demo log
+expect:
+  - resource:
+      attributes:
+        values:
+          service.name: declconfig-otel-demo
+          service.namespace: opentelemetry-demo
+          service.instance.id: {exists: true}
+          host.name: {exists: true}
+          os.type: {exists: true}
+          process.pid: {exists: true}
+  - output:
+      stream: stderr
+      pattern: could not be loaded
+      exists: false

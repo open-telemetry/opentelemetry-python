@@ -1,10 +1,18 @@
 description: >
-  Environment variable substitution: plain, typed standalone, embedded, quoted, defaults,
-  set-but-empty and `$$` escapes.
+  Environment variable substitution: plain, `env:` prefixed, typed standalone (int, bool,
+  float, hex), embedded, multiple, quoted, defaults, set-but-empty, no YAML injection, no
+  recursive substitution and `$$` escape edge cases from the specification.
 env:
   DECLCONFIG_SERVICE_NAME: declconfig-general-env-substitution
   DECLCONFIG_INT: "42"
   DECLCONFIG_EMPTY: ""
+  DECLCONFIG_BOOL: "true"
+  DECLCONFIG_FLOAT: "1.1"
+  DECLCONFIG_HEX: "0xdeadbeef"
+  DECLCONFIG_INJECT: "value\nkey: value"
+  DECLCONFIG_DO_NOT_REPLACE_ME: Never use this value
+  DECLCONFIG_REPLACE_ME: ${DECLCONFIG_DO_NOT_REPLACE_ME}
+  DECLCONFIG_WITH_ESCAPE: value$$
 until:
   - spans:
       name: env-span
@@ -17,5 +25,22 @@ expect:
           env.quoted: "42"
           env.embedded: v-42
           env.default: fallback
-          env.empty: ""
+          env.empty: fallback
           env.escaped: ${DECLCONFIG_INT}
+          env.prefixed: 42
+          env.prefixed_quoted: "42"
+          env.prefixed_default: fallback
+          env.bool: true
+          env.float: 1.1
+          env.hex: 3735928559
+          env.multiple: foo 42 1.1
+          env.no_injection: "value\nkey: value"
+          env.not_recursive: ${DECLCONFIG_DO_NOT_REPLACE_ME}
+          env.default_not_recursive: ${DECLCONFIG_INT}
+          env.escape_then_ref: $42
+          env.double_escape: $${DECLCONFIG_INT}
+          env.escaped_default: ${DECLCONFIG_INT:-42}
+          env.escape_in_default: ${DECLCONFIG_UNSET:-${DECLCONFIG_UNSET}}
+          env.value_not_unescaped: value$$
+          env.lone_escape: a $ b
+          env.lone_dollar: a $ b

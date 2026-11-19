@@ -7,7 +7,10 @@ from unittest.mock import patch
 
 import yaml
 
-from opentelemetry.configuration.file import substitute_env_vars
+from opentelemetry.configuration.file import (
+    ConfigurationError,
+    substitute_env_vars,
+)
 
 
 class TestEnvSubstitution(unittest.TestCase):
@@ -133,3 +136,70 @@ line2: value2"""
             int_result = yaml.safe_load(substitute_env_vars("key: ${INT_VAL}"))
         self.assertIs(bool_result["key"], True)
         self.assertEqual(int_result["key"], 42)
+
+
+class TestEnvSubstitutionSpecification(unittest.TestCase):
+    """Substitution rules from the declarative configuration specification."""
+
+    @patch.dict(os.environ, {"EMPTY_VAR": ""})
+    def test_empty_variable_uses_default(self):
+        """A variable set to an empty value is replaced by its default."""
+        self.assertEqual(substitute_env_vars("${EMPTY_VAR:-fallback}"), "fallback")
+        self.assertEqual(substitute_env_vars("${EMPTY_VAR}"), "")
+
+    @patch.dict(os.environ, {"env": "named-env"}, clear=True)
+    def test_variable_named_env_with_default(self):
+        """``${env:-x}`` is the variable ``env`` with a default, not a prefix."""
+        self.assertEqual(substitute_env_vars("${env:-x}"), "named-env")
+        self.assertEqual(substitute_env_vars("${env}"), "named-env")
+
+    @patch.dict(
+        os.environ,
+        {
+            "STRING_VALUE": "value",
+            "FLOAT_VALUE": "1.1",
+            "DO_NOT_REPLACE_ME": "Never use this value",
+            "REPLACE_ME": "${DO_NOT_REPLACE_ME}",
+            "VALUE_WITH_ESCAPE": "value$$",
+        },
+        clear=True,
+    )
+    def test_specification_examples(self):
+        """Examples from the declarative configuration spec's substitution table."""
+        cases = [
+            ("${STRING_VALUE}", "value"),
+            ("${env:STRING_VALUE}", "value"),
+            ("${env:UNDEFINED_KEY:-fallback}", "fallback"),
+            ("foo ${STRING_VALUE} ${FLOAT_VALUE}", "foo value 1.1"),
+            ("${UNDEFINED_KEY}", ""),
+            ("${UNDEFINED_KEY:-fallback}", "fallback"),
+            ("${REPLACE_ME}", "${DO_NOT_REPLACE_ME}"),
+            ("${UNDEFINED_KEY:-${STRING_VALUE}}", "${STRING_VALUE}"),
+            ("$${STRING_VALUE}", "${STRING_VALUE}"),
+            ("$$${STRING_VALUE}", "$value"),
+            ("$$$${STRING_VALUE}", "$${STRING_VALUE}"),
+            ("$${STRING_VALUE:-fallback}", "${STRING_VALUE:-fallback}"),
+            ("$${STRING_VALUE:-${STRING_VALUE}}", "${STRING_VALUE:-value}"),
+            ("${UNDEFINED_KEY:-$${UNDEFINED_KEY}}", "${UNDEFINED_KEY:-${UNDEFINED_KEY}}"),
+            ("${VALUE_WITH_ESCAPE}", "value$$"),
+            ("a $$ b", "a $ b"),
+            ("a $ b", "a $ b"),
+        ]
+        for text, expected in cases:
+            with self.subTest(text=text):
+                self.assertEqual(substitute_env_vars(text), expected)
+
+    @patch.dict(os.environ, {"STRING_VALUE": "value"}, clear=True)
+    def test_invalid_reference_raises(self):
+        """A reference that is not a valid env var substitution is an error."""
+        for text in (
+            "${STRING_VALUE:?error}",
+            "${1API_KEY}",
+            "${API_$KEY}",
+            "${sys:foo}",
+            "${env:1API_KEY}",
+            "prefix ${STRING_VALUE:?error} suffix",
+        ):
+            with self.subTest(text=text):
+                with self.assertRaises(ConfigurationError):
+                    substitute_env_vars(text)

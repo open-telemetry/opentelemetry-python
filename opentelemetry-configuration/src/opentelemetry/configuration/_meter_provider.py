@@ -4,12 +4,22 @@
 from __future__ import annotations
 
 import logging
+import math
 
 from opentelemetry import metrics
 from opentelemetry.configuration._common import (
+    _grpc_credentials_from_tls,
+    _grpc_insecure_from_tls,
+    _include_exclude_predicate,
     _map_compression,
     _parse_headers,
     _parse_otlp_file_output_stream,
+    _resolve_export_timeout,
+    _resolve_otlp_grpc_endpoint,
+    _resolve_otlp_http_endpoint,
+    _scope_name_matches_glob,
+    _validate_mtls_pair,
+    _warn_unsupported_otlp_size_limits,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -18,6 +28,9 @@ from opentelemetry.configuration._exceptions import (
 )
 from opentelemetry.configuration.models import (
     Aggregation as AggregationConfig,
+)
+from opentelemetry.configuration.models import (
+    CardinalityLimits as CardinalityLimitsConfig,
 )
 from opentelemetry.configuration.models import (
     ConsoleMetricExporter as ConsoleMetricExporterConfig,
@@ -89,6 +102,7 @@ from opentelemetry.sdk.metrics._internal import (
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    CardinalityLimits,
     ConsoleMetricExporter,
     MetricExporter,
     MetricReader,
@@ -105,7 +119,6 @@ from opentelemetry.sdk.metrics.view import (
     View,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import _scope_name_matches_glob
 
 _logger = logging.getLogger(__name__)
 
@@ -255,6 +268,7 @@ def _create_view(config: ViewConfig) -> View:
         description=stream.description,
         attribute_keys=attribute_keys,
         aggregation=aggregation,
+        aggregation_cardinality_limit=stream.aggregation_cardinality_limit,
     )
 
 
@@ -274,13 +288,23 @@ def _create_otlp_http_metric_exporter(
     config: OtlpHttpMetricExporterConfig,
 ) -> MetricExporter:
     """Create an OTLP HTTP metric exporter from config."""
+    tls = config.tls
+    if tls is not None:
+        _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http",
+                "metrics",
+                config.max_request_size,
+                config.max_response_size,
+                max_request_size_supported=True,
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
@@ -297,14 +321,25 @@ def _create_otlp_http_metric_exporter(
 
             compression = _map_compression(config.compression, Compression, allow_deflate=True)
             return OTLPMetricExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "metrics"),
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
                 preferred_temporality=preferred_temporality,
                 preferred_aggregation=preferred_aggregation,
+                max_request_size=config.max_request_size,
             )
         case OtlpHttpEncoding.json:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http JSON",
+                "metrics",
+                config.max_request_size,
+                config.max_response_size,
+                max_request_size_supported=False,
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
@@ -321,7 +356,10 @@ def _create_otlp_http_metric_exporter(
 
             compression = _map_compression(config.compression, JsonCompression, allow_deflate=True)
             return JsonOTLPMetricExporter(
-                endpoint=config.endpoint,
+                endpoint=_resolve_otlp_http_endpoint(config.endpoint, "metrics"),
+                certificate_file=tls.ca_file if tls is not None else None,
+                client_key_file=tls.key_file if tls is not None else None,
+                client_certificate_file=tls.cert_file if tls is not None else None,
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
@@ -351,14 +389,20 @@ def _create_otlp_grpc_metric_exporter(
             feature="otlp_grpc metric exporter",
         ) from exc
 
+    _warn_unsupported_otlp_size_limits(
+        "otlp_grpc", "metrics", config.max_request_size, config.max_response_size, max_request_size_supported=False
+    )
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
-    timeout = (config.timeout / 1000.0) if config.timeout is not None else None
+    endpoint = _resolve_otlp_grpc_endpoint(config.endpoint)
+    timeout = _resolve_export_timeout(config.timeout)
     preferred_temporality = _map_temporality(config.temporality_preference)
     preferred_aggregation = _map_histogram_aggregation(config.default_histogram_aggregation)
 
     return OTLPMetricExporter(  # type: ignore[return-value]
-        endpoint=config.endpoint,
+        endpoint=endpoint,
+        insecure=_grpc_insecure_from_tls(endpoint, config.tls),
+        credentials=_grpc_credentials_from_tls(config.tls),
         headers=headers,
         timeout=timeout,
         compression=compression,  # type: ignore[arg-type]
@@ -428,6 +472,30 @@ def _create_push_metric_exporter(
             )
 
 
+def _create_cardinality_limits(config: CardinalityLimitsConfig | None) -> CardinalityLimits | None:
+    """Create the SDK per-instrument cardinality limits from config.
+
+    Each instrument type uses its own limit and falls back to ``default``.
+    Instrument types left out of the result use the SDK default limit.
+    """
+    if config is None:
+        return None
+    limits: CardinalityLimits = {}
+    for instrument_class, limit in (
+        (Counter, config.counter),
+        (UpDownCounter, config.up_down_counter),
+        (Histogram, config.histogram),
+        (_Gauge, config.gauge),
+        (ObservableCounter, config.observable_counter),
+        (ObservableUpDownCounter, config.observable_up_down_counter),
+        (ObservableGauge, config.observable_gauge),
+    ):
+        limit = limit if limit is not None else config.default
+        if limit is not None:
+            limits[instrument_class] = limit
+    return limits
+
+
 def _create_periodic_metric_reader(
     config: PeriodicMetricReaderConfig,
 ) -> PeriodicExportingMetricReader:
@@ -438,15 +506,19 @@ def _create_periodic_metric_reader(
     exporter = _create_push_metric_exporter(config.exporter)
     interval = config.interval if config.interval is not None else _DEFAULT_EXPORT_INTERVAL_MILLIS
     timeout = config.timeout if config.timeout is not None else _DEFAULT_EXPORT_TIMEOUT_MILLIS
+    # A timeout of 0 means no limit.
+    export_timeout_millis = math.inf if timeout == 0 else float(timeout)
     return PeriodicExportingMetricReader(
         exporter=exporter,
         export_interval_millis=float(interval),
-        export_timeout_millis=float(timeout),
+        export_timeout_millis=export_timeout_millis,
+        cardinality_limits=_create_cardinality_limits(config.cardinality_limits),
     )
 
 
 def _create_prometheus_metric_reader(
     config: PrometheusMetricExporterConfig,
+    cardinality_limits: CardinalityLimits | None = None,
 ) -> MetricReader:
     """Create a PrometheusMetricReader from config.
 
@@ -470,15 +542,18 @@ def _create_prometheus_metric_reader(
         config.target_info_enabled_development is not None and not config.target_info_enabled_development
     )
 
-    if config.scope_info_enabled is not None:
-        _logger.warning("scope_info_enabled is not yet supported for Prometheus metric exporter and will be ignored.")
-    if config.resource_constant_labels is not None:
-        _logger.warning(
-            "resource_constant_labels is not yet supported for Prometheus metric exporter and will be ignored."
-        )
+    scope_info_enabled = config.scope_info_enabled is None or config.scope_info_enabled
+    resource_attribute_filter = (
+        _include_exclude_predicate(config.resource_constant_labels)
+        if config.resource_constant_labels is not None
+        else None
+    )
 
     reader = PrometheusMetricReader(
         disable_target_info=disable_target_info,
+        scope_info_enabled=scope_info_enabled,
+        resource_attribute_filter=resource_attribute_filter,
+        cardinality_limits=cardinality_limits,
     )
 
     port = config.port if config.port is not None else 9464
@@ -490,6 +565,7 @@ def _create_prometheus_metric_reader(
 
 def _create_pull_metric_exporter(
     config: PullMetricExporterConfig,
+    cardinality_limits: CardinalityLimits | None = None,
 ) -> MetricReader:
     """Create a pull metric exporter (which is itself a MetricReader) from config.
 
@@ -501,9 +577,13 @@ def _create_pull_metric_exporter(
     entry point group.
     """
     if config.prometheus_development is not None:
-        return _create_prometheus_metric_reader(config.prometheus_development)
+        return _create_prometheus_metric_reader(config.prometheus_development, cardinality_limits)
     if config.additional_properties:
         name, plugin_config = next(iter(config.additional_properties.items()))
+        if cardinality_limits is not None:
+            _logger.warning(
+                "cardinality_limits is not yet supported for pull metric exporter plugins and will be ignored."
+            )
         return load_entry_point("opentelemetry_pull_metric_exporter", name)(**(plugin_config or {}))
     raise ConfigurationError(
         "No exporter type specified in pull metric exporter config. Supported types: prometheus_development."
@@ -516,15 +596,13 @@ def _create_pull_metric_reader(
     """Create a pull MetricReader from config.
 
     The pull reader's exporter is itself a MetricReader (combined reader+exporter).
-    producers and cardinality_limits are not yet supported.
+    producers are not yet supported.
     """
     if config.producers:
         _logger.warning(
             "MetricProducer configuration is not yet supported for pull metric readers and will be ignored."
         )
-    if config.cardinality_limits is not None:
-        _logger.warning("cardinality_limits is not yet supported for pull metric readers and will be ignored.")
-    return _create_pull_metric_exporter(config.exporter)
+    return _create_pull_metric_exporter(config.exporter, _create_cardinality_limits(config.cardinality_limits))
 
 
 def _create_metric_reader(config: MetricReaderConfig) -> MetricReader:
@@ -616,6 +694,8 @@ def create_meter_provider(
         if config.views:
             for view_config in config.views:
                 views.append(_create_view(view_config))
+        if config.view_matching_mode_development is not None:
+            _logger.warning("view_matching_mode/development is not yet supported and will be ignored.")
 
     meter_configurator = (
         _create_meter_configurator(config.meter_configurator_development)

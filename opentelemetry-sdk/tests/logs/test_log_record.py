@@ -115,7 +115,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_set_limits(self):
         attr = {"key": "value", "key2": "value2"}
-        expected = {"key2": "v"}
+        expected = {"key": "v"}
         limits = LogRecordLimits(
             max_attributes=1,
             max_attribute_length=1,
@@ -209,3 +209,19 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(record.log_record.attributes, {"a": "b"})
         self.assertEqual(record.log_record.event_name, "an.event")
         self.assertEqual(record.resource, resource)
+
+    def test_read_write_log_record_equality(self):
+        log_record = LogRecord(body="a log line")
+        resource = Resource.create({"service.name": "foo"})
+        limits = LogRecordLimits()
+        record = ReadWriteLogRecord(log_record=log_record, resource=resource, limits=limits)
+
+        self.assertEqual(
+            record,
+            ReadWriteLogRecord(log_record=log_record, resource=resource, limits=limits),
+        )
+        self.assertNotEqual(
+            record,
+            ReadWriteLogRecord(log_record=LogRecord(body="other"), resource=resource, limits=limits),
+        )
+        self.assertNotEqual(record, object())

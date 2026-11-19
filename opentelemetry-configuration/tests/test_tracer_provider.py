@@ -5,8 +5,10 @@
 # pylint: disable=protected-access
 # pylint: disable=too-many-lines
 
+import math
 import os
 import sys
+import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -18,6 +20,9 @@ from opentelemetry.configuration._tracer_provider import (
     create_tracer_provider,
 )
 from opentelemetry.configuration.file._loader import ConfigurationError
+from opentelemetry.configuration.models import (
+    AlwaysRecordSampler as AlwaysRecordSamplerConfig,
+)
 from opentelemetry.configuration.models import (
     AttributeLimits,
     OtlpHttpEncoding,
@@ -57,6 +62,12 @@ from opentelemetry.configuration.models import (
 )
 from opentelemetry.configuration.models import (
     ExperimentalTracerMatcherAndConfig as TracerMatcherAndConfig,
+)
+from opentelemetry.configuration.models import (
+    GrpcTls as GrpcTlsConfig,
+)
+from opentelemetry.configuration.models import (
+    HttpTls as HttpTlsConfig,
 )
 from opentelemetry.configuration.models import (
     IdGenerator as IdGeneratorConfig,
@@ -105,6 +116,7 @@ from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
+    AlwaysRecordSampler,
     Decision,
     ParentBased,
     Sampler,
@@ -200,6 +212,15 @@ class TestCreateSampler(unittest.TestCase):
         provider = self._make_provider(SamplerConfig(always_off={}))
         self.assertIs(provider.sampler, ALWAYS_OFF)
 
+    def test_always_record_wraps_root_sampler(self):
+        provider = self._make_provider(
+            SamplerConfig(always_record=AlwaysRecordSamplerConfig(root=SamplerConfig(always_off={})))
+        )
+        self.assertIsInstance(provider.sampler, AlwaysRecordSampler)
+        self.assertEqual(provider.sampler.get_description(), f"AlwaysRecordSampler{{{ALWAYS_OFF.get_description()}}}")
+        result = provider.sampler.should_sample(None, TRACE_ID, "span")
+        self.assertEqual(result.decision, Decision.RECORD_ONLY)
+
     def test_trace_id_ratio_based(self):
         provider = self._make_provider(SamplerConfig(trace_id_ratio_based=TraceIdRatioBasedConfig(ratio=0.5)))
         self.assertIsInstance(provider.sampler, TraceIdRatioBased)
@@ -287,6 +308,41 @@ class TestCreateSampler(unittest.TestCase):
             # pylint: disable=unexpected-keyword-arg
             provider = self._make_provider(SamplerConfig(my_custom_sampler={}))
         self.assertIs(provider.sampler, mock_sampler)
+        mock_class.assert_called_once_with()
+
+    def test_user_defined_sampler_receives_plugin_config(self):
+        cases = [
+            ({"my_custom_sampler": {"ratio": 0.25, "label": "x"}}, {"ratio": 0.25, "label": "x"}),
+            ({"my_custom_sampler": {}}, {}),
+            ({"my_custom_sampler": None}, {}),
+        ]
+        for config_dict, expected_kwargs in cases:
+            with self.subTest(config=config_dict):
+                mock_sampler = MagicMock(spec=Sampler)
+                mock_class = MagicMock(return_value=mock_sampler)
+                with patch(
+                    "opentelemetry.configuration._common.entry_points",
+                    return_value=[MagicMock(**{"load.return_value": mock_class})],
+                ):
+                    provider = self._make_provider(_dict_to_dataclass(config_dict, SamplerConfig))
+                self.assertIs(provider.sampler, mock_sampler)
+                mock_class.assert_called_once_with(**expected_kwargs)
+
+    def test_user_defined_parent_based_root_receives_plugin_config(self):
+        mock_sampler = MagicMock(spec=Sampler)
+        mock_class = MagicMock(return_value=mock_sampler)
+        sampler_config = _dict_to_dataclass(
+            {"parent_based": {"root": {"my_custom_sampler": {"ratio": 0.25}}}},
+            SamplerConfig,
+        )
+        with patch(
+            "opentelemetry.configuration._common.entry_points",
+            return_value=[MagicMock(**{"load.return_value": mock_class})],
+        ):
+            provider = self._make_provider(sampler_config)
+        self.assertIsInstance(provider.sampler, ParentBased)
+        self.assertIs(provider.sampler._root, mock_sampler)
+        mock_class.assert_called_once_with(ratio=0.25)
 
     def test_user_defined_sampler_not_found_raises_configuration_error(self):
         with (
@@ -433,6 +489,34 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         self.assertEqual(excluded, Decision.DROP)
         self.assertEqual(case_mismatch, Decision.DROP)
 
+    def test_composite_rule_based_attribute_patterns_literal_brackets(self):
+        cases = [
+            (["/api/[bc]"], None, "/api/[bc]", True),
+            (["/api/[bc]"], None, "/api/b", False),
+            (["/api/[bc]*"], None, "/api/[bc]/users", True),
+            (["/api/[bc]*"], None, "/api/b/users", False),
+            (None, ["/api/[bc]"], "/api/[bc]", False),
+            (None, ["/api/[bc]"], "/api/b", True),
+            (None, ["/api/[bc]*"], "/api/[bc]/users", False),
+            (None, ["/api/[bc]*"], "/api/b/users", True),
+            (["/api/*"], ["/api/[bc]*"], "/api/[bc]/users", False),
+            (["/api/[bc]"], ["/api/[bc]"], "/api/[bc]", False),
+            (["/api/[bc]*"], None, "/API/[bc]/users", False),
+            (["/api/[bc]"], None, ("/api/b", "/api/[bc]"), True),
+        ]
+        for included, excluded, value, expected in cases:
+            with self.subTest(included=included, excluded=excluded, value=value):
+                rule_based = RuleBasedSamplerConfig(
+                    rules=[
+                        self._rule(
+                            self._always_on(),
+                            attribute_patterns=self._attribute_patterns("http.route", included, excluded),
+                        )
+                    ]
+                )
+                decision = self._decision(rule_based, attributes={"http.route": value})
+                self.assertEqual(decision, Decision.RECORD_AND_SAMPLE if expected else Decision.DROP)
+
     def test_composite_rule_based_span_kind(self):
         rule_based = RuleBasedSamplerConfig(
             rules=[
@@ -526,7 +610,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
         )
 
 
-class TestCreateSpanExporterAndProcessor(unittest.TestCase):
+class TestCreateSpanExporterAndProcessor(unittest.TestCase):  # pylint: disable=too-many-public-methods
     # pylint: disable=no-self-use
 
     @staticmethod
@@ -548,6 +632,19 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
         self.assertEqual(len(procs), 1)
         self.assertIsInstance(procs[0], BatchSpanProcessor)
         self.assertIsInstance(procs[0].span_exporter, ConsoleSpanExporter)
+
+    def test_batch_processor_zero_schedule_delay(self):
+        config = TracerProviderConfig(
+            processors=[
+                SpanProcessorConfig(
+                    batch=BatchSpanProcessorConfig(exporter=SpanExporterConfig(console={}), schedule_delay=0)
+                )
+            ]
+        )
+        provider = create_tracer_provider(config)
+        procs = provider._active_span_processor._span_processors
+        self.assertEqual(procs[0]._batch_processor._schedule_delay_millis, 0)
+        provider.shutdown()
 
     def test_console_exporter_simple(self):
         config = self._make_simple_config(SpanExporterConfig(console={}))
@@ -599,10 +696,91 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
         mock_exporter_cls.assert_called_once_with(
             endpoint="http://localhost:4318",
+            certificate_file=None,
+            client_key_file=None,
+            client_certificate_file=None,
             headers=None,
-            timeout=None,
-            compression=None,
+            timeout=10.0,
+            compression=mock_compression_cls.NoCompression,
+            max_request_size=None,
         )
+
+    def test_otlp_http_max_request_size_passed_through(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            },
+        ):
+            create_tracer_provider(
+                self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(max_request_size=1024)))
+            )
+
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["max_request_size"], 1024)
+
+    def test_otlp_unsupported_size_limits_warn(self):
+        modules = {
+            "grpc": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http.trace_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+            "opentelemetry.exporter.otlp.json.http.trace_exporter": MagicMock(),
+        }
+        cases = [
+            (
+                "grpc max_request_size",
+                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_request_size=1024)),
+                "max_request_size is not yet supported for otlp_grpc exporter for spans",
+            ),
+            (
+                "grpc max_response_size",
+                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_grpc exporter for spans",
+            ),
+            (
+                "http max_response_size",
+                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_http exporter for spans",
+            ),
+            (
+                "http json max_request_size",
+                SpanExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
+                ),
+                "max_request_size is not yet supported for otlp_http JSON exporter for spans",
+            ),
+        ]
+        for name, exporter_config, expected in cases:
+            with (
+                self.subTest(name),
+                patch.dict(sys.modules, modules),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_tracer_provider(self._make_batch_config(exporter_config))
+                self.assertTrue(any(expected in message for message in logs.output), logs.output)
+
+    def test_otlp_http_zero_timeout_is_unlimited(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            },
+        ):
+            config = self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(timeout=0)))
+            create_tracer_provider(config)
+
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["timeout"], math.inf)
 
     def test_otlp_http_json_missing_package_raises(self):
         config = self._make_batch_config(
@@ -651,6 +829,9 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
 
         mock_exporter_cls.assert_called_once_with(
             endpoint="http://collector:4318/v1/traces",
+            certificate_file=None,
+            client_key_file=None,
+            client_certificate_file=None,
             headers={"x-api-key": "secret"},
             timeout=5.0,
             compression="json_deflate",
@@ -826,6 +1007,248 @@ class TestCreateSpanExporterAndProcessor(unittest.TestCase):
                 create_tracer_provider(config)
 
 
+class TestCreateSpanExporterTls(unittest.TestCase):
+    @staticmethod
+    def _make_batch_config(exporter_config):
+        return TracerProviderConfig(
+            processors=[SpanProcessorConfig(batch=BatchSpanProcessorConfig(exporter=exporter_config))]
+        )
+
+    @patch.dict(os.environ, {"OTEL_EXPORTER_OTLP_INSECURE": "true", "OTEL_EXPORTER_OTLP_TRACES_INSECURE": "true"})
+    def test_otlp_grpc_secure_default_ignores_insecure_env(self):
+        for tls in (None, GrpcTlsConfig()):
+            mock_module = MagicMock()
+            with (
+                self.subTest(tls=tls),
+                patch.dict(
+                    sys.modules,
+                    {
+                        "grpc": MagicMock(),
+                        "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+                    },
+                ),
+            ):
+                mock_exporter_cls = mock_module.OTLPSpanExporter
+                config = self._make_batch_config(
+                    SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(endpoint="collector:4317", tls=tls))
+                )
+                provider = create_tracer_provider(config)
+                try:
+                    self.assertIs(mock_exporter_cls.call_args.kwargs["insecure"], False)
+                finally:
+                    provider.shutdown()
+
+    def test_otlp_http_tls_files_passed(self):
+        for encoding in (None, OtlpHttpEncoding.protobuf, OtlpHttpEncoding.json):
+            with self.subTest(encoding=encoding):
+                protocol = "json" if encoding == OtlpHttpEncoding.json else "proto"
+                mock_exporter_cls = MagicMock()
+                mock_module = MagicMock()
+                mock_module.OTLPSpanExporter = mock_exporter_cls
+
+                with patch.dict(
+                    sys.modules,
+                    {
+                        f"opentelemetry.exporter.otlp.{protocol}.http.trace_exporter": mock_module,
+                        "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                        "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                    },
+                ):
+                    config = self._make_batch_config(
+                        SpanExporterConfig(
+                            otlp_http=OtlpHttpExporterConfig(
+                                encoding=encoding,
+                                tls=HttpTlsConfig(
+                                    ca_file="/certs/ca.pem",
+                                    key_file="/certs/client.key",
+                                    cert_file="/certs/client.pem",
+                                ),
+                            )
+                        )
+                    )
+                    create_tracer_provider(config)
+
+                _, kwargs = mock_exporter_cls.call_args
+                self.assertEqual(kwargs["certificate_file"], "/certs/ca.pem")
+                self.assertEqual(kwargs["client_key_file"], "/certs/client.key")
+                self.assertEqual(kwargs["client_certificate_file"], "/certs/client.pem")
+
+    def test_otlp_http_tls_key_without_cert_raises(self):
+        mock_module = MagicMock()
+
+        with (
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                },
+            ),
+            self.assertRaises(ConfigurationError),
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(otlp_http=OtlpHttpExporterConfig(tls=HttpTlsConfig(key_file="/certs/client.key")))
+            )
+            create_tracer_provider(config)
+        mock_module.OTLPSpanExporter.assert_not_called()
+
+    def test_otlp_grpc_tls_insecure(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "grpc": mock_grpc,
+                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+            },
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(tls=GrpcTlsConfig(insecure=True)))
+            )
+            create_tracer_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertTrue(kwargs["insecure"])
+        self.assertIsNone(kwargs["credentials"])
+        mock_grpc.ssl_channel_credentials.assert_not_called()
+
+    def test_otlp_grpc_http_endpoint_overrides_tls_insecure(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules, {"grpc": MagicMock(), "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module}
+        ):
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_grpc=OtlpGrpcExporterConfig(
+                        endpoint="http://collector:4317", tls=GrpcTlsConfig(insecure=False)
+                    )
+                )
+            )
+            create_tracer_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertTrue(kwargs["insecure"])
+
+    def test_otlp_grpc_tls_files_build_credentials(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "grpc": mock_grpc,
+                    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+                },
+            ),
+        ):
+            ca_file = os.path.join(tmp_dir, "ca.pem")
+            with open(ca_file, "wb") as file:
+                file.write(b"ca-bytes")
+            config = self._make_batch_config(
+                SpanExporterConfig(
+                    otlp_grpc=OtlpGrpcExporterConfig(
+                        endpoint="https://collector:4317", tls=GrpcTlsConfig(ca_file=ca_file)
+                    )
+                )
+            )
+            create_tracer_provider(config)
+
+        mock_grpc.ssl_channel_credentials.assert_called_once_with(
+            root_certificates=b"ca-bytes",
+            private_key=None,
+            certificate_chain=None,
+        )
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertIs(kwargs["credentials"], mock_grpc.ssl_channel_credentials.return_value)
+        self.assertFalse(kwargs["insecure"])
+
+
+class TestSpanExporterAndProcessorSchemaDefaults(unittest.TestCase):
+    """Absent fields resolve to schema defaults."""
+
+    _make_batch_config = staticmethod(TestCreateSpanExporterAndProcessor._make_batch_config)
+
+    @patch.dict(
+        os.environ,
+        {
+            "OTEL_BSP_SCHEDULE_DELAY": "1",
+            "OTEL_BSP_EXPORT_TIMEOUT": "2",
+            "OTEL_BSP_MAX_QUEUE_SIZE": "3",
+            "OTEL_BSP_MAX_EXPORT_BATCH_SIZE": "3",
+        },
+    )
+    def test_batch_processor_absent_fields_do_not_read_env_vars(self):
+        provider = create_tracer_provider(self._make_batch_config(SpanExporterConfig(console={})))
+        batch_processor = provider._active_span_processor._span_processors[0]._batch_processor
+        self.assertEqual(batch_processor._schedule_delay_millis, 5000)
+        self.assertEqual(batch_processor._export_timeout_millis, 30000)
+        self.assertEqual(batch_processor._max_queue_size, 2048)
+        self.assertEqual(batch_processor._max_export_batch_size, 512)
+        provider.shutdown()
+
+    def test_otlp_http_absent_fields_use_schema_defaults(self):
+        mock_exporter_cls = MagicMock()
+        mock_compression_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+        mock_http_module = MagicMock()
+        mock_http_module.Compression = mock_compression_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http.trace_exporter": mock_module,
+                "opentelemetry.exporter.otlp.proto.http": mock_http_module,
+            },
+        ):
+            create_tracer_provider(self._make_batch_config(SpanExporterConfig(otlp_http=OtlpHttpExporterConfig())))
+
+        mock_exporter_cls.assert_called_once_with(
+            endpoint="http://localhost:4318/v1/traces",
+            certificate_file=None,
+            client_key_file=None,
+            client_certificate_file=None,
+            headers=None,
+            timeout=10.0,
+            compression=mock_compression_cls.NoCompression,
+            max_request_size=None,
+        )
+
+    def test_otlp_grpc_absent_fields_use_schema_defaults(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc_module = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPSpanExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules,
+            {
+                "grpc": mock_grpc_module,
+                "opentelemetry.exporter.otlp.proto.grpc.trace_exporter": mock_module,
+            },
+        ):
+            create_tracer_provider(self._make_batch_config(SpanExporterConfig(otlp_grpc=OtlpGrpcExporterConfig())))
+
+        mock_exporter_cls.assert_called_once_with(
+            endpoint="http://localhost:4317",
+            insecure=True,
+            credentials=None,
+            headers=None,
+            timeout=10.0,
+            compression=mock_grpc_module.Compression.NoCompression,
+        )
+
+
 class TestCreateSpanLimits(unittest.TestCase):
     # pylint: disable=no-self-use
 
@@ -848,6 +1271,21 @@ class TestCreateSpanLimits(unittest.TestCase):
     def test_explicit_attribute_value_length_limit(self):
         provider = self._create_with_limits(SpanLimitsConfig(attribute_value_length_limit=64))
         self.assertEqual(provider._span_limits.max_attribute_length, 64)
+
+    def test_attribute_value_depth_limit_warns(self):
+        for name, limits, global_limits in (
+            ("per-signal", SpanLimitsConfig(attribute_value_depth_limit=3), None),
+            ("global", None, AttributeLimits(attribute_value_depth_limit=3)),
+        ):
+            with (
+                self.subTest(name),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_tracer_provider(
+                    TracerProviderConfig(processors=[], limits=limits),
+                    global_attribute_limits=global_limits,
+                )
+                self.assertIn("attribute_value_depth_limit is not yet supported", logs.output[0])
 
     def test_absent_limits_use_spec_defaults(self):
         provider = self._create_with_limits(SpanLimitsConfig())
@@ -946,6 +1384,28 @@ class TestTracerConfigurator(unittest.TestCase):
         provider = create_tracer_provider(config)
         self.assertFalse(self._enabled(provider, "noisy.http"))
         self.assertTrue(self._enabled(provider, "app.service"))
+
+    def test_scope_patterns_treat_brackets_literally(self):
+        for pattern in ("noisy.[bc]", "noisy.[bc]*"):
+            with self.subTest(pattern=pattern):
+                config = TracerProviderConfig(
+                    processors=[],
+                    tracer_configurator_development=TracerConfiguratorConfig(
+                        default_config=TracerConfigConfig(enabled=True),
+                        tracers=[
+                            TracerMatcherAndConfig(
+                                name=pattern,
+                                config=TracerConfigConfig(enabled=False),
+                            )
+                        ],
+                    ),
+                )
+                provider = create_tracer_provider(config)
+                self.assertFalse(self._enabled(provider, "noisy.[bc]"))
+                self.assertTrue(self._enabled(provider, "noisy.b"))
+                self.assertTrue(self._enabled(provider, "noisy.btail"))
+                self.assertTrue(self._enabled(provider, "Noisy.[bc]"))
+                self.assertEqual(self._enabled(provider, "noisy.[bc]tail"), pattern == "noisy.[bc]")
 
     def test_default_config_applies_to_unmatched_scopes(self):
         config = TracerProviderConfig(
@@ -1052,6 +1512,12 @@ class TestGlobalAttributeLimitsFallback(unittest.TestCase):
             provider = create_tracer_provider(
                 TracerProviderConfig(processors=[]),
             )
+        self.assertEqual(provider._span_limits.max_attributes, 128)
         self.assertEqual(provider._span_limits.max_span_attributes, 128)
         self.assertIsNone(provider._span_limits.max_attribute_length)
         self.assertIsNone(provider._span_limits.max_span_attribute_length)
+
+    @patch.dict(os.environ, {"OTEL_ATTRIBUTE_COUNT_LIMIT": "not-a-number"})
+    def test_global_limits_absent_ignores_invalid_env_var(self):
+        provider = create_tracer_provider(TracerProviderConfig(processors=[]))
+        self.assertEqual(provider._span_limits.max_attributes, 128)
