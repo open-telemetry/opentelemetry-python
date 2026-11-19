@@ -776,7 +776,7 @@ class Logger(APILogger):
         if (
             severity_number is not None
             and severity_number is not SeverityNumber.UNSPECIFIED
-            and severity_number.value < self._logger_config.minimum_severity.value
+            and severity_number < self._logger_config.minimum_severity
         ):
             return False
         if self._logger_config.trace_based:
