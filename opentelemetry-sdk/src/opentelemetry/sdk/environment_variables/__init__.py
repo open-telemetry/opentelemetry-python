@@ -21,11 +21,12 @@ components the file enables (e.g. resource detectors) and via
 ``${env:VAR}`` substitution inside the file.
 
 Python-implementation extensions outside the spec (``OTEL_PYTHON_*``
-variables such as ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` or
-:envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR`) are also bypassed when
-:envvar:`OTEL_CONFIG_FILE` is set, because the env-var initialisation path
-is skipped entirely in favour of the declarative file. Honouring these
-alongside a config file is tracked separately.
+variables such as ``OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED`` and
+:envvar:`OTEL_PYTHON_TRACER_CONFIGURATOR`) are applied after the declarative
+providers are configured. The logging variable adds the SDK logging handler;
+tracer, meter, and logger configurators are applied to their corresponding
+provider only when that provider is configured in the file. These extensions
+are skipped when the configuration sets ``disabled: true``.
 
 See the OpenTelemetry declarative configuration specification for details.
 """
