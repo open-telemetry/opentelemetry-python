@@ -55,10 +55,10 @@ traceidratio = "opentelemetry.sdk.trace.sampling:TraceIdRatioBased"
 parentbased_traceidratio = "opentelemetry.sdk.trace.sampling:ParentBasedTraceIdRatio"
 
 [project.entry-points.opentelemetry_logger_provider]
-sdk_logger_provider = "opentelemetry.sdk._logs:LoggerProvider"
+sdk_logger_provider = "opentelemetry.sdk.logs:LoggerProvider"
 
 [project.entry-points.opentelemetry_logs_exporter]
-console = "opentelemetry.sdk._logs.export:ConsoleLogRecordExporter"
+console = "opentelemetry.sdk.logs.export:ConsoleLogRecordExporter"
 
 [project.entry-points.opentelemetry_meter_provider]
 sdk_meter_provider = "opentelemetry.sdk.metrics:MeterProvider"

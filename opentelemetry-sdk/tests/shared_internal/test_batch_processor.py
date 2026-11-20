@@ -20,14 +20,14 @@ import pytest
 from opentelemetry.logs import (
     LogRecord,
 )
-from opentelemetry.sdk._logs import (
-    ReadWriteLogRecord,
-)
-from opentelemetry.sdk._logs.export import (
-    BatchLogRecordProcessor,
-)
 from opentelemetry.sdk._shared_internal import (
     DuplicateFilter,
+)
+from opentelemetry.sdk.logs import (
+    ReadWriteLogRecord,
+)
+from opentelemetry.sdk.logs.export import (
+    BatchLogRecordProcessor,
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
