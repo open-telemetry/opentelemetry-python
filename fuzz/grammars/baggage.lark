@@ -1,0 +1,17 @@
+// W3C Baggage list-member
+// https://www.w3.org/TR/baggage/#definition
+//
+// Only a single list-member is described: OWS around it, empty list-members
+// and the limits on list-members and lengths are handled by the oracle, as
+// list-members are accepted or dropped one by one.
+start: KEY _EQUALS VALUE? (_SEMICOLON property)*
+property: KEY (_EQUALS VALUE?)?
+
+// token (RFC 7230 section 3.2.6)
+KEY: /[!#$%&'*+\-.^_`|~0-9A-Za-z]+/
+// baggage-octet: printable US-ASCII except SP, DQUOTE, ",", ";" and "\"
+VALUE: /[!#-+\--:<-\[\]-~]+/
+
+// Separators with the whitespace allowed around them (OWS, RFC 9110 section 5.6.3)
+_EQUALS: /[ \t]*=[ \t]*/
+_SEMICOLON: /[ \t]*;[ \t]*/
