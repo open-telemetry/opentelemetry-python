@@ -12,6 +12,7 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _DEFAULT_CARDINALITY_LIMIT,
+    _is_view_stream_disabled,
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -268,12 +269,16 @@ class MetricReaderStorage:
         result = True
 
         # pylint: disable=protected-access
-        if isinstance(instrument, Asynchronous) and isinstance(
-            view._aggregation,
-            (
-                ExplicitBucketHistogramAggregation,
-                ExponentialBucketHistogramAggregation,
-            ),
+        if (
+            not _is_view_stream_disabled(view, instrument)
+            and isinstance(instrument, Asynchronous)
+            and isinstance(
+                view._aggregation,
+                (
+                    ExplicitBucketHistogramAggregation,
+                    ExponentialBucketHistogramAggregation,
+                ),
+            )
         ):
             _logger.warning(
                 "View %s and instrument %s will produce semantic errors when matched, the view has not been applied.",

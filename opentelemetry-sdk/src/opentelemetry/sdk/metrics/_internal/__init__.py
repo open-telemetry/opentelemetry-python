@@ -135,9 +135,10 @@ class Meter(APIMeter):
         description="",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
         **_kwargs: Unpack[_NoExtraKwargs],
     ) -> APICounter:
-        advisory = _instrument_advisory(_attributes_advisory)
+        advisory = _instrument_advisory(_attributes_advisory, _opt_in_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Counter, unit, description, advisory)
@@ -173,9 +174,10 @@ class Meter(APIMeter):
         description="",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
         **_kwargs: Unpack[_NoExtraKwargs],
     ) -> APIUpDownCounter:
-        advisory = _instrument_advisory(_attributes_advisory)
+        advisory = _instrument_advisory(_attributes_advisory, _opt_in_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _UpDownCounter, unit, description, advisory)
@@ -212,9 +214,10 @@ class Meter(APIMeter):
         description="",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
         **_kwargs: Unpack[_NoExtraKwargs],
     ) -> APIObservableCounter:
-        advisory = _instrument_advisory(_attributes_advisory)
+        advisory = _instrument_advisory(_attributes_advisory, _opt_in_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableCounter, unit, description, advisory)
@@ -255,9 +258,10 @@ class Meter(APIMeter):
         *,
         explicit_bucket_boundaries_advisory: Sequence[float] | None = None,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
         **_kwargs: Unpack[_NoExtraKwargs],
     ) -> APIHistogram:
-        advisory = _histogram_advisory(_attributes_advisory, explicit_bucket_boundaries_advisory)
+        advisory = _histogram_advisory(_attributes_advisory, explicit_bucket_boundaries_advisory, _opt_in_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(
@@ -299,9 +303,10 @@ class Meter(APIMeter):
         description="",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
         **_kwargs: Unpack[_NoExtraKwargs],
     ) -> APIGauge:
-        advisory = _instrument_advisory(_attributes_advisory)
+        advisory = _instrument_advisory(_attributes_advisory, _opt_in_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _Gauge, unit, description, advisory)
@@ -338,9 +343,10 @@ class Meter(APIMeter):
         description="",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
         **_kwargs: Unpack[_NoExtraKwargs],
     ) -> APIObservableGauge:
-        advisory = _instrument_advisory(_attributes_advisory)
+        advisory = _instrument_advisory(_attributes_advisory, _opt_in_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableGauge, unit, description, advisory)
@@ -381,9 +387,10 @@ class Meter(APIMeter):
         description="",
         *,
         _attributes_advisory: Sequence[str] | None = None,
+        _opt_in_advisory: bool | None = None,
         **_kwargs: Unpack[_NoExtraKwargs],
     ) -> APIObservableUpDownCounter:
-        advisory = _instrument_advisory(_attributes_advisory)
+        advisory = _instrument_advisory(_attributes_advisory, _opt_in_advisory)
 
         with self._instrument_registration_lock:
             status = self._register_instrument(name, _ObservableUpDownCounter, unit, description, advisory)

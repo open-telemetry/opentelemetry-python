@@ -15,7 +15,9 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     AggregationTemporality,
     DefaultAggregation,
+    DropAggregation,
     _Aggregation,
+    _DropAggregation,
     _SumAggregation,
 )
 from opentelemetry.sdk.metrics._internal.instrument import _Instrument
@@ -73,6 +75,15 @@ _OVERFLOW_ATTRIBUTES: dict[str, AnyValue] = {"otel.metric.overflow": True}
 _OVERFLOW_KEY = _hash_attributes(_OVERFLOW_ATTRIBUTES)
 
 
+def _is_view_stream_disabled(view: View, instrument: _Instrument) -> bool:
+    # pylint: disable=protected-access
+    if view._enabled is False:
+        return True
+    advisory = getattr(instrument, "_advisory", None)
+    opt_in = isinstance(advisory, _InstrumentAdvisory) and advisory.opt_in
+    return opt_in and view._enabled is not True
+
+
 class _ViewInstrumentMatch:
     def __init__(
         self,
@@ -93,31 +104,31 @@ class _ViewInstrumentMatch:
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
         self._description = self._view._description or self._instrument.description
+        advisory = getattr(self._instrument, "_advisory", None)
         # A view that specifies attribute keys takes precedence over the
         # instrument's attributes advisory. The advisory only applies when no
         # view configures this aspect of the stream
         self._attribute_keys = self._view._attribute_keys
-        if self._attribute_keys is None:
-            advisory = getattr(self._instrument, "_advisory", None)
-            if isinstance(advisory, _InstrumentAdvisory):
-                self._attribute_keys = advisory.attributes
-        if not isinstance(self._view._aggregation, DefaultAggregation):
-            self._aggregation = self._view._aggregation._create_aggregation(
-                self._instrument,
-                None,
-                self._view._exemplar_reservoir_factory,
-                0,
-            )
+        if self._attribute_keys is None and isinstance(advisory, _InstrumentAdvisory):
+            self._attribute_keys = advisory.attributes
+        self._aggregation_factory: Aggregation
+        if _is_view_stream_disabled(self._view, self._instrument):
+            self._aggregation_factory = DropAggregation()
+        elif not isinstance(self._view._aggregation, DefaultAggregation):
+            self._aggregation_factory = self._view._aggregation
         else:
-            self._aggregation = self._instrument_class_aggregation[self._instrument.__class__]._create_aggregation(
-                self._instrument,
-                None,
-                self._view._exemplar_reservoir_factory,
-                0,
-            )
+            self._aggregation_factory = self._instrument_class_aggregation[self._instrument.__class__]
+        self._aggregation = self._aggregation_factory._create_aggregation(
+            self._instrument,
+            None,
+            self._view._exemplar_reservoir_factory,
+            0,
+        )
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
         # pylint: disable=protected-access
+        if isinstance(self._aggregation, _DropAggregation) or isinstance(other._aggregation, _DropAggregation):
+            return False
 
         result = (
             self._name == other._name
@@ -144,6 +155,9 @@ class _ViewInstrumentMatch:
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement, should_sample_exemplar: bool = True) -> None:
+        if isinstance(self._aggregation, _DropAggregation):
+            return
+
         attributes = {}
         if measurement.attributes:
             # Make a shallow copy since the user can mutate the dict after the fact.
@@ -186,20 +200,12 @@ class _ViewInstrumentMatch:
 
         start_time_unix_nano = self._previous_collection_start_nanos or time_ns()
         # pylint: disable=protected-access
-        if not isinstance(self._view._aggregation, DefaultAggregation):
-            aggregation = self._view._aggregation._create_aggregation(
-                self._instrument,
-                attributes,
-                self._view._exemplar_reservoir_factory,
-                start_time_unix_nano,
-            )
-        else:
-            aggregation = self._instrument_class_aggregation[self._instrument.__class__]._create_aggregation(
-                self._instrument,
-                attributes,
-                self._view._exemplar_reservoir_factory,
-                start_time_unix_nano,
-            )
+        aggregation = self._aggregation_factory._create_aggregation(
+            self._instrument,
+            attributes,
+            self._view._exemplar_reservoir_factory,
+            start_time_unix_nano,
+        )
         self._attributes_aggregation[aggr_key] = aggregation
         return aggregation
 
@@ -208,6 +214,9 @@ class _ViewInstrumentMatch:
         collection_aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
     ) -> Sequence[DataPointT] | None:
+        if isinstance(self._aggregation, _DropAggregation):
+            return None
+
         data_points: list[DataPointT] = []
         with self._lock:
             aggregations = self._attributes_aggregation
