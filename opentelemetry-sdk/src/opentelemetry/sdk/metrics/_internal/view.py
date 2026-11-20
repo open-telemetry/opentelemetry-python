@@ -100,10 +100,11 @@ class View:
         enabled: This is a metric stream customizing attribute: whether the
             metric stream is enabled. If `False`, the metric stream will use
             `DropAggregation` regardless of `aggregation`. If `True`, the
-            metric stream will be enabled (including for instruments with
-            `_opt_in_advisory=True`). If `None`, instruments with
-            `_opt_in_advisory=True` will use `DropAggregation` and all other
-            instruments will be enabled. Must be a bool.
+            metric stream is aggregated as if `_opt_in_advisory` were `False`
+            (still honoring an explicit `DropAggregation`). If `None`,
+            instruments with `_opt_in_advisory=True` will use
+            `DropAggregation` and all other instruments will be enabled. Must
+            be a bool.
 
     This class is not intended to be subclassed by the user.
     """

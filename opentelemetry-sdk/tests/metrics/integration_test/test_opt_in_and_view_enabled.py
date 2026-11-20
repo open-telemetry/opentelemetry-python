@@ -8,9 +8,11 @@ from unittest import TestCase
 
 from opentelemetry.metrics import Observation
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics.export import Gauge, InMemoryMetricReader
 from opentelemetry.sdk.metrics.view import (
+    DropAggregation,
     ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
     SumAggregation,
     View,
 )
@@ -204,6 +206,38 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
             {"other": "value"},
         )
 
+    def test_opt_in_enabled_by_view_with_explicit_aggregation(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+            views=[
+                View(
+                    instrument_name="last_value_counter",
+                    enabled=True,
+                    aggregation=LastValueAggregation(),
+                ),
+                View(
+                    instrument_name="dropped_counter",
+                    enabled=True,
+                    aggregation=DropAggregation(),
+                ),
+            ],
+        )
+        meter = meter_provider.get_meter("testmeter")
+        last_value_counter = meter.create_counter("last_value_counter", _opt_in_advisory=True)
+        dropped_counter = meter.create_counter("dropped_counter", _opt_in_advisory=True)
+        last_value_counter.add(3)
+        last_value_counter.add(7)
+        dropped_counter.add(10)
+
+        metrics_data = reader.get_metrics_data()
+        self.assertIsNotNone(metrics_data)
+        metrics = metrics_data.resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual(len(metrics), 1)
+        self.assertEqual(metrics[0].name, "last_value_counter")
+        self.assertIsInstance(metrics[0].data, Gauge)
+        self.assertEqual(metrics[0].data.data_points[0].value, 7)
+
     def test_view_enabled_false_disables_default_and_opt_in_instruments(self):
         for opt_in_advisory in (None, False, True):
             with self.subTest(opt_in_advisory=opt_in_advisory):
@@ -255,17 +289,26 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         with self.assertLogs(level=WARNING) as log:
             counter = meter.create_counter(
                 "test_counter",
-                _opt_in_advisory="invalid",  # type: ignore[arg-type]
+                _opt_in_advisory="invalid",
             )
         self.assertIn("_opt_in_advisory must be a bool", log.output[0])
 
+        with self.assertLogs(level=WARNING) as hist_log:
+            histogram = meter.create_histogram(
+                "test_histogram",
+                explicit_bucket_boundaries_advisory=[1.0, 2.0],
+                _opt_in_advisory="invalid",
+            )
+        self.assertIn("_opt_in_advisory must be a bool", hist_log.output[0])
+
         counter.add(3)
+        histogram.record(1.5)
         metrics_data = reader.get_metrics_data()
         self.assertIsNotNone(metrics_data)
-        metrics = metrics_data.resource_metrics[0].scope_metrics[0].metrics
-        self.assertEqual(len(metrics), 1)
-        self.assertEqual(metrics[0].name, "test_counter")
-        self.assertEqual(metrics[0].data.data_points[0].value, 3)
+        metrics_by_name = {metric.name: metric for metric in metrics_data.resource_metrics[0].scope_metrics[0].metrics}
+        self.assertEqual(set(metrics_by_name), {"test_counter", "test_histogram"})
+        self.assertEqual(metrics_by_name["test_counter"].data.data_points[0].value, 3)
+        self.assertEqual(metrics_by_name["test_histogram"].data.data_points[0].explicit_bounds, (1.0, 2.0))
 
     def test_disabled_streams_do_not_retain_per_attribute_aggregations(self):
         reader = InMemoryMetricReader()

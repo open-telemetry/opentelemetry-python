@@ -75,6 +75,15 @@ _OVERFLOW_ATTRIBUTES: dict[str, AnyValue] = {"otel.metric.overflow": True}
 _OVERFLOW_KEY = _hash_attributes(_OVERFLOW_ATTRIBUTES)
 
 
+def _is_view_stream_disabled(view: View, instrument: _Instrument) -> bool:
+    # pylint: disable=protected-access
+    if view._enabled is False:
+        return True
+    advisory = getattr(instrument, "_advisory", None)
+    opt_in = isinstance(advisory, _InstrumentAdvisory) and advisory.opt_in
+    return opt_in and view._enabled is not True
+
+
 class _ViewInstrumentMatch:
     def __init__(
         self,
@@ -102,9 +111,8 @@ class _ViewInstrumentMatch:
         self._attribute_keys = self._view._attribute_keys
         if self._attribute_keys is None and isinstance(advisory, _InstrumentAdvisory):
             self._attribute_keys = advisory.attributes
-        opt_in = isinstance(advisory, _InstrumentAdvisory) and advisory.opt_in is True
         self._aggregation_factory: Aggregation
-        if self._view._enabled is False or (opt_in and self._view._enabled is not True):
+        if _is_view_stream_disabled(self._view, self._instrument):
             self._aggregation_factory = DropAggregation()
         elif not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation_factory = self._view._aggregation

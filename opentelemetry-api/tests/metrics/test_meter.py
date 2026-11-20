@@ -191,6 +191,28 @@ class TestMeter(TestCase):
                     log.output[0],
                 )
 
+    def test_repeated_instrument_names_with_equivalent_opt_in_advisory(self):
+        test_meter = NoOpMeter("name")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "histogram",
+            "gauge",
+            "observable_counter",
+            "observable_up_down_counter",
+            "observable_gauge",
+        ]:
+            with self.subTest(instrument_name=instrument_name):
+                create_instrument = getattr(test_meter, f"create_{instrument_name}")
+                create_instrument(instrument_name)
+
+                with self.assertNoLogs(level=WARNING):
+                    create_instrument(instrument_name, _opt_in_advisory=False)
+
+                with self.assertLogs(level=WARNING):
+                    create_instrument(instrument_name, _opt_in_advisory=True)
+
     def test_repeated_instrument_names_with_different_attributes_advisory(
         self,
     ):

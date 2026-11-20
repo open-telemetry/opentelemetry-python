@@ -32,7 +32,7 @@ _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 @dataclass(frozen=True)
 class _InstrumentAdvisory:
     attributes: frozenset[str] | None = None
-    opt_in: bool | None = None
+    opt_in: bool = False
 
 
 @dataclass(frozen=True)
@@ -82,18 +82,18 @@ def _validate_explicit_bucket_boundaries_advisory(
 
 def _validate_opt_in_advisory(
     opt_in_advisory: bool | None,
-) -> bool | None:
+) -> bool:
     """Returns the advisory as a bool, otherwise logs a warning and returns
-    `None` so the advisory is ignored."""
+    `False` so the advisory is ignored."""
 
     if opt_in_advisory is None:
-        return None
+        return False
 
     if isinstance(opt_in_advisory, bool):
         return opt_in_advisory
 
     _logger.warning("_opt_in_advisory must be a bool")
-    return None
+    return False
 
 
 def _instrument_advisory(
