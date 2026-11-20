@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: support metric producers on periodic metric readers, loaded from the `opentelemetry_metrics_producer` entry point group
