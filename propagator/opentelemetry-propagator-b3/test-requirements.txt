@@ -7,7 +7,3 @@ pytest==9.0.3
 tomli==2.0.1
 typing_extensions==4.10.0
 wrapt==1.16.0
--e opentelemetry-api
--e opentelemetry-sdk
--e opentelemetry-semantic-conventions
--e propagator/opentelemetry-propagator-b3
