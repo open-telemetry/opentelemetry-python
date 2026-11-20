@@ -149,11 +149,9 @@ class Encoder(abc.ABC):
                 continue
 
             if defined_max_tag_value_length:
-                if tag_value_element is None:
-                    running_string_length += 4  # null with no quotes
-                else:
-                    # + 2 accounts for string quotation marks
-                    running_string_length += len(tag_value_element) + 2
+                # measure the element as serialized, so that quotation
+                # marks, escape sequences and null are all accounted for
+                running_string_length += len(json.dumps(tag_value_element))
 
                 if tag_value_elements:
                     # accounts for ',' item separator

@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 import abc
+import json
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
@@ -81,6 +82,17 @@ class CommonEncoderTestCases:
             max_tag_value_length = 123456
             encoder = self.get_encoder(max_tag_value_length)
             self.assertEqual(max_tag_value_length, encoder.max_tag_value_length)
+
+        def test_encode_max_tag_length_sequence_with_escaped_elements(self):
+            encoder = self.get_encoder(10)
+            for sequence, expected in (
+                (["éé"], "[]"),
+                (['a"b"c'], "[]"),
+                (["a", "é"], '["a"]'),
+            ):
+                value = encoder._extract_tags_from_dict({"key": sequence})["key"]
+                self.assertEqual(expected, value)
+                self.assertEqual(sequence[: len(json.loads(value))], json.loads(value))
 
         def test_nsec_to_usec_round(self):
             base_time_nsec = 683647322 * 10**9
