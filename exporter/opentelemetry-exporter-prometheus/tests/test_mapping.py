@@ -74,6 +74,9 @@ class TestMapping(TestCase):
         self.assertEqual(map_unit("{foo}/s"), "per_second")
         self.assertEqual(map_unit("foo/bar"), "foo_per_bar")
         self.assertEqual(map_unit("2fer/store"), "2fer_per_store")
+        self.assertEqual(map_unit("%/s"), "percent_per_second")
+        self.assertEqual(map_unit("%/min"), "percent_per_min")
+        self.assertEqual(map_unit("%/h"), "percent_per_hour")
 
         # should be sanitized to become part of the metric name without surrounding "_"
         self.assertEqual(map_unit("____"), "")
@@ -89,6 +92,7 @@ class TestMapping(TestCase):
         self.assertEqual(map_unit("{requests}/s{interval}"), "per_second")
         self.assertEqual(map_unit("km{distance}/h{duration}"), "km_per_hour")
         self.assertEqual(map_unit("foo{a}bar{b}"), "foobar")
+        self.assertEqual(map_unit("%{utilization}/s{interval}"), "percent_per_second")
 
         # empty annotations attached to units should also be stripped properly
         self.assertEqual(map_unit("m{}"), "meters")

@@ -570,6 +570,16 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
                 """
             ),
         )
+        self.verify_text_format(
+            _generate_gauge(name="test_gauge", value=1, unit="%/s"),
+            dedent(
+                """\
+                # HELP test_gauge_percent_per_second foo
+                # TYPE test_gauge_percent_per_second gauge
+                test_gauge_percent_per_second{a="1",b="true"} 1.0
+                """
+            ),
+        )
 
         # invalid characters in name are sanitized before being passed to prom client, which
         # would throw errors
