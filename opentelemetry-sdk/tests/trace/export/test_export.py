@@ -77,6 +77,34 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         span_processor.shutdown()
         self.assertTrue(my_exporter.is_shutdown)
 
+    def test_simple_span_processor_force_flush(self):
+        exporter = mock.Mock()
+        exporter.force_flush.return_value = True
+
+        span_processor = export.SimpleSpanProcessor(exporter)
+        result = span_processor.force_flush(timeout_millis=5000)
+
+        self.assertTrue(result)
+        exporter.force_flush.assert_called_once_with(timeout_millis=5000)
+
+        # When exporter returns False
+        exporter.reset_mock()
+        exporter.force_flush.return_value = False
+        result = span_processor.force_flush(timeout_millis=1000)
+        self.assertFalse(result)
+        exporter.force_flush.assert_called_once_with(timeout_millis=1000)
+
+        # When exporter does not implement force_flush
+        class NoForceFlushExporter:
+            def export(self, spans):
+                pass
+
+            def shutdown(self):
+                pass
+
+        processor_no_flush = export.SimpleSpanProcessor(NoForceFlushExporter())
+        self.assertTrue(processor_no_flush.force_flush())
+
     def test_simple_span_processor_no_context(self):
         """Check that we process spans that are never made active.
 

@@ -136,7 +136,10 @@ class SimpleSpanProcessor(SpanProcessor):
         self.span_exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
-        # pylint: disable=unused-argument
+        # Exporters are optional in custom setups and may not implement force_flush
+        flush_fn = getattr(self.span_exporter, "force_flush", None)
+        if callable(flush_fn):
+            return bool(flush_fn(timeout_millis=timeout_millis))
         return True
 
 
