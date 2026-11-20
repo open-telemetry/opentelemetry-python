@@ -17,8 +17,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install toml
-        run: pip install toml
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Verify prerequisites
         env:
@@ -30,7 +30,7 @@ jobs:
           fi
 
           if [[ ! -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(uv run --frozen --only-dev ./scripts/eachdist.py version --mode stable)
             stable_version=${stable_version//.dev/}
             if [[ $PRERELEASE_VERSION != ${stable_version}* ]]; then
               echo "$PRERELEASE_VERSION is not a prerelease for the version on main ($stable_version)"
@@ -47,24 +47,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # zizmor: ignore[artipacked] Credentials are required by the branch pushes below.
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: Install dependencies
-        run: pip install toml towncrier
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
-      - name: Create release branch
+      - name: Set environment variables
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
           if [[ -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(uv run --frozen --only-dev ./scripts/eachdist.py version --mode stable)
             stable_version=${stable_version//.dev/}
           else
             stable_version=$PRERELEASE_VERSION
           fi
 
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=$(uv run --frozen --only-dev ./scripts/eachdist.py version --mode prerelease)
           unstable_version=${unstable_version//.dev/}
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
@@ -79,17 +78,22 @@ jobs:
             exit 1
           fi
 
-          git push origin HEAD:$release_branch_name
-
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
+
+      - name: Create release branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh auth setup-git
+          git push origin HEAD:$RELEASE_BRANCH_NAME
 
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
 
       - name: Generate changelog
-        run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
+        run: uv run --frozen --only-dev towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -104,15 +108,17 @@ jobs:
       - name: Create pull request against the release branch
         id: create_release_branch_pr
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # not using secrets.GITHUB_TOKEN for pr create since pull requests from that token do not run workflows
+          PR_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Prepare release ${STABLE_VERSION}/${UNSTABLE_VERSION}"
           branch="otelbot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
+          gh auth setup-git
           git push origin HEAD:$branch
-          pr_url=$(gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
+          pr_url=$(GH_TOKEN="${PR_TOKEN}" gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
                        --body "$message." \
                        --head $branch \
                        --base $RELEASE_BRANCH_NAME)
@@ -135,24 +141,23 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # zizmor: ignore[artipacked] Credentials are required by the branch push below.
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: Install dependencies
-        run: pip install toml towncrier
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Set environment variables
         env:
           PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
         run: |
           if [[ -z $PRERELEASE_VERSION ]]; then
-            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=$(uv run --frozen --only-dev ./scripts/eachdist.py version --mode stable)
             stable_version=${stable_version//.dev/}
           else
             stable_version=$PRERELEASE_VERSION
           fi
 
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=$(uv run --frozen --only-dev ./scripts/eachdist.py version --mode prerelease)
           unstable_version=${unstable_version//.dev/}
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
@@ -188,7 +193,7 @@ jobs:
         run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $UNSTABLE_NEXT_VERSION
 
       - name: Generate changelog
-        run: towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
+        run: uv run --frozen --only-dev towncrier build --yes --version "$STABLE_VERSION/$UNSTABLE_VERSION"
 
       - name: Use CLA approved github bot
         run: .github/scripts/use-cla-approved-github-bot.sh
@@ -203,16 +208,18 @@ jobs:
       - name: Create pull request against main
         id: create_main_pr
         env:
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # not using secrets.GITHUB_TOKEN for pr create since pull requests from that token do not run workflows
+          PR_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update version to ${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}"
           body="Update version to \`${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}\`."
           branch="otelbot/update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_NEXT_VERSION}"
 
           git commit -a -m "$message"
+          gh auth setup-git
           git push origin HEAD:$branch
-          pr_url=$(gh pr create --title "$message" \
+          pr_url=$(GH_TOKEN="${PR_TOKEN}" gh pr create --title "$message" \
                        --body "$body" \
                        --head $branch \
                        --base main)
