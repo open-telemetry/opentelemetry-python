@@ -57,10 +57,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from os import environ
-from typing import (
-    Any,
-    TypeVar,
-)
+from typing import Any
 
 from prometheus_client import CollectorRegistry, start_http_server
 from prometheus_client.core import (
@@ -167,103 +164,165 @@ def _should_convert_sum_to_gauge(metric: Metric) -> bool:
     return not metric.data.is_monotonic and metric.data.aggregation_temporality == AggregationTemporality.CUMULATIVE
 
 
-_FamilyT = TypeVar("_FamilyT", bound=PrometheusMetric)
+_MetricFamilyFactory = type[CounterMetricFamily] | type[GaugeMetricFamily] | type[HistogramMetricFamily]
+
+_FACTORY_TO_PROMETHEUS_TYPE: dict[_MetricFamilyFactory, str] = {
+    CounterMetricFamily: "counter",
+    GaugeMetricFamily: "gauge",
+    HistogramMetricFamily: "histogram",
+}
+
+_RESERVED_FAMILY_SUFFIXES: dict[_MetricFamilyFactory, tuple[str, ...]] = {
+    CounterMetricFamily: ("_total", "_created"),
+    GaugeMetricFamily: (),
+    HistogramMetricFamily: ("_bucket", "_sum", "_count", "_created"),
+}
 
 
-def _get_or_create_family(
-    registry: dict[str, PrometheusMetric],
-    family_id: str,
-    factory: Callable[..., _FamilyT],
-    *,
-    name: str,
-    documentation: str,
-    labels: Sequence[str],
+def _resolve_metric_names(
+    metric_name: str,
     unit: str,
-) -> _FamilyT:
-    if family_id not in registry:
-        registry[family_id] = factory(
-            name=name,
-            documentation=documentation,
-            labels=labels,
+    factory: _MetricFamilyFactory,
+) -> tuple[str, tuple[str, ...]]:
+    base_name = (
+        metric_name[:-6]
+        if factory is CounterMetricFamily and len(metric_name) > 6 and metric_name.endswith("_total")
+        else metric_name
+    )
+    family_name = f"{base_name}_{unit}" if unit and not base_name.endswith(f"_{unit}") else base_name
+    prometheus_name = f"{family_name}_total" if factory is CounterMetricFamily else family_name
+    reserved_names = (
+        prometheus_name,
+        *(
+            candidate
+            for candidate in (
+                family_name,
+                *(f"{family_name}{suffix}" for suffix in _RESERVED_FAMILY_SUFFIXES[factory]),
+            )
+            if candidate != prometheus_name
+        ),
+    )
+    return prometheus_name, reserved_names
+
+
+class _PendingMetricFamily:
+    """Accumulates data points across metrics that map to the same Prometheus metric family."""
+
+    def __init__(
+        self,
+        factory: _MetricFamilyFactory,
+        name: str,
+        description: str,
+        unit: str,
+    ) -> None:
+        self.factory = factory
+        self.name = name
+        self.description = description
+        self.unit = unit
+        self.keys: set[str] = set()
+        self.rows: list[dict[str, str]] = []
+        self.values: list[float | dict[str, Any]] = []
+
+    def add_points(
+        self,
+        keys: set[str],
+        rows: Sequence[dict[str, str]],
+        values: Sequence[float | dict[str, Any]],
+    ) -> None:
+        self.keys.update(keys)
+        self.rows.extend(rows)
+        self.values.extend(values)
+
+    def build(self) -> PrometheusMetric:
+        label_keys = sorted(self.keys)
+        family = self.factory(
+            name=self.name,
+            documentation=self.description,
+            labels=label_keys,
+            unit=self.unit,
+        )
+        # Backfill missing labels with "" after collecting every metric in the
+        # family so points from different instruments stay aligned by label key.
+        if isinstance(family, HistogramMetricFamily):
+            for row, value in zip(self.rows, self.values):
+                if isinstance(value, dict):
+                    family.add_metric(
+                        labels=[row.get(k, "") for k in label_keys],
+                        buckets=_convert_buckets(value["bucket_counts"], value["explicit_bounds"]),
+                        sum_value=value["sum"],
+                    )
+        else:
+            for row, value in zip(self.rows, self.values):
+                if not isinstance(value, dict):
+                    family.add_metric(
+                        labels=[row.get(k, "") for k in label_keys],
+                        value=value,
+                    )
+        return family
+
+
+_PendingFamilyEntry = _PendingMetricFamily | InfoMetricFamily
+
+
+def _get_or_create_pending_family(
+    pending_families: dict[str, _PendingFamilyEntry],
+    factory: _MetricFamilyFactory,
+    metric_name: str,
+    description: str,
+    unit: str,
+) -> _PendingMetricFamily | None:
+    prometheus_name, reserved_names = _resolve_metric_names(metric_name, unit, factory)
+    conflict_name = next((name for name in reserved_names if name in pending_families), None)
+    if conflict_name is None:
+        pending = _PendingMetricFamily(
+            factory=factory,
+            name=prometheus_name,
+            description=description,
             unit=unit,
         )
-    return registry[family_id]
+        for name in reserved_names:
+            pending_families[name] = pending
+        return pending
 
-
-def _populate_counter_family(
-    registry: dict[str, PrometheusMetric],
-    per_metric_family_id: str,
-    metric_name: str,
-    description: str,
-    unit: str,
-    label_keys: Sequence[str],
-    label_rows: Sequence[Sequence[str]],
-    values: Sequence[float],
-) -> None:
-    family_id = "|".join([per_metric_family_id, CounterMetricFamily.__name__])
-    family = _get_or_create_family(
-        registry,
-        family_id,
-        CounterMetricFamily,
-        name=metric_name,
-        documentation=description,
-        labels=label_keys,
-        unit=unit,
-    )
-    for label_values, value in zip(label_rows, values):
-        family.add_metric(labels=label_values, value=value)
-
-
-def _populate_gauge_family(
-    registry: dict[str, PrometheusMetric],
-    per_metric_family_id: str,
-    metric_name: str,
-    description: str,
-    unit: str,
-    label_keys: Sequence[str],
-    label_rows: Sequence[Sequence[str]],
-    values: Sequence[float],
-) -> None:
-    family_id = "|".join([per_metric_family_id, GaugeMetricFamily.__name__])
-    family = _get_or_create_family(
-        registry,
-        family_id,
-        GaugeMetricFamily,
-        name=metric_name,
-        documentation=description,
-        labels=label_keys,
-        unit=unit,
-    )
-    for label_values, value in zip(label_rows, values):
-        family.add_metric(labels=label_values, value=value)
-
-
-def _populate_histogram_family(
-    registry: dict[str, PrometheusMetric],
-    per_metric_family_id: str,
-    metric_name: str,
-    description: str,
-    unit: str,
-    label_keys: Sequence[str],
-    label_rows: Sequence[Sequence[str]],
-    values: Sequence[dict[str, Any]],
-) -> None:
-    family_id = "|".join([per_metric_family_id, HistogramMetricFamily.__name__])
-    family = _get_or_create_family(
-        registry,
-        family_id,
-        HistogramMetricFamily,
-        name=metric_name,
-        documentation=description,
-        labels=label_keys,
-        unit=unit,
-    )
-    for label_values, value in zip(label_rows, values):
-        family.add_metric(
-            labels=label_values,
-            buckets=_convert_buckets(value["bucket_counts"], value["explicit_bounds"]),
-            sum_value=value["sum"],
+    existing = pending_families[conflict_name]
+    if isinstance(existing, InfoMetricFamily):
+        _logger.warning(
+            "Metric type conflict for %s: keeping info, dropping %s",
+            conflict_name,
+            _FACTORY_TO_PROMETHEUS_TYPE[factory],
         )
+        return None
+    if existing.factory is not factory:
+        _logger.warning(
+            "Metric type conflict for %s: keeping %s, dropping %s",
+            conflict_name,
+            _FACTORY_TO_PROMETHEUS_TYPE[existing.factory],
+            _FACTORY_TO_PROMETHEUS_TYPE[factory],
+        )
+        return None
+    if existing.name != prometheus_name:
+        _logger.warning(
+            "Metric name conflict for %s: keeping %s, dropping %s",
+            conflict_name,
+            existing.name,
+            prometheus_name,
+        )
+        return None
+    if existing.description != description:
+        _logger.warning(
+            "Metric description conflict for %s: keeping %r, dropping %r",
+            prometheus_name,
+            existing.description,
+            description,
+        )
+    if existing.unit != unit:
+        _logger.warning(
+            "Metric unit conflict for %s: keeping %r, dropping %r",
+            prometheus_name,
+            existing.unit,
+            unit,
+        )
+    return existing
 
 
 class PrometheusMetricReader(MetricReader):
@@ -374,7 +433,7 @@ class _CustomCollector:
         if self._callback is not None:
             self._callback()
 
-        metric_family_id_metric_family = {}
+        pending_families: dict[str, _PendingFamilyEntry] = {}
 
         if len(self._metrics_datas):
             if not self._disable_target_info:
@@ -386,19 +445,22 @@ class _CustomCollector:
                     self._target_info = self._create_info_metric(
                         _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                     )
-                metric_family_id_metric_family[_TARGET_INFO_NAME] = self._target_info
+                pending_families[_TARGET_INFO_NAME] = self._target_info
+                pending_families[f"{_TARGET_INFO_NAME}_info"] = self._target_info
+                yield self._target_info
 
         while self._metrics_datas:
-            self._translate_to_prometheus(self._metrics_datas.popleft(), metric_family_id_metric_family)
+            self._translate_to_prometheus(self._metrics_datas.popleft(), pending_families)
 
-            if metric_family_id_metric_family:
-                yield from metric_family_id_metric_family.values()
+        for name, pending in pending_families.items():
+            if isinstance(pending, _PendingMetricFamily) and name == pending.name:
+                yield pending.build()
 
     def _translate_to_prometheus(
         self,
         metrics_data: MetricsData,
-        metric_family_id_metric_family: dict[str, PrometheusMetric],
-    ):
+        pending_families: dict[str, _PendingFamilyEntry],
+    ) -> None:
         for rm in metrics_data.resource_metrics:
             resource_attrs = self._build_resource_attrs(rm.resource)
             for sm in rm.scope_metrics:
@@ -408,7 +470,7 @@ class _CustomCollector:
                         metric=metric,
                         scope_attrs=scope_attrs,
                         resource_attrs=resource_attrs,
-                        metric_family_id_metric_family=metric_family_id_metric_family,
+                        pending_families=pending_families,
                     )
 
     def _translate_metric(
@@ -416,51 +478,37 @@ class _CustomCollector:
         metric: Metric,
         scope_attrs: dict[str, AnyValue],
         resource_attrs: dict[str, AnyValue],
-        metric_family_id_metric_family: dict[str, PrometheusMetric],
+        pending_families: dict[str, _PendingFamilyEntry],
     ) -> None:
+        convert_sum_to_gauge = _should_convert_sum_to_gauge(metric)
+
+        factory: _MetricFamilyFactory
+        if isinstance(metric.data, Sum) and not convert_sum_to_gauge:
+            factory = CounterMetricFamily
+        elif isinstance(metric.data, Gauge) or convert_sum_to_gauge:
+            factory = GaugeMetricFamily
+        elif isinstance(metric.data, Histogram):
+            factory = HistogramMetricFamily
+        else:
+            _logger.warning("Unsupported metric data. %s", type(metric.data))
+            return
+
         metric_name = self._resolve_metric_name(metric.name)
         description = metric.description or ""
         unit = map_unit(metric.unit or "")
-        label_keys, label_rows, values = self._collect_data_points(metric.data, scope_attrs, resource_attrs)
-        per_metric_family_id = "|".join((metric_name, description, unit))
 
-        convert_sum_to_gauge = _should_convert_sum_to_gauge(metric)
+        pending = _get_or_create_pending_family(
+            pending_families=pending_families,
+            factory=factory,
+            metric_name=metric_name,
+            description=description,
+            unit=unit,
+        )
+        if pending is None:
+            return
 
-        if isinstance(metric.data, Sum) and not convert_sum_to_gauge:
-            _populate_counter_family(
-                registry=metric_family_id_metric_family,
-                per_metric_family_id=per_metric_family_id,
-                metric_name=metric_name,
-                description=description,
-                unit=unit,
-                label_keys=label_keys,
-                label_rows=label_rows,
-                values=values,
-            )
-        elif isinstance(metric.data, Gauge) or convert_sum_to_gauge:
-            _populate_gauge_family(
-                registry=metric_family_id_metric_family,
-                per_metric_family_id=per_metric_family_id,
-                metric_name=metric_name,
-                description=description,
-                unit=unit,
-                label_keys=label_keys,
-                label_rows=label_rows,
-                values=values,
-            )
-        elif isinstance(metric.data, Histogram):
-            _populate_histogram_family(
-                registry=metric_family_id_metric_family,
-                per_metric_family_id=per_metric_family_id,
-                metric_name=metric_name,
-                description=description,
-                unit=unit,
-                label_keys=label_keys,
-                label_rows=label_rows,
-                values=values,
-            )
-        else:
-            _logger.warning("Unsupported metric data. %s", type(metric.data))
+        keys, rows, values = self._collect_data_points(metric.data, scope_attrs, resource_attrs)
+        pending.add_points(keys, rows, values)
 
     def _build_scope_attrs(self, scope: InstrumentationScope) -> dict[str, AnyValue]:
         if not self._scope_info_enabled:
@@ -489,7 +537,7 @@ class _CustomCollector:
         metric_data: DataT,
         scope_attrs: dict[str, AnyValue],
         resource_attrs: dict[str, AnyValue],
-    ) -> tuple[list[str], list[list[str]], list[float | dict[str, Any]]]:
+    ) -> tuple[set[str], list[dict[str, str]], list[float | dict[str, Any]]]:
         keys: set[str] = set()
         rows: list[dict[str, str]] = []
         values: list[float | dict[str, Any]] = []
@@ -517,11 +565,7 @@ class _CustomCollector:
             else:
                 values.append(point.value)
 
-        label_keys = sorted(keys)
-        # Backfill missing labels with "" so every data point exposes the
-        # full label set expected by the Prometheus family.
-        label_rows = [[labels.get(k, "") for k in label_keys] for labels in rows]
-        return label_keys, label_rows, values
+        return keys, rows, values
 
     # pylint: disable=no-self-use
     def _check_value(self, value: float | str | Sequence) -> str:
