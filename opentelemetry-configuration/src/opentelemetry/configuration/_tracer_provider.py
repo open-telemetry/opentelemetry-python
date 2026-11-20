@@ -17,7 +17,9 @@ from opentelemetry.configuration._common import (
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
     _scope_name_matches_glob,
-    _validate_mtls_pair,
+    _validate_http_tls,
+    _warn_unsupported_attribute_value_depth_limit,
+    _warn_unsupported_otlp_size_limits,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import (
@@ -118,6 +120,7 @@ from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
+    AlwaysRecordSampler,
     ParentBased,
     Sampler,
     TraceIdRatioBased,
@@ -134,14 +137,16 @@ def _create_otlp_http_span_exporter(
     config: OtlpHttpExporterConfig,
 ) -> SpanExporter:
     """Create an OTLP HTTP span exporter from config."""
+    _validate_http_tls(config.tls, "otlp_http")
     tls = config.tls
-    if tls is not None:
-        _validate_mtls_pair(tls.key_file, tls.cert_file, "otlp_http")
     headers = _parse_headers(config.headers, config.headers_list)
     timeout = _resolve_export_timeout(config.timeout)
 
     match config.encoding:
         case None | OtlpHttpEncoding.protobuf:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http", "spans", config.max_request_size, config.max_response_size, max_request_size_supported=True
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.proto.http import (  # noqa: PLC0415
@@ -165,8 +170,16 @@ def _create_otlp_http_span_exporter(
                 headers=headers,
                 timeout=timeout,
                 compression=compression,
+                max_request_size=config.max_request_size,
             )
         case OtlpHttpEncoding.json:
+            _warn_unsupported_otlp_size_limits(
+                "otlp_http JSON",
+                "spans",
+                config.max_request_size,
+                config.max_response_size,
+                max_request_size_supported=False,
+            )
             try:
                 # pylint: disable=import-outside-toplevel,no-name-in-module
                 from opentelemetry.exporter.otlp.common.http import (  # noqa: PLC0415
@@ -214,6 +227,9 @@ def _create_otlp_grpc_span_exporter(
             feature="otlp_grpc span exporter",
         ) from exc
 
+    _warn_unsupported_otlp_size_limits(
+        "otlp_grpc", "spans", config.max_request_size, config.max_response_size, max_request_size_supported=False
+    )
     compression = _map_compression(config.compression, grpc.Compression)
     headers = _parse_headers(config.headers, config.headers_list)
     endpoint = _resolve_otlp_grpc_endpoint(config.endpoint)
@@ -370,18 +386,22 @@ def _create_rule_based_sampler_rule_predicate(
     return AllPredicate(predicates)
 
 
+# pylint: disable-next=too-many-return-statements
 def _create_sampler(config: SamplerConfig) -> Sampler:
     """Create a sampler from config.
 
     Built-in sampler types are checked via typed fields on the Sampler
     dataclass. User-defined sampler names captured in additional_properties
     by the @_additional_properties decorator are loaded via the
-    ``opentelemetry_sampler`` entry point group.
+    ``opentelemetry_sampler`` entry point group, and the plugin's
+    configuration mapping is passed to the factory as keyword arguments.
     """
     if config.always_on is not None:
         return ALWAYS_ON
     if config.always_off is not None:
         return ALWAYS_OFF
+    if config.always_record is not None:
+        return AlwaysRecordSampler(_create_sampler(config.always_record.root))
     if config.trace_id_ratio_based is not None:
         ratio = config.trace_id_ratio_based.ratio
         return TraceIdRatioBased(ratio if ratio is not None else 1.0)
@@ -390,11 +410,11 @@ def _create_sampler(config: SamplerConfig) -> Sampler:
     if config.parent_based is not None:
         return _create_parent_based_sampler(config.parent_based)
     if config.additional_properties:
-        name = next(iter(config.additional_properties))
-        return load_entry_point("opentelemetry_sampler", name)()
+        name, plugin_config = next(iter(config.additional_properties.items()))
+        return load_entry_point("opentelemetry_sampler", name)(**(plugin_config or {}))
     raise ConfigurationError(
         f"Unsupported sampler type in config: {config!r}. "
-        "Supported types: always_on, always_off, composite_development, "
+        "Supported types: always_on, always_off, always_record, composite_development, "
         "trace_id_ratio_based, parent_based."
     )
 
@@ -446,6 +466,8 @@ def _create_span_limits(
     attribute_value_length_limit = config.attribute_value_length_limit
     if attribute_value_length_limit is None and global_limits is not None:
         attribute_value_length_limit = global_limits.attribute_value_length_limit
+
+    _warn_unsupported_attribute_value_depth_limit(config.attribute_value_depth_limit, global_limits)
 
     resolved_attribute_count_limit = (
         attribute_count_limit if attribute_count_limit is not None else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT

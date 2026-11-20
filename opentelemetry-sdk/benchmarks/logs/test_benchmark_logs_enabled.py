@@ -36,7 +36,7 @@ class _SeverityFilteringProcessor(LogRecordProcessor):
         severity_number=None,
         event_name=None,
     ):
-        return severity_number is None or severity_number.value >= self._min_severity.value
+        return severity_number is None or severity_number >= self._min_severity
 
     def shutdown(self):
         pass
