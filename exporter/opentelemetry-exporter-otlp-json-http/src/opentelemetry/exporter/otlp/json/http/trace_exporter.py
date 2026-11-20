@@ -6,6 +6,9 @@ from collections.abc import Mapping, Sequence
 from typing import overload
 
 from opentelemetry.exporter.http.transport._base import BaseHTTPTransport
+from opentelemetry.exporter.otlp.common._partial_success import (
+    _report_partial_success,
+)
 from opentelemetry.exporter.otlp.common.http import (
     Compression,
     _OTLPHTTPClient,
@@ -15,10 +18,14 @@ from opentelemetry.exporter.otlp.json.common._internal.trace_encoder import (
 )
 from opentelemetry.exporter.otlp.json.http._internal import (
     _build_transport,
+    _parse_export_response,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
     _resolve_timeout,
+)
+from opentelemetry.proto_json.collector.trace.v1.trace_service import (
+    ExportTraceServiceResponse,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
@@ -91,9 +98,10 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_KEY,
             OTEL_EXPORTER_OTLP_TRACES_CLIENT_CERTIFICATE,
         )
+        self._endpoint = endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, _DEFAULT_TRACES_EXPORT_PATH)
         self._client = _OTLPHTTPClient(
             transport=transport,
-            endpoint=endpoint or _resolve_endpoint(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT, _DEFAULT_TRACES_EXPORT_PATH),
+            endpoint=self._endpoint,
             kind="spans",
             timeout=timeout if timeout is not None else _resolve_timeout(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT),
             compression=compression
@@ -115,7 +123,19 @@ class OTLPSpanExporter(SpanExporter):
             _logger.error("Failed to encode spans: %s", error)
             return SpanExportResult.FAILURE
         export_result = self._client.export(body)
-        return SpanExportResult.SUCCESS if export_result.success else SpanExportResult.FAILURE
+        if not export_result.success:
+            return SpanExportResult.FAILURE
+
+        response = _parse_export_response(export_result.content, ExportTraceServiceResponse, _logger)
+        if response is not None and response.partial_success is not None:
+            _report_partial_success(
+                _logger,
+                "spans",
+                self._endpoint,
+                response.partial_success.rejected_spans or 0,
+                response.partial_success.error_message or "",
+            )
+        return SpanExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         if self._shutdown:

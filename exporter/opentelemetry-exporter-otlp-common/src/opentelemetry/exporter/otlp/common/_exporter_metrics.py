@@ -8,7 +8,7 @@ from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
 from dataclasses import dataclass
 from time import perf_counter
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Final, Protocol
 from urllib.parse import urlparse
 
 from opentelemetry.metrics import MeterProvider, get_meter_provider
@@ -39,6 +39,8 @@ if TYPE_CHECKING:
 
 _component_counter = Counter()
 
+_REJECTED: Final[str] = "rejected"
+
 _GRPC_COMPONENT_TYPES = frozenset(
     {
         OtelComponentTypeValues.OTLP_GRPC_SPAN_EXPORTER,
@@ -52,6 +54,7 @@ _GRPC_COMPONENT_TYPES = frozenset(
 class ExportResult:
     error: Exception | None = None
     error_attrs: Attributes = None
+    rejected: int = 0
 
 
 class ExporterMetricsT(Protocol):
@@ -129,7 +132,12 @@ class ExporterMetrics:
             exported_attrs = (
                 {**self._standard_attrs, ERROR_TYPE: type(error).__qualname__} if error else self._standard_attrs
             )
-            self._exported.add(num_items, exported_attrs)
+            rejected = 0 if error else min(max(result.rejected, 0), num_items)
+            if rejected:
+                self._exported.add(num_items - rejected, exported_attrs)
+                self._exported.add(rejected, {**self._standard_attrs, ERROR_TYPE: _REJECTED})
+            else:
+                self._exported.add(num_items, exported_attrs)
             duration_attrs = {**exported_attrs, **error_attrs} if error_attrs else exported_attrs
             self._duration.record(end_time - start_time, duration_attrs)
 
