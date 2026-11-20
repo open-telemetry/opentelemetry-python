@@ -990,7 +990,7 @@ class TestSpan(unittest.TestCase):
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
             root.set_attribute("valid-byte-type-attribute", b"valid byte")
-            self.assertTrue(isinstance(root.attributes["valid-byte-type-attribute"], bytes))
+            self.assertEqual(root.attributes["valid-byte-type-attribute"], b"valid byte")
 
     def test_sampling_attributes(self):
         sampling_attributes = {

@@ -25,17 +25,16 @@ def _filter_valid_entries(
     for entry in entries:
         if not entry:
             continue
+        if len(entry) > max_pair_length:
+            _logger.warning(
+                "Baggage pair exceeded the maximum allowed length (%s) and will be dropped.",
+                max_pair_length,
+            )
+            continue
         if not entry.isascii():
             _logger.warning(
                 "Baggage entry with key `%s` contains non-ASCII characters",
                 entry.split("=", 1)[0],
-            )
-            continue
-        if len(entry) > max_pair_length:
-            _logger.warning(
-                "Baggage entry with key `%s` exceeded the maximum number of bytes per list-member with length %d",
-                entry.split("=", 1)[0],
-                len(entry),
             )
             continue
         yield entry
@@ -44,7 +43,6 @@ def _filter_valid_entries(
 def _apply_baggage_limits(
     entries: Iterable[str],
     max_pairs: int,
-    max_pair_length: int,
     max_header_length: int,
 ) -> Iterator[str]:
     """Apply W3C Baggage size limits to a sequence of baggage entries.
@@ -53,7 +51,9 @@ def _apply_baggage_limits(
     Logs warnings when entries are dropped.
     """
     length = 0
-    for index, entry in enumerate(_filter_valid_entries(entries, max_pair_length)):
+    for index, entry in enumerate(
+        _filter_valid_entries(entries, max_pair_length=max_header_length)
+    ):
         if index >= max_pairs:
             _logger.warning("Baggage exceeded the maximum number of list-members")
             return
@@ -69,7 +69,6 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     """Extracts and injects Baggage which is used to annotate telemetry."""
 
     _MAX_HEADER_LENGTH = 8192
-    _MAX_PAIR_LENGTH = 4096
     _MAX_PAIRS = 180
     _BAGGAGE_HEADER_NAME = "baggage"
 
@@ -96,7 +95,6 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         for entry in _apply_baggage_limits(
             _split_baggage_entries(headers),
             max_pairs=self._MAX_PAIRS,
-            max_pair_length=self._MAX_PAIR_LENGTH,
             max_header_length=self._MAX_HEADER_LENGTH,
         ):
             try:
@@ -143,7 +141,6 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             _apply_baggage_limits(
                 _encode_baggage_pairs(baggage_entries),
                 max_pairs=self._MAX_PAIRS,
-                max_pair_length=self._MAX_PAIR_LENGTH,
                 max_header_length=self._MAX_HEADER_LENGTH,
             )
         )
