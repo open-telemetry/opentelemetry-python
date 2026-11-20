@@ -133,6 +133,12 @@ class _ViewInstrumentMatch:
 
         return result
 
+    def _at_fork_reinit(self) -> None:
+        self._lock = Lock()
+        for aggregation in self._attributes_aggregation.values():
+            # pylint: disable-next=protected-access
+            aggregation._at_fork_reinit()
+
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement, should_sample_exemplar: bool = True) -> None:
         attributes = {}
