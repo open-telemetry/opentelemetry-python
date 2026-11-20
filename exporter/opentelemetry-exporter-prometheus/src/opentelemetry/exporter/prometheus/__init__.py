@@ -51,7 +51,7 @@ API
 ---
 """
 
-from collections import deque
+from collections import defaultdict, deque
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
 from json import dumps
@@ -495,15 +495,18 @@ class _CustomCollector:
         values: list[float | dict[str, Any]] = []
 
         for point in metric_data.data_points:
+            colliding_labels: dict[str, list[tuple[str, AnyValue]]] = defaultdict(list)
+            for key, value in {
+                **resource_attrs,
+                **scope_attrs,
+                **(point.attributes or {}),
+            }.items():
+                colliding_labels[sanitize_attribute(key)].append((key, value))
+
             labels: dict[str, str] = {}
-            for key, value in chain(
-                resource_attrs.items(),
-                scope_attrs.items(),
-                point.attributes.items(),
-            ):
-                label = sanitize_attribute(key)
+            for label, pairs in colliding_labels.items():
                 keys.add(label)
-                labels[label] = self._check_value(value)
+                labels[label] = ";".join(self._check_value(v) for _, v in sorted(pairs, key=lambda x: x[0]))
             rows.append(labels)
 
             if isinstance(point, HistogramDataPoint):
@@ -524,18 +527,25 @@ class _CustomCollector:
         return label_keys, label_rows, values
 
     # pylint: disable=no-self-use
-    def _check_value(self, value: float | str | Sequence) -> str:
+    def _check_value(self, value: AnyValue) -> str:
         """Check the label value and return is appropriate representation"""
         if not isinstance(value, str):
             return dumps(value, default=str)
         return str(value)
 
-    def _create_info_metric(self, name: str, description: str, attributes: dict[str, str]) -> InfoMetricFamily:
+    def _create_info_metric(self, name: str, description: str, attributes: Mapping[str, AnyValue]) -> InfoMetricFamily:
         """Create an Info Metric Family with list of attributes"""
         # sanitize the attribute names according to Prometheus rule
-        attributes = {sanitize_attribute(key): self._check_value(value) for key, value in attributes.items()}
-        info = InfoMetricFamily(name, description, labels=attributes)
-        info.add_metric(labels=list(attributes.keys()), value=attributes)
+        colliding_labels: dict[str, list[tuple[str, AnyValue]]] = defaultdict(list)
+        for key, value in attributes.items():
+            colliding_labels[sanitize_attribute(key)].append((key, value))
+
+        labels = {
+            label: ";".join(self._check_value(v) for _, v in sorted(pairs, key=lambda x: x[0]))
+            for label, pairs in colliding_labels.items()
+        }
+        info = InfoMetricFamily(name, description, labels=list(labels.keys()))
+        info.add_metric(labels=list(labels.keys()), value=labels)
         return info
 
 

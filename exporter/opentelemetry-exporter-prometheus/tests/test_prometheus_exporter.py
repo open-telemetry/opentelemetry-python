@@ -450,6 +450,29 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             "0.1",
         )
 
+    def test_target_info_collision(self):
+        metric_reader = PrometheusMetricReader()
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource(
+                {
+                    "system.os": "Unix",
+                    "system_os": "Linux",
+                }
+            ),
+        )
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        prometheus_metric = list(metric_reader._collector.collect())[0]
+
+        self.assertEqual(type(prometheus_metric), InfoMetricFamily)
+        self.assertEqual(prometheus_metric.name, "target")
+        self.assertEqual(
+            prometheus_metric.samples[0].labels["system_os"],
+            "Unix;Linux",
+        )
+
     def test_label_order_does_not_matter(self):
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(metric_readers=[metric_reader])
@@ -470,6 +493,56 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         # Only one metric is generated
         metric_count = prometheus_output.count("# HELP counter_total")
         self.assertEqual(metric_count, 1)
+
+    def test_label_key_collisions(self):
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"a.b": "1", "a_b": "2"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{a_b="1;2"} 42.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_sum(
+                "test_with_collision",
+                1.0,
+                attributes={"hello_world": "hello_world", "hello.world": "hello.world"},
+                description="test description",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_with_collision_total test description
+                # TYPE test_with_collision_total counter
+                test_with_collision_total{hello_world="hello.world;hello_world"} 1.0
+                """
+            ),
+        )
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"key_name": "3", "key.name": "2", "key-name": "1"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{key_name="1;2;3"} 42.0
+                """
+            ),
+        )
 
     def test_metric_name(self):
         self.verify_text_format(
