@@ -154,6 +154,56 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         self.assertEqual(metric.name, "testhistogram")
         self.assertEqual(metric.data.data_points[0].explicit_bounds, (1.0, 2.0, 3.0))
 
+    def test_opt_in_enabled_by_view_preserves_attributes_advisory(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+            views=[
+                View(instrument_name="opt_in_counter", enabled=True),
+                View(instrument_name="opt_in_histogram", enabled=True),
+                View(
+                    instrument_name="override_counter",
+                    enabled=True,
+                    attribute_keys={"other"},
+                ),
+            ],
+        )
+        meter = meter_provider.get_meter("testmeter")
+        counter = meter.create_counter(
+            "opt_in_counter",
+            _attributes_advisory=["label"],
+            _opt_in_advisory=True,
+        )
+        histogram = meter.create_histogram(
+            "opt_in_histogram",
+            explicit_bucket_boundaries_advisory=[1.0, 2.0, 3.0],
+            _attributes_advisory=["label"],
+            _opt_in_advisory=True,
+        )
+        override_counter = meter.create_counter(
+            "override_counter",
+            _attributes_advisory=["label"],
+            _opt_in_advisory=True,
+        )
+        counter.add(1, {"label": "value", "dropped": "value"})
+        histogram.record(2, {"label": "value", "dropped": "value"})
+        override_counter.add(1, {"label": "value", "other": "value"})
+
+        metrics_data = reader.get_metrics_data()
+        self.assertIsNotNone(metrics_data)
+        metrics_by_name = {metric.name: metric for metric in metrics_data.resource_metrics[0].scope_metrics[0].metrics}
+        self.assertEqual(
+            dict(metrics_by_name["opt_in_counter"].data.data_points[0].attributes),
+            {"label": "value"},
+        )
+        hist_dp = metrics_by_name["opt_in_histogram"].data.data_points[0]
+        self.assertEqual(dict(hist_dp.attributes), {"label": "value"})
+        self.assertEqual(hist_dp.explicit_bounds, (1.0, 2.0, 3.0))
+        self.assertEqual(
+            dict(metrics_by_name["override_counter"].data.data_points[0].attributes),
+            {"other": "value"},
+        )
+
     def test_view_enabled_false_disables_default_and_opt_in_instruments(self):
         for opt_in_advisory in (None, False, True):
             with self.subTest(opt_in_advisory=opt_in_advisory):
