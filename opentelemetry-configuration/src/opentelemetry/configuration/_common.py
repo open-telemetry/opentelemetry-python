@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     # pylint: disable-next=import-error
     import grpc
 
-    from opentelemetry.configuration.models import GrpcTls, IncludeExclude
+    from opentelemetry.configuration.models import AttributeLimits, GrpcTls, IncludeExclude
 
 _logger = logging.getLogger(__name__)
 
@@ -196,6 +196,35 @@ def _resolve_otlp_grpc_endpoint(endpoint: str | None) -> str:
     return endpoint if endpoint is not None else _DEFAULT_OTLP_GRPC_ENDPOINT
 
 
+def _warn_unsupported_otlp_size_limits(
+    exporter_name: str,
+    signal: Literal["spans", "logs", "metrics"],
+    max_request_size: int | None,
+    max_response_size: int | None,
+    max_request_size_supported: bool,
+) -> None:
+    """Warn about OTLP size limits that are configured but not applied by the exporter."""
+    if max_request_size is not None and not max_request_size_supported:
+        _logger.warning(
+            "max_request_size is not yet supported for %s exporter for %s and will be ignored.", exporter_name, signal
+        )
+    if max_response_size is not None:
+        _logger.warning(
+            "max_response_size is not yet supported for %s exporter for %s and will be ignored.", exporter_name, signal
+        )
+
+
+def _warn_unsupported_attribute_value_depth_limit(
+    attribute_value_depth_limit: int | None,
+    global_limits: AttributeLimits | None,
+) -> None:
+    """Warn when attribute_value_depth_limit is configured, as the SDK does not support it."""
+    if attribute_value_depth_limit is None and global_limits is not None:
+        attribute_value_depth_limit = global_limits.attribute_value_depth_limit
+    if attribute_value_depth_limit is not None:
+        _logger.warning("attribute_value_depth_limit is not yet supported and will be ignored.")
+
+
 def _resolve_export_timeout(timeout: int | None) -> float:
     """Convert a config export timeout in milliseconds to seconds.
 
@@ -301,6 +330,24 @@ def _read_tls_file(path: str, field: str) -> bytes:
             return file.read()
     except OSError as exc:
         raise ConfigurationError(f"Failed to read tls.{field} '{path}': {exc}") from exc
+
+
+def _validate_http_tls(tls: Any, exporter: str = "otlp_http") -> None:
+    """Validate mTLS pair and verify that configured TLS files exist and are readable.
+
+    HTTP exporters take file paths rather than loaded bytes/credentials, but missing
+    or unreadable certificate files should fail fast at startup with ConfigurationError
+    rather than causing delayed export failures in background threads.
+    """
+    if tls is None:
+        return
+    _validate_mtls_pair(tls.key_file, tls.cert_file, exporter)
+    if tls.ca_file is not None:
+        _read_tls_file(tls.ca_file, "ca_file")
+    if tls.cert_file is not None:
+        _read_tls_file(tls.cert_file, "cert_file")
+    if tls.key_file is not None:
+        _read_tls_file(tls.key_file, "key_file")
 
 
 def _grpc_credentials_from_tls(tls: GrpcTls | None) -> grpc.ChannelCredentials | None:
