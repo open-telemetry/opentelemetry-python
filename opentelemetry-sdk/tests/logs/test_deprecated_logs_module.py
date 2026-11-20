@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import importlib
+import pickle
 import sys
 import unittest
 import warnings
@@ -92,6 +93,43 @@ class TestDeprecatedLogsModule(unittest.TestCase):
         for name in opentelemetry.sdk.logs.__all__:
             with self.subTest(name=name):
                 self.assertIs(getattr(deprecated, name), getattr(opentelemetry.sdk.logs, name))
+
+    def test_public_symbols_use_public_module(self) -> None:
+        for name in opentelemetry.sdk.logs.__all__:
+            with self.subTest(name=name):
+                symbol = getattr(opentelemetry.sdk.logs, name)
+                self.assertEqual(symbol.__module__, "opentelemetry.sdk.logs")
+                self.assertIs(pickle.loads(pickle.dumps(symbol)), symbol)
+
+    def test_submodule_reexports_are_identical(self) -> None:
+        # pylint: disable=import-outside-toplevel,import-error
+        with self.assertWarns(DeprecationWarning):
+            from opentelemetry.sdk._logs._internal import Logger as DeprecatedLogger  # noqa: PLC0415
+            from opentelemetry.sdk._logs._internal._exceptions import (  # noqa: PLC0415
+                _get_exception_attributes as deprecated_get_exception_attributes,
+            )
+            from opentelemetry.sdk._logs._internal._logger_metrics import (  # noqa: PLC0415
+                LoggerMetrics as DeprecatedLoggerMetrics,
+            )
+            from opentelemetry.sdk._logs._internal.export import (  # noqa: PLC0415
+                LogRecordExporter as DeprecatedLogRecordExporter,
+            )
+            from opentelemetry.sdk._logs._internal.export.in_memory_log_exporter import (  # noqa: PLC0415
+                InMemoryLogRecordExporter as DeprecatedInMemoryLogRecordExporter,
+            )
+            from opentelemetry.sdk._logs.export import (  # noqa: PLC0415
+                BatchLogRecordProcessor as DeprecatedBatchLogRecordProcessor,
+            )
+
+        self.assertIs(DeprecatedLogger, opentelemetry.sdk.logs.Logger)
+        self.assertIs(
+            deprecated_get_exception_attributes,
+            opentelemetry.sdk.logs._internal._exceptions._get_exception_attributes,
+        )
+        self.assertIs(DeprecatedLoggerMetrics, opentelemetry.sdk.logs._internal._logger_metrics.LoggerMetrics)
+        self.assertIs(DeprecatedLogRecordExporter, opentelemetry.sdk.logs.export.LogRecordExporter)
+        self.assertIs(DeprecatedInMemoryLogRecordExporter, opentelemetry.sdk.logs.export.InMemoryLogRecordExporter)
+        self.assertIs(DeprecatedBatchLogRecordProcessor, opentelemetry.sdk.logs.export.BatchLogRecordProcessor)
 
     def test_submodules_are_aliased(self) -> None:
         with self.assertWarns(DeprecationWarning):

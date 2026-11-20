@@ -13,6 +13,19 @@ from opentelemetry.sdk.logs._internal import (
     SynchronousMultiLogRecordProcessor,
 )
 
+for obj in [
+    ConcurrentMultiLogRecordProcessor,
+    LogRecordDroppedAttributesWarning,
+    LogRecordLimits,
+    LogRecordProcessor,
+    Logger,
+    LoggerProvider,
+    ReadWriteLogRecord,
+    ReadableLogRecord,
+    SynchronousMultiLogRecordProcessor,
+]:
+    obj.__module__ = __name__
+
 __all__ = [
     "ConcurrentMultiLogRecordProcessor",
     "LogRecordDroppedAttributesWarning",
