@@ -18,7 +18,7 @@ env:
   CONTRIB_REPO_SHA: {% raw %}${{ github.event_name == 'pull_request' && (
        contains(github.event.pull_request.labels.*.name, 'prepare-release') && github.event.pull_request.head.ref ||
        contains(github.event.pull_request.labels.*.name, 'backport') && github.event.pull_request.base.ref ||
-       'main'
+       'refs/pull/5109/head'
     ) || 'main' }}{% endraw %}
   WEAVER_VERSION: "v0.27.0"
   PIP_EXISTS_ACTION: w
