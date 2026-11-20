@@ -25,7 +25,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.metrics import MeterProvider, NoOpMeterProvider
+from opentelemetry.metrics import MeterProvider
 from opentelemetry.sdk.environment_variables import (
     OTEL_METRIC_EXPORT_INTERVAL,
     OTEL_METRIC_EXPORT_TIMEOUT,
@@ -67,7 +67,12 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
 )
 from opentelemetry.util._once import Once
 
-from ._metric_reader_metrics import create_metric_reader_metrics
+from ._metric_reader_metrics import (
+    MetricReaderMetrics,
+    MetricReaderMetricsT,
+    NoOpMetricReaderMetrics,
+    create_metric_reader_metrics,
+)
 
 _logger = getLogger(__name__)
 
@@ -379,11 +384,8 @@ class MetricReader(ABC):
                 self._instrument_class_cardinality_limit[_validate_cardinality_limit(typ, limit)] = limit
 
         self._otel_component_type = otel_component_type.value if otel_component_type else type(self).__qualname__
-        self._metrics = create_metric_reader_metrics(
-            self._otel_component_type,
-            NoOpMeterProvider(),
-            parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
-        )
+        self._metrics: MetricReaderMetricsT = NoOpMetricReaderMetrics()
+        self._otel_component_id: int | None = None
 
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
@@ -443,7 +445,10 @@ class MetricReader(ABC):
             self._otel_component_type,
             meter_provider,
             parse_boolean_environment_variable(OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED),
+            component_id=self._otel_component_id,
         )
+        if isinstance(self._metrics, MetricReaderMetrics):
+            self._otel_component_id = self._metrics._component_id
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         self.collect(timeout_millis=timeout_millis)
