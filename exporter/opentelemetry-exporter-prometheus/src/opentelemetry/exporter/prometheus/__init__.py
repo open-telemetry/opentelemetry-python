@@ -383,10 +383,12 @@ class _CustomCollector:
                     for res in self._metrics_datas[0].resource_metrics:
                         attributes = {**attributes, **res.resource.attributes}
 
-                    self._target_info = self._create_info_metric(
-                        _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
-                    )
-                metric_family_id_metric_family[_TARGET_INFO_NAME] = self._target_info
+                    if attributes:
+                        self._target_info = self._create_info_metric(
+                            _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
+                        )
+                if self._target_info is not None:
+                    metric_family_id_metric_family[_TARGET_INFO_NAME] = self._target_info
 
         while self._metrics_datas:
             self._translate_to_prometheus(self._metrics_datas.popleft(), metric_family_id_metric_family)
