@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import opentelemetry.logs._internal as logs_internal
-from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
+from opentelemetry.environment_variables import OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.logs import get_logger_provider, set_logger_provider
 from opentelemetry.test.globals_test import reset_logging_globals
 
@@ -39,7 +39,7 @@ class TestGlobals(unittest.TestCase):
         with (
             patch.dict(
                 "os.environ",
-                {_OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"},
+                {OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"},
             ),
             patch("opentelemetry.logs._internal._load_provider", Mock()),
         ):
