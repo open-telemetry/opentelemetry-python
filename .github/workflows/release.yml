@@ -21,8 +21,13 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
       - name: Install toml
-        run: pip install toml
+        run: |
+          uv sync --locked --only-group toml
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Set environment variables
         run: |
@@ -86,7 +91,7 @@ jobs:
 
       - name: Install twine
         run: |
-          pip install twine
+          uv sync --locked --only-group twine
 
       # The step below publishes to testpypi in order to catch any issues
       # with the package configuration that would cause a failure to upload
