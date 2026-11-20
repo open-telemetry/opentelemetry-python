@@ -3,7 +3,7 @@
 
 import pytest
 
-from opentelemetry._logs import LogRecord, SeverityNumber
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,

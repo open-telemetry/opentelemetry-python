@@ -6,9 +6,9 @@ import os
 import unittest
 from unittest.mock import Mock, patch
 
-from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
-from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.logs import NoOpLoggerProvider, SeverityNumber
+from opentelemetry.logs import get_logger as APIGetLogger
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LoggerProvider,

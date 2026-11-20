@@ -11,11 +11,11 @@ from unittest.mock import Mock, patch
 from google.protobuf.json_format import MessageToDict
 from grpc import ChannelCredentials, Compression
 
-from opentelemetry._logs import LogRecord, SeverityNumber
 from opentelemetry.exporter.otlp.proto.common._internal import _encode_value
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
+from opentelemetry.logs import LogRecord, SeverityNumber
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
