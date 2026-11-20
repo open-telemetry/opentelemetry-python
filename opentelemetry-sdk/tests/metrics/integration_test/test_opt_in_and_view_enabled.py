@@ -114,7 +114,7 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
             metric_readers=[reader],
-            views=[View(instrument_name="test_*", enabled=True)],
+            views=[View(instrument_name="test_*", _enabled=True)],
         )
         meter = meter_provider.get_meter("testmeter")
 
@@ -140,7 +140,7 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
             metric_readers=[reader],
-            views=[View(instrument_name="testhistogram", enabled=True)],
+            views=[View(instrument_name="testhistogram", _enabled=True)],
         )
         meter = meter_provider.get_meter("testmeter")
         histogram = meter.create_histogram(
@@ -161,11 +161,11 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         meter_provider = MeterProvider(
             metric_readers=[reader],
             views=[
-                View(instrument_name="opt_in_counter", enabled=True),
-                View(instrument_name="opt_in_histogram", enabled=True),
+                View(instrument_name="opt_in_counter", _enabled=True),
+                View(instrument_name="opt_in_histogram", _enabled=True),
                 View(
                     instrument_name="override_counter",
-                    enabled=True,
+                    _enabled=True,
                     attribute_keys={"other"},
                 ),
             ],
@@ -213,12 +213,12 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
             views=[
                 View(
                     instrument_name="last_value_counter",
-                    enabled=True,
+                    _enabled=True,
                     aggregation=LastValueAggregation(),
                 ),
                 View(
                     instrument_name="dropped_counter",
-                    enabled=True,
+                    _enabled=True,
                     aggregation=DropAggregation(),
                 ),
             ],
@@ -248,9 +248,9 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
                         View(
                             instrument_name="test_counter",
                             aggregation=SumAggregation(),
-                            enabled=False,
+                            _enabled=False,
                         ),
-                        View(instrument_name="test_*", enabled=False),
+                        View(instrument_name="test_*", _enabled=False),
                     ],
                 )
                 meter = meter_provider.get_meter("testmeter")
@@ -264,8 +264,8 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         meter_provider = MeterProvider(
             metric_readers=[reader],
             views=[
-                View(instrument_name="*", enabled=False),
-                View(instrument_name="enabled_counter", enabled=True),
+                View(instrument_name="*", _enabled=False),
+                View(instrument_name="enabled_counter", _enabled=True),
             ],
         )
         meter = meter_provider.get_meter("testmeter")
@@ -314,7 +314,7 @@ class TestOptInAdvisoryAndViewEnabled(TestCase):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
             metric_readers=[reader],
-            views=[View(instrument_name="view_disabled_counter", enabled=False)],
+            views=[View(instrument_name="view_disabled_counter", _enabled=False)],
         )
         meter = meter_provider.get_meter("testmeter")
         opt_in_counter = meter.create_counter("opt_in_counter", _opt_in_advisory=True)

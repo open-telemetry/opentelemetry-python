@@ -296,7 +296,7 @@ class Test_ViewInstrumentMatch(TestCase):  # pylint: disable=invalid-name
         cases = (
             (
                 "view_enabled_false",
-                View(instrument_name="instrument", enabled=False),
+                View(instrument_name="instrument", _enabled=False),
                 _Counter(
                     name="instrument",
                     instrumentation_scope=Mock(),

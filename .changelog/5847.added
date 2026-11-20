@@ -1,1 +1,1 @@
-`opentelemetry-api`, `opentelemetry-sdk`: add experimental `_opt_in_advisory` metric instrument parameter and `View` `enabled` configuration parameter
+`opentelemetry-api`, `opentelemetry-sdk`: add experimental `_opt_in_advisory` metric instrument parameter and `View` `_enabled` configuration parameter

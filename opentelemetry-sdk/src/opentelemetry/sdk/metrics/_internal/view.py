@@ -97,7 +97,7 @@ class View:
             by the attribute ``otel.metric.overflow=true``. If `None` the
             cardinality limit of the metric reader is used, which defaults to
             2000. Must be a positive integer.
-        enabled: This is a metric stream customizing attribute: whether the
+        _enabled: This is a metric stream customizing attribute: whether the
             metric stream is enabled. If `False`, the metric stream will use
             `DropAggregation` regardless of `aggregation`. If `True`, the
             metric stream is aggregated as if `_opt_in_advisory` were `False`
@@ -125,7 +125,8 @@ class View:
         exemplar_reservoir_factory: Callable[[type[_Aggregation]], ExemplarReservoirBuilder] | None = None,
         instrument_unit: str | None = None,
         aggregation_cardinality_limit: int | None = None,
-        enabled: bool | None = None,
+        *,
+        _enabled: bool | None = None,
     ):
         if aggregation_cardinality_limit is not None and (
             isinstance(aggregation_cardinality_limit, bool)
@@ -136,8 +137,8 @@ class View:
                 f"aggregation_cardinality_limit must be a positive integer, got {aggregation_cardinality_limit!r}"
             )
 
-        if enabled is not None and not isinstance(enabled, bool):
-            raise ValueError(f"enabled must be a bool, got {enabled!r}")
+        if _enabled is not None and not isinstance(_enabled, bool):
+            raise ValueError(f"_enabled must be a bool, got {_enabled!r}")
 
         if (
             instrument_type
@@ -162,8 +163,8 @@ class View:
                 raise Exception(f"View {name} declared with wildcard characters in instrument_name")
 
         # _name, _description, _aggregation, _exemplar_reservoir_factory,
-        # _attribute_keys and _aggregation_cardinality_limit will be accessed
-        # when instantiating a _ViewInstrumentMatch.
+        # _attribute_keys, _aggregation_cardinality_limit, and _enabled will
+        # be accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
@@ -177,7 +178,7 @@ class View:
         self._aggregation = aggregation or self._default_aggregation
         self._exemplar_reservoir_factory = exemplar_reservoir_factory or _default_reservoir_factory
         self._aggregation_cardinality_limit = aggregation_cardinality_limit
-        self._enabled = enabled
+        self._enabled = _enabled
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

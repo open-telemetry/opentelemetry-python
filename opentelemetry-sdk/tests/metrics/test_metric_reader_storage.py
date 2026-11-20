@@ -339,7 +339,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 disabled_view = View(
                     instrument_name="observable_counter",
                     aggregation=aggregation,
-                    enabled=False,
+                    _enabled=False,
                 )
                 metric_reader_storage = MetricReaderStorage(
                     SdkConfiguration(
@@ -404,7 +404,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 view = View(
                     instrument_name="observable_counter",
                     aggregation=aggregation,
-                    enabled=True,
+                    _enabled=True,
                 )
                 metric_reader_storage = MetricReaderStorage(
                     SdkConfiguration(
@@ -879,8 +879,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 exemplar_filter=Mock(),
                 resource=Mock(),
                 views=(
-                    View(instrument_name="observable_counter_0", name="foo", enabled=False),
-                    View(instrument_name="observable_counter_1", name="foo", enabled=False),
+                    View(instrument_name="observable_counter_0", name="foo", _enabled=False),
+                    View(instrument_name="observable_counter_1", name="foo", _enabled=False),
                 ),
             ),
             MagicMock(**{"__getitem__.return_value": AggregationTemporality.CUMULATIVE}),

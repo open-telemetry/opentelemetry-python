@@ -241,14 +241,14 @@ class TestView(TestCase):
         default_view = View(instrument_name="my_counter")
         self.assertIsNone(default_view._enabled)
 
-        enabled_view = View(instrument_name="my_counter", enabled=True)
+        enabled_view = View(instrument_name="my_counter", _enabled=True)
         self.assertTrue(enabled_view._enabled)
 
-        disabled_view = View(instrument_name="my_counter", enabled=False)
+        disabled_view = View(instrument_name="my_counter", _enabled=False)
         self.assertFalse(disabled_view._enabled)
 
     def test_invalid_view_enabled(self):
         for enabled in (0, 1, "false", "true", 1.5):
             with self.subTest(enabled=enabled):
                 with self.assertRaises(ValueError):
-                    View(instrument_name="my_counter", enabled=enabled)
+                    View(instrument_name="my_counter", _enabled=enabled)
