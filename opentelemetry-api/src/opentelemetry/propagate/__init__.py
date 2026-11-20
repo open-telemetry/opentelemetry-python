@@ -19,6 +19,13 @@ Notice that these propagator classes are defined as
 ``opentelemetry_propagator`` entry points in the ``pyproject.toml`` file of
 ``opentelemetry``.
 
+``OTEL_PROPAGATORS`` is read on the first call to ``get_global_textmap()``
+(and therefore on the first ``extract`` or ``inject``), not when this module
+is imported. A distro can import the API and then set the variable from
+``configure()``. ``set_global_textmap()`` always wins over the environment
+variable, including when it is called before that first read. A failed load
+is not cached, so a later call can succeed after the variable is corrected.
+
 Example::
 
     import flask
@@ -55,6 +62,7 @@ Example::
 
 from logging import getLogger
 from os import environ
+from threading import RLock
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
@@ -149,7 +157,13 @@ def _load_propagators() -> textmap.TextMapPropagator:
     return composite.CompositePropagator(_propagators)
 
 
-_HTTP_TEXT_FORMAT: textmap.TextMapPropagator = _load_propagators()
+# None means "not loaded yet". Resolved on the first get_global_textmap() so a
+# distro can set OTEL_PROPAGATORS in configure() after this module is imported.
+# set_global_textmap() stores a real propagator and therefore wins over a later
+# read of the environment variable. Reloading this module clears the cache.
+_HTTP_TEXT_FORMAT: textmap.TextMapPropagator | None = None
+# Reentrant so propagator initialization can call set_global_textmap() on this thread.
+_HTTP_TEXT_FORMAT_LOCK = RLock()
 
 # Deprecated: propagators, environ_propagators and propagator names were never intendended to be part of the public API.
 propagators: list[textmap.TextMapPropagator] = []
@@ -161,11 +175,41 @@ for propagator in environ_propagators.split(","):  # type: ignore[assignment]
 
 
 def get_global_textmap() -> textmap.TextMapPropagator:
-    return _HTTP_TEXT_FORMAT
+    """Return the global text map propagator, loading it on first use.
+
+    The first call reads ``OTEL_PROPAGATORS``. Later calls return the same
+    instance until ``set_global_textmap()`` replaces it or this module is
+    reloaded. A load that raises does not fill the cache.
+
+    Initialization runs under a reentrant lock, so ``set_global_textmap()``
+    during propagator initialization does not deadlock and still takes
+    precedence over the loaded propagator.
+    """
+    current = _HTTP_TEXT_FORMAT
+    if current is not None:
+        return current
+
+    with _HTTP_TEXT_FORMAT_LOCK:
+        current = _HTTP_TEXT_FORMAT
+        if current is not None:
+            return current
+        loaded = _load_propagators()
+        # set_global_textmap() during initialization takes precedence.
+        current = _HTTP_TEXT_FORMAT
+        if current is not None:
+            return current
+        set_global_textmap(loaded)
+        return loaded
 
 
 def set_global_textmap(
     http_text_format: textmap.TextMapPropagator,
 ) -> None:
+    """Set the global text map propagator.
+
+    Takes precedence over ``OTEL_PROPAGATORS``, whether or not that variable
+    has already been read.
+    """
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format
+    with _HTTP_TEXT_FORMAT_LOCK:
+        _HTTP_TEXT_FORMAT = http_text_format
