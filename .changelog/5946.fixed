@@ -1,0 +1,1 @@
+`opentelemetry-exporter-zipkin-json`: account for JSON escaping when truncating sequence tag values to `max_tag_value_length`, so truncated tags stay valid JSON
