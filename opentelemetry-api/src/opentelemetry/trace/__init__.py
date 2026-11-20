@@ -428,10 +428,18 @@ class Tracer(ABC):
         """Experimental: create a span with extensible options.
 
         Args:
-            type_: Identifies the class of spans, for example ``"http.client.request"``.
-                Immutable after creation. Must be a case-sensitive ASCII string of
-                at most 255 characters starting with a letter, followed by letters,
-                digits, ``_``, ``.``, ``-`` or ``/``. Validated by the SDK.
+            type_: Identifies the class of spans defined by semantic conventions,
+                for example ``"http.client.request"``. Immutable after creation;
+                empty is the same as unset. The span type:
+
+                - is expected to uniquely identify the span structure (name
+                  format, kind, attributes, error conditions, operation scope);
+                - MUST have low cardinality, typically lower than the span name;
+                - MUST be a case-sensitive ASCII string of at most 255 characters
+                  starting with a letter, followed by letters, digits, ``_`` or
+                  ``.``.
+
+                Not validated by the API; the SDK drops invalid values.
             options: Additional span creation options. Unsupported fields are
                 ignored. Omitting options preserves :meth:`start_span` behavior.
 

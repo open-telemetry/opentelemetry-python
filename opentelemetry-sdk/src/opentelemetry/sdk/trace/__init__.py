@@ -78,10 +78,11 @@ from opentelemetry.util._decorator import _agnosticcontextmanager
 logger = logging.getLogger(__name__)
 
 _SPAN_TYPE_ERROR_MESSAGE = (
-    "Dropping span type: expected ASCII string of maximum length 255 characters starting with a letter but got %s"
+    "Dropping span type: expected ASCII string of maximum length 255 characters "
+    "starting with a letter, followed by letters, digits, '_' or '.' but got %s"
 )
 
-_SPAN_TYPE_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_./-]{0,254}")
+_SPAN_TYPE_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_.]{0,254}")
 
 
 def _is_valid_span_type(span_type: object) -> bool:
@@ -1255,8 +1256,7 @@ class Tracer(trace_api.Tracer):
         type_: str | None = None,
         options: _SpanOptions | None = None,
     ) -> trace_api.Span:
-        if type_ is not None:
-            type_ = _checked_span_type(type_)
+        type_ = _checked_span_type(type_) if type_ else None
         return self._new_span(
             name,
             context,
@@ -1285,8 +1285,7 @@ class Tracer(trace_api.Tracer):
         type_: str | None = None,
         options: _SpanOptions | None = None,
     ) -> Iterator[trace_api.Span]:
-        if type_ is not None:
-            type_ = _checked_span_type(type_)
+        type_ = _checked_span_type(type_) if type_ else None
         span = self._new_span(
             name,
             context,

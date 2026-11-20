@@ -964,19 +964,26 @@ class TestSpanType(unittest.TestCase):
 
     def test_span_type_valid_syntax(self):
         tracer = new_tracer()
-        for span_type in ("a", "A_b.c-d/e9", "a" * 255):
+        for span_type in ("a", "A_b.c9", "a" * 255):
             with self.subTest(type_=span_type):
                 self.assertEqual(
                     tracer._start_span_with_options("s", type_=span_type)._type,
                     span_type,
                 )
 
+    def test_span_type_empty_is_unset(self):
+        tracer = new_tracer()
+        with self.assertNoLogs(level=ERROR):
+            span = tracer._start_span_with_options("s", type_="")
+        self.assertIsNone(span._type)
+
     def test_span_type_invalid_syntax(self):
         tracer = new_tracer()
         for span_type in (
-            "",
             "1abc",
             "_abc",
+            "a-b",
+            "a/b",
             "a b",
             "a!",
             "abc\n",
