@@ -201,13 +201,12 @@ class OTLPLogExporter(LogRecordExporter):
                 return LogRecordExportResult.FAILURE
 
             export_result = self._client.export(serialized_data)
+            if export_result.status_code is not None:
+                result.response_attrs = {HTTP_RESPONSE_STATUS_CODE: export_result.status_code}
             if not export_result.success:
                 result.error = export_result.error
-                result.error_attrs = (
-                    {HTTP_RESPONSE_STATUS_CODE: export_result.status_code}
-                    if export_result.status_code is not None
-                    else None
-                )
+                if export_result.status_code is not None:
+                    result.error_type = str(export_result.status_code)
                 return LogRecordExportResult.FAILURE
         return LogRecordExportResult.SUCCESS
 

@@ -508,6 +508,12 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIn("otel.sdk.exporter.operation.duration", names)
         for metric in metrics:
             self.assert_standard_metric_attrs(metric.data.data_points[0].attributes)
+            self.assertNotIn("error.type", metric.data.data_points[0].attributes)
+        duration_metric = next(m for m in metrics if m.name == "otel.sdk.exporter.operation.duration")
+        self.assertEqual(
+            duration_metric.data.data_points[0].attributes["http.response.status_code"],
+            200,
+        )
 
     @patch.dict("os.environ", {OTEL_PYTHON_SDK_INTERNAL_METRICS_ENABLED: "true"})
     @mocketize
@@ -528,6 +534,9 @@ class TestOTLPMetricExporter(TestCase):
             duration_metric.data.data_points[0].attributes["http.response.status_code"],
             401,
         )
+        self.assertEqual(duration_metric.data.data_points[0].attributes["error.type"], "401")
+        exported = next(m for m in metrics if m.name == "otel.sdk.exporter.metric_data_point.exported")
+        self.assertEqual(exported.data.data_points[0].attributes["error.type"], "401")
 
     @mocketize
     def test_export_max_export_batch_size_single_batch_integration(self):

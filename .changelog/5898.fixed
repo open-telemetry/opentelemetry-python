@@ -1,0 +1,1 @@
+`opentelemetry-exporter-otlp-proto-http`, `opentelemetry-exporter-otlp-proto-grpc`: record `error.type` for HTTP 4xx/5xx export failures and record response status codes on successful exports in the exporter self-observability metrics.
