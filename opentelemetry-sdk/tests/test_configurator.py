@@ -1250,13 +1250,41 @@ class TestExporterNames(TestCase):
         {
             "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
             "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP,
             "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
             "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL": "grpc",
+            "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL": "grpc",
         },
     )
     def test_otlp_custom_exporter(self):
         self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP])
         self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC])
+        self.assertEqual(_get_exporter_names("logs"), [_EXPORTER_OTLP_PROTO_GRPC])
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+        },
+    )
+    def test_otlp_exporter_with_protocol(self):
+        for signal_type in ("traces", "metrics", "logs"):
+            with self.subTest(signal_type=signal_type):
+                self.assertEqual(_get_exporter_names(signal_type), [_EXPORTER_OTLP_PROTO_GRPC])
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_EXPORTER_OTLP_PROTOCOL": "invalid",
+        },
+    )
+    def test_otlp_exporter_unsupported_protocol(self):
+        with self.assertRaises(RuntimeError):
+            _get_exporter_names("logs")
 
     @patch.dict(
         environ,
@@ -1277,9 +1305,9 @@ class TestExporterNames(TestCase):
             self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC])
         assert len(logs_context.output) == 1
 
-    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "zipkin"})
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "zipkin, otlp"})
     def test_multiple_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names("traces")), ["zipkin"])
+        self.assertEqual(_get_exporter_names("traces"), ["zipkin", _EXPORTER_OTLP_PROTO_GRPC])
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
     def test_none_exporters(self):
