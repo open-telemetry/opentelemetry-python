@@ -12,6 +12,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
 from opentelemetry.exporter.otlp.proto.common._internal.trace_encoder import (
     _SPAN_KIND_MAP,
     _encode_status,
+    _span_flags,
 )
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import encode_spans
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -24,6 +25,10 @@ from opentelemetry.proto.common.v1.common_pb2 import (
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
+)
+from opentelemetry.proto.trace.v1.trace_pb2 import (
+    SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK,
+    SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
     ResourceSpans as PB2ResourceSpans,
@@ -248,7 +253,7 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                                         code=SDKStatusCode.ERROR.value,
                                         message="Example description",
                                     ),
-                                    flags=0x300,
+                                    flags=0x301,
                                 )
                             ],
                         ),
@@ -423,3 +428,70 @@ class TestOTLPTraceEncoder(unittest.TestCase):
                 code=SDKStatusCode.ERROR.value,
             ),
         )
+
+    def test_span_flags(self):
+        trace_id = 0x3E0C63257DE34C926F9EFCD03927272E
+        cases = [
+            (
+                "sampled_remote_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x1110,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.SAMPLED,
+                ),
+                SDKSpanContext(trace_id, 0x1111, is_remote=True),
+                (SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED),
+            ),
+            (
+                "random_trace_id_remote_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x1110,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.RANDOM_TRACE_ID,
+                ),
+                SDKSpanContext(trace_id, 0x1111, is_remote=True),
+                (
+                    SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK
+                    | SPAN_FLAGS_CONTEXT_IS_REMOTE_MASK
+                    | SDKTraceFlags.RANDOM_TRACE_ID
+                ),
+            ),
+            (
+                "sampled_random_trace_id_local_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x2220,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.SAMPLED | SDKTraceFlags.RANDOM_TRACE_ID,
+                ),
+                SDKSpanContext(trace_id, 0x2222, is_remote=False),
+                (SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED | SDKTraceFlags.RANDOM_TRACE_ID),
+            ),
+            (
+                "unsampled_local_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x2220,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.DEFAULT,
+                ),
+                SDKSpanContext(trace_id, 0x2222, is_remote=False),
+                SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK,
+            ),
+            (
+                "no_parent",
+                SDKSpanContext(
+                    trace_id,
+                    0x3330,
+                    is_remote=False,
+                    trace_flags=SDKTraceFlags.SAMPLED,
+                ),
+                None,
+                (SPAN_FLAGS_CONTEXT_HAS_IS_REMOTE_MASK | SDKTraceFlags.SAMPLED),
+            ),
+        ]
+        for name, span_context, parent_context, expected_flags in cases:
+            with self.subTest(name=name):
+                self.assertEqual(_span_flags(span_context, parent_context), expected_flags)
