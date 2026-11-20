@@ -28,8 +28,14 @@ value `REDACTED`:
 * [`X-Amz-Signature`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-authentication-methods.html)
 * [`X-Amz-Credential`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-authentication-methods.html)
 * [`X-Amz-Security-Token`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-authentication-methods.html)
+* [`AWSAccessKeyId`](https://docs.aws.amazon.com/AmazonS3/latest/developerguide/RESTAuthentication.html#RESTAuthenticationQueryStringAuth)
+* [`Signature`](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-canned-policy.html)
 * [`sig`](https://learn.microsoft.com/azure/storage/common/storage-sas-overview#sas-token)
 * [`X-Goog-Signature`](https://cloud.google.com/storage/docs/access-control/signed-urls)
+
+Several of these keys are used by more than one service or signing scheme. Each link
+points to one representative usage rather than an exhaustive list, and does not narrow
+the scope of the key to the linked service or signing scheme.
 
 This list is subject to change over time.
 
@@ -64,8 +70,14 @@ Query string values for the following keys SHOULD be redacted by default and rep
 * [`X-Amz-Signature`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-authentication-methods.html)
 * [`X-Amz-Credential`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-authentication-methods.html)
 * [`X-Amz-Security-Token`](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_sigv-authentication-methods.html)
+* [`AWSAccessKeyId`](https://docs.aws.amazon.com/AmazonS3/latest/developerguide/RESTAuthentication.html#RESTAuthenticationQueryStringAuth)
+* [`Signature`](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-canned-policy.html)
 * [`sig`](https://learn.microsoft.com/azure/storage/common/storage-sas-overview#sas-token)
 * [`X-Goog-Signature`](https://cloud.google.com/storage/docs/access-control/signed-urls)
+
+Several of these keys are used by more than one service or signing scheme. Each link
+points to one representative usage rather than an exhaustive list, and does not narrow
+the scope of the key to the linked service or signing scheme.
 
 This list is subject to change over time.
 

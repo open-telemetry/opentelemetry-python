@@ -74,7 +74,7 @@ def create_db_client_connection_idle_min(meter: Meter) -> UpDownCounter:
     )
 
 
-DB_CLIENT_CONNECTION_MAX: Final = "db.client.connection.max"
+DB_CLIENT_CONNECTION_LIMIT: Final = "db.client.connection.limit"
 """
 The maximum number of open connections allowed
 Instrument: updowncounter
@@ -82,11 +82,26 @@ Unit: {connection}
 """
 
 
-def create_db_client_connection_max(meter: Meter) -> UpDownCounter:
+def create_db_client_connection_limit(meter: Meter) -> UpDownCounter:
     """The maximum number of open connections allowed"""
     return meter.create_up_down_counter(
-        name=DB_CLIENT_CONNECTION_MAX,
+        name=DB_CLIENT_CONNECTION_LIMIT,
         description="The maximum number of open connections allowed.",
+        unit="{connection}",
+    )
+
+
+DB_CLIENT_CONNECTION_MAX: Final = "db.client.connection.max"
+"""
+Deprecated: Replaced by `db.client.connection.limit`.
+"""
+
+
+def create_db_client_connection_max(meter: Meter) -> UpDownCounter:
+    """Deprecated, use `db.client.connection.limit` instead"""
+    return meter.create_up_down_counter(
+        name=DB_CLIENT_CONNECTION_MAX,
+        description="Deprecated, use `db.client.connection.limit` instead.",
         unit="{connection}",
     )
 
@@ -206,15 +221,15 @@ def create_db_client_connections_idle_min(meter: Meter) -> UpDownCounter:
 
 DB_CLIENT_CONNECTIONS_MAX: Final = "db.client.connections.max"
 """
-Deprecated: Replaced by `db.client.connection.max`.
+Deprecated: Replaced by `db.client.connection.limit`.
 """
 
 
 def create_db_client_connections_max(meter: Meter) -> UpDownCounter:
-    """Deprecated, use `db.client.connection.max` instead"""
+    """Deprecated, use `db.client.connection.limit` instead"""
     return meter.create_up_down_counter(
         name=DB_CLIENT_CONNECTIONS_MAX,
-        description="Deprecated, use `db.client.connection.max` instead.",
+        description="Deprecated, use `db.client.connection.limit` instead.",
         unit="{connection}",
     )
 
