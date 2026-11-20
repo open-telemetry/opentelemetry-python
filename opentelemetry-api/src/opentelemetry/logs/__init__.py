@@ -34,6 +34,18 @@ from opentelemetry.logs._internal import (
 )
 from opentelemetry.logs.severity import SeverityNumber
 
+for obj in [
+    LogRecord,
+    Logger,
+    LoggerProvider,
+    NoOpLogger,
+    NoOpLoggerProvider,
+    get_logger,
+    get_logger_provider,
+    set_logger_provider,
+]:
+    obj.__module__ = __name__
+
 __all__ = [
     "LogRecord",
     "Logger",
