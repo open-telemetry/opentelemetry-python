@@ -14,6 +14,7 @@ from opentelemetry.sdk.trace import (
     SpanProcessor,
     TracerProvider,
     _default_tracer_configurator,
+    _is_valid_span_type,
     _RuleBasedTracerConfigurator,
     _TracerConfig,
     sampling,
@@ -146,6 +147,70 @@ def test_simple_start_as_current_span(benchmark):
             span.add_event("benchmarkEvent")
 
     benchmark(benchmark_start_as_current_span)
+
+
+def _record_mean_alloc_bytes(benchmark, func, *args):
+    func(*args)  # warm-up so one-time caches aren't counted
+    peaks = []
+    for _ in range(200):
+        tracemalloc.start()
+        func(*args)
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        peaks.append(peak)
+    benchmark.extra_info["mean_alloc_bytes"] = sum(peaks) / len(peaks)
+
+
+def _start_span_no_type():
+    span = tracer.start_span("benchmarkedSpan", attributes={"long.attribute": -10000000001000000000})
+    span.add_event("benchmarkEvent")
+    span.end()
+
+
+def _start_span_type():
+    span = tracer.start_span(
+        "benchmarkedSpan",
+        attributes={"long.attribute": -10000000001000000000},
+        _type="http.client.request",
+    )
+    span.add_event("benchmarkEvent")
+    span.end()
+
+
+def _start_as_current_span_no_type():
+    with tracer.start_as_current_span("benchmarkedSpan", attributes={"long.attribute": -10000000001000000000}) as span:
+        span.add_event("benchmarkEvent")
+
+
+def _start_as_current_span_type():
+    with tracer.start_as_current_span(
+        "benchmarkedSpan",
+        attributes={"long.attribute": -10000000001000000000},
+        _type="http.client.request",
+    ) as span:
+        span.add_event("benchmarkEvent")
+
+
+@pytest.mark.parametrize("func", [_start_span_no_type, _start_span_type], ids=["no_type", "type"])
+def test_start_span_type(benchmark, func):
+    _record_mean_alloc_bytes(benchmark, func)
+    benchmark(func)
+
+
+@pytest.mark.parametrize("func", [_start_as_current_span_no_type, _start_as_current_span_type], ids=["no_type", "type"])
+def test_start_as_current_span_type(benchmark, func):
+    _record_mean_alloc_bytes(benchmark, func)
+    benchmark(func)
+
+
+@pytest.mark.parametrize(
+    "span_type",
+    ["http.client.request", "gen_ai.client.inference.operation", "a" * 255, "invalid type"],
+    ids=["19_chars", "33_chars", "255_chars", "invalid"],
+)
+def test_is_valid_span_type(benchmark, span_type):
+    _record_mean_alloc_bytes(benchmark, _is_valid_span_type, span_type)
+    benchmark(_is_valid_span_type, span_type)
 
 
 class _EventsReadingProcessor(SpanProcessor):

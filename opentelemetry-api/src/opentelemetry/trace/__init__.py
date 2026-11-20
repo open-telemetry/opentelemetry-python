@@ -283,6 +283,8 @@ class Tracer(SignatureCompatABC):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        *,
+        _type: str | None = None,
     ) -> "Span":
         """Starts a span.
 
@@ -321,6 +323,20 @@ class Tracer(SignatureCompatABC):
                 be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
                 this mechanism if it was previously set manually.
+            _type: Experimental. Identifies the class of spans defined by
+                semantic conventions, for example ``"http.client.request"``.
+                Immutable after creation; empty is the same as unset. The span
+                type:
+
+                - is expected to uniquely identify the span structure (name
+                  format, kind, attributes, error conditions, operation scope);
+                - MUST have low cardinality, typically lower than the span name;
+                - MUST be a case-sensitive ASCII string of at most 255 characters
+                  starting with a letter, followed by letters, digits, ``_`` or
+                  ``.``.
+
+                Not validated by the API; the SDK drops invalid values.
+                Becomes public as ``type`` once span type is stable.
 
         Returns:
             The newly-created span.
@@ -339,6 +355,8 @@ class Tracer(SignatureCompatABC):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        *,
+        _type: str | None = None,
     ) -> Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -396,6 +414,7 @@ class Tracer(SignatureCompatABC):
                 this mechanism if it was previously set manually.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
+            _type: Experimental span type, see :meth:`start_span`.
 
         Yields:
             The newly-created span.
@@ -458,6 +477,8 @@ class NoOpTracer(Tracer):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        *,
+        _type: str | None = None,
     ) -> "Span":
         current_span = get_current_span(context)
         if isinstance(current_span, NonRecordingSpan):
@@ -485,6 +506,8 @@ class NoOpTracer(Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        *,
+        _type: str | None = None,
     ) -> Iterator["Span"]:
         span = self.start_span(
             name=name,

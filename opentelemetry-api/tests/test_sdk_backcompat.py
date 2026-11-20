@@ -174,6 +174,20 @@ class TestFrozenTracer(TraceGlobalsTest):
 
         self.assertEqual(provider.tracer.spans, [("work", trace.SpanKind.CLIENT, None)])
 
+    def test_span_type(self) -> None:
+        tracer = trace.get_tracer("my.library")
+        provider = FrozenTracerProvider()
+        trace.set_tracer_provider(provider)
+
+        tracer.start_span("GET", _type="http.client.request")
+        with tracer.start_as_current_span("POST", _type="http.client.request"):
+            pass
+
+        self.assertEqual(
+            provider.tracer.spans,
+            [("GET", trace.SpanKind.INTERNAL, None), ("POST", trace.SpanKind.INTERNAL, None)],
+        )
+
 
 class TestFrozenMeter(MetricsGlobalsTest):
     def test_instruments_created_before_provider_is_set(self) -> None:

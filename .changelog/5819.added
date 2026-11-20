@@ -1,0 +1,1 @@
+`opentelemetry-api`, `opentelemetry-sdk`: Add experimental `_type` keyword argument to `Tracer.start_span` and `Tracer.start_as_current_span`; the SDK validates span type and exposes it on `ReadableSpan._type`
