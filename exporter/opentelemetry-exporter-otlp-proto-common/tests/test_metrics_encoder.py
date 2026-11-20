@@ -373,6 +373,83 @@ class TestOTLPMetricsEncoder(unittest.TestCase):
         actual = encode_metrics(metrics_data)
         self.assertEqual(expected, actual)
 
+    def test_encode_gauge_with_start_time(self):
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        attributes={"a": 1, "b": False},
+                        schema_url="resource_schema_url",
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="first_name",
+                                version="first_version",
+                                schema_url="instrumentation_scope_schema_url",
+                            ),
+                            metrics=[
+                                _generate_gauge(
+                                    "gauge_start_time",
+                                    42,
+                                    start_time_unix_nano=1641946015139533244,
+                                )
+                            ],
+                            schema_url="instrumentation_scope_schema_url",
+                        )
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
+        )
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                pb2.ResourceMetrics(
+                    schema_url="resource_schema_url",
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(key="b", value=AnyValue(bool_value=False)),
+                        ]
+                    ),
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(name="first_name", version="first_version"),
+                            schema_url="instrumentation_scope_schema_url",
+                            metrics=[
+                                pb2.Metric(
+                                    name="gauge_start_time",
+                                    unit="s",
+                                    description="foo",
+                                    gauge=pb2.Gauge(
+                                        data_points=[
+                                            pb2.NumberDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(int_value=1),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(bool_value=True),
+                                                    ),
+                                                ],
+                                                time_unix_nano=1641946016139533244,
+                                                start_time_unix_nano=1641946015139533244,
+                                                as_int=42,
+                                            )
+                                        ],
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        actual = encode_metrics(metrics_data)
+        self.assertEqual(expected, actual)
+
     def test_encode_histogram(self):
         metrics_data = MetricsData(
             resource_metrics=[

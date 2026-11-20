@@ -371,9 +371,11 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         attributes: Attributes,
         reservoir_builder: ExemplarReservoirBuilder,
         instrument_is_synchronous: bool,
+        start_time_unix_nano: int = 0,
     ):
         super().__init__(attributes, reservoir_builder)
         self._instrument_is_synchronous = instrument_is_synchronous
+        self._start_time_unix_nano = start_time_unix_nano
         self._value = None
 
     def aggregate(self, measurement: Measurement, should_sample_exemplar: bool = True):
@@ -391,6 +393,9 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         Atomically return a point for the current value of the metric.
         """
         with self._lock:
+            start_time_unix_nano = self._start_time_unix_nano
+            if collection_aggregation_temporality is AggregationTemporality.DELTA:
+                self._start_time_unix_nano = collection_start_nano
             if self._value is None:
                 return None
             value = self._value
@@ -405,7 +410,7 @@ class _LastValueAggregation(_Aggregation[GaugePoint]):
         return NumberDataPoint(
             attributes=self._attributes,
             exemplars=exemplars,
-            start_time_unix_nano=None,
+            start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=collection_start_nano,
             value=value,
         )
@@ -1189,6 +1194,7 @@ class DefaultAggregation(Aggregation):
                 attributes,
                 reservoir_builder=reservoir_factory(_LastValueAggregation),
                 instrument_is_synchronous=False,
+                start_time_unix_nano=start_time_unix_nano,
             )
 
         if isinstance(instrument, _Gauge):
@@ -1196,6 +1202,7 @@ class DefaultAggregation(Aggregation):
                 attributes,
                 reservoir_builder=reservoir_factory(_LastValueAggregation),
                 instrument_is_synchronous=True,
+                start_time_unix_nano=start_time_unix_nano,
             )
 
         # pylint: disable=broad-exception-raised
@@ -1347,6 +1354,7 @@ class LastValueAggregation(Aggregation):
             attributes,
             reservoir_builder=reservoir_factory(_LastValueAggregation),
             instrument_is_synchronous=isinstance(instrument, Synchronous),
+            start_time_unix_nano=start_time_unix_nano,
         )
 
 
