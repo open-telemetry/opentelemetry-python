@@ -504,30 +504,59 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 mock_log_module = MagicMock()
                 mock_log_module.OTLPLogExporter = mock_exporter_cls
 
-                with patch.dict(
-                    sys.modules,
-                    {
-                        "opentelemetry.exporter.otlp.proto.http": MagicMock(),
-                        "opentelemetry.exporter.otlp.common.http": MagicMock(),
-                        f"opentelemetry.exporter.otlp.{protocol}.http._log_exporter": mock_log_module,
-                    },
+                with (
+                    tempfile.TemporaryDirectory() as tmp_dir,
+                    patch.dict(
+                        sys.modules,
+                        {
+                            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                            f"opentelemetry.exporter.otlp.{protocol}.http._log_exporter": mock_log_module,
+                        },
+                    ),
                 ):
+                    paths = {}
+                    for name in ("ca", "client", "client_key"):
+                        paths[name] = os.path.join(tmp_dir, f"{name}.pem")
+                        with open(paths[name], "wb") as file:
+                            file.write(b"data")
+
                     config = LogRecordExporterConfig(
                         otlp_http=OtlpHttpExporterConfig(
                             encoding=encoding,
                             tls=HttpTlsConfig(
-                                ca_file="/certs/ca.pem",
-                                key_file="/certs/client.key",
-                                cert_file="/certs/client.pem",
+                                ca_file=paths["ca"],
+                                key_file=paths["client_key"],
+                                cert_file=paths["client"],
                             ),
                         )
                     )
                     _create_log_record_exporter(config)
 
                 call_kwargs = mock_exporter_cls.call_args.kwargs
-                self.assertEqual(call_kwargs["certificate_file"], "/certs/ca.pem")
-                self.assertEqual(call_kwargs["client_key_file"], "/certs/client.key")
-                self.assertEqual(call_kwargs["client_certificate_file"], "/certs/client.pem")
+                self.assertEqual(call_kwargs["certificate_file"], paths["ca"])
+                self.assertEqual(call_kwargs["client_key_file"], paths["client_key"])
+                self.assertEqual(call_kwargs["client_certificate_file"], paths["client"])
+
+    def test_otlp_http_tls_missing_file_raises(self):
+        mock_log_module = MagicMock()
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                    "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            config = LogRecordExporterConfig(
+                otlp_http=OtlpHttpExporterConfig(tls=HttpTlsConfig(ca_file=os.path.join(tmp_dir, "missing.pem")))
+            )
+            _create_log_record_exporter(config)
+        self.assertIn("tls.ca_file", str(ctx.exception))
+        mock_log_module.OTLPLogExporter.assert_not_called()
 
     def test_otlp_grpc_http_endpoint_overrides_tls_insecure(self):
         mock_exporter_cls = MagicMock()
