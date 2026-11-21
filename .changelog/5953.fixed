@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: drop stale trace ids from exemplars recorded outside a span

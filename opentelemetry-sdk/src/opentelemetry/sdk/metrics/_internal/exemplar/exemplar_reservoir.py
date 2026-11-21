@@ -101,6 +101,9 @@ class ExemplarBucket:
             span_context = span.get_span_context()
             self.__span_id = span_context.span_id
             self.__trace_id = span_context.trace_id
+        else:
+            self.__span_id = None
+            self.__trace_id = None
 
         self.__offered = True
 
