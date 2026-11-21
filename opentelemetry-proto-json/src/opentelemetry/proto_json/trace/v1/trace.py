@@ -244,7 +244,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             if (_value := data.get("attributes")) is not None:
                 _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
             if (_value := data.get("droppedAttributesCount")) is not None:
-                opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
+                opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_attributes_count")
                 _args["dropped_attributes_count"] = _value
 
             return cls(**_args)
@@ -309,10 +309,10 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
             if (_value := data.get("attributes")) is not None:
                 _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
             if (_value := data.get("droppedAttributesCount")) is not None:
-                opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
+                opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_attributes_count")
                 _args["dropped_attributes_count"] = _value
             if (_value := data.get("flags")) is not None:
-                opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
+                opentelemetry.proto_json._json_codec.validate_int_type(_value, "flags")
                 _args["flags"] = _value
 
             return cls(**_args)
@@ -400,7 +400,7 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("parentSpanId")) is not None:
             _args["parent_span_id"] = opentelemetry.proto_json._json_codec.decode_hex(_value, "parent_span_id")
         if (_value := data.get("flags")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "flags")
             _args["flags"] = _value
         if (_value := data.get("name")) is not None:
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "name")
@@ -414,17 +414,17 @@ class Span(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("events")) is not None:
             _args["events"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Span.Event.from_dict(_v), "events")
         if (_value := data.get("droppedEventsCount")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_events_count")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_events_count")
             _args["dropped_events_count"] = _value
         if (_value := data.get("links")) is not None:
             _args["links"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Span.Link.from_dict(_v), "links")
         if (_value := data.get("droppedLinksCount")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_links_count")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_links_count")
             _args["dropped_links_count"] = _value
         if (_value := data.get("status")) is not None:
             _args["status"] = Status.from_dict(_value)

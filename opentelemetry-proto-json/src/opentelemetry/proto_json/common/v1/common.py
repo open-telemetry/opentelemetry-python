@@ -70,7 +70,7 @@ class AnyValue(opentelemetry.proto_json._json_codec.JsonMessage):
         _args = {}
 
         if (_value := data.get("stringValueStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "string_value_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "string_value_strindex")
             _args["string_value_strindex"] = _value
         elif (_value := data.get("bytesValue")) is not None:
             _args["bytes_value"] = opentelemetry.proto_json._json_codec.decode_base64(_value, "bytes_value")
@@ -221,7 +221,7 @@ class KeyValue(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("value")) is not None:
             _args["value"] = AnyValue.from_dict(_value)
         if (_value := data.get("keyStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "key_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "key_strindex")
             _args["key_strindex"] = _value
 
         return cls(**_args)
@@ -280,7 +280,7 @@ class InstrumentationScope(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
 
         return cls(**_args)

@@ -58,7 +58,7 @@ class Resource(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("entityRefs")) is not None:
             _args["entity_refs"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.EntityRef.from_dict(_v), "entity_refs")

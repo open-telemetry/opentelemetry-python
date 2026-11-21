@@ -19,6 +19,7 @@ from opentelemetry.codegen.json.runtime.json_codec import (
     encode_hex,
     encode_int64,
     encode_repeated,
+    validate_int_type,
     validate_type,
 )
 
@@ -198,33 +199,35 @@ def test_validate_type() -> None:
     validate_type("s", str, "field")
     validate_type(1, int, "field")
     validate_type(True, bool, "field")
-    validate_type(False, (bool, str), "field")
     validate_type(1, (int, str), "field")
     validate_type("s", (int, str), "field")
 
     with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got str"):
         validate_type("s", int, "field")
 
-    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got bool"):
-        validate_type(True, int, "field")
-
-    with pytest.raises(
-        TypeError,
-        match=r"Field 'field' expected \(<class 'int'>, <class 'str'>\), got bool",
-    ):
-        validate_type(False, (int, str), "field")
-
-    with pytest.raises(
-        TypeError,
-        match=r"Field 'field' expected \(<class 'float'>, <class 'int'>, <class 'str'>\), got bool",
-    ):
-        validate_type(True, (float, int, str), "field")
-
     with pytest.raises(
         TypeError,
         match=r"Field 'field' expected \(<class 'int'>, <class 'float'>\), got str",
     ):
         validate_type("s", (int, float), "field")
+
+
+def test_validate_int_type() -> None:
+    validate_int_type(0, "field")
+    validate_int_type(1, "field")
+    validate_int_type(_Color.GREEN, "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got bool"):
+        validate_int_type(True, "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got bool"):
+        validate_int_type(False, "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got str"):
+        validate_int_type("1", "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got float"):
+        validate_int_type(1.0, "field")
 
 
 @pytest.mark.parametrize(
