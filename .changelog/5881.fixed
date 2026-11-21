@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: Preserve the original casing of metric instrument names.

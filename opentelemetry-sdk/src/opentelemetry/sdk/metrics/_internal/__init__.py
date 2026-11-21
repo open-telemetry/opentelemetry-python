@@ -128,6 +128,16 @@ class Meter(APIMeter):
     def _set_meter_config(self, meter_config: _MeterConfig) -> None:
         self._meter_config.update(meter_config)
 
+    @staticmethod
+    def _log_instrument_name_conflict(name: str, registered_name: str) -> None:
+        """Report a different spelling of an already registered instrument name."""
+        if name != registered_name:
+            _logger.warning(
+                "An instrument with name %s has been created already using the name %s and will be used instead.",
+                name,
+                registered_name,
+            )
+
     def create_counter(
         self,
         name,
@@ -152,6 +162,8 @@ class Meter(APIMeter):
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
+
+        self._log_instrument_name_conflict(name, instrument.name)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -190,6 +202,8 @@ class Meter(APIMeter):
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
+
+        self._log_instrument_name_conflict(name, instrument.name)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -233,6 +247,8 @@ class Meter(APIMeter):
 
         if not status.already_registered:
             self._measurement_consumer.register_asynchronous_instrument(instrument)
+
+        self._log_instrument_name_conflict(name, instrument.name)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -279,6 +295,8 @@ class Meter(APIMeter):
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
 
+        self._log_instrument_name_conflict(name, instrument.name)
+
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
@@ -316,6 +334,8 @@ class Meter(APIMeter):
                     _meter_config=self._meter_config,
                 )
             instrument = self._instrument_id_instrument[status.instrument_id]
+
+        self._log_instrument_name_conflict(name, instrument.name)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
@@ -360,6 +380,8 @@ class Meter(APIMeter):
         if not status.already_registered:
             self._measurement_consumer.register_asynchronous_instrument(instrument)
 
+        self._log_instrument_name_conflict(name, instrument.name)
+
         if status.conflict:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
@@ -402,6 +424,8 @@ class Meter(APIMeter):
 
         if not status.already_registered:
             self._measurement_consumer.register_asynchronous_instrument(instrument)
+
+        self._log_instrument_name_conflict(name, instrument.name)
 
         if status.conflict:
             # FIXME #2558 go through all views here and check if this

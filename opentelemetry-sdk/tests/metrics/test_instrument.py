@@ -36,7 +36,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 class TestCounter(TestCase):
     def testname(self):
         self.assertEqual(_Counter("name", Mock(), Mock()).name, "name")
-        self.assertEqual(_Counter("Name", Mock(), Mock()).name, "name")
+        self.assertEqual(_Counter("Name", Mock(), Mock()).name, "Name")
 
     def test_add(self):
         mc = Mock()
@@ -154,7 +154,7 @@ def generator_callback_1():
 class TestObservableGauge(TestCase):
     def testname(self):
         self.assertEqual(_ObservableGauge("name", Mock(), Mock()).name, "name")
-        self.assertEqual(_ObservableGauge("Name", Mock(), Mock()).name, "name")
+        self.assertEqual(_ObservableGauge("Name", Mock(), Mock()).name, "Name")
 
     def test_callable_callback_0(self):
         observable_gauge = _ObservableGauge("name", Mock(), Mock(), [callable_callback_0])
@@ -428,7 +428,7 @@ class TestObservableCounter(TestCase):
 class TestGauge(TestCase):
     def testname(self):
         self.assertEqual(_Gauge("name", Mock(), Mock()).name, "name")
-        self.assertEqual(_Gauge("Name", Mock(), Mock()).name, "name")
+        self.assertEqual(_Gauge("Name", Mock(), Mock()).name, "Name")
 
     def test_set(self):
         mc = Mock()
