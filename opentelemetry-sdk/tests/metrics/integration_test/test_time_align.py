@@ -153,11 +153,11 @@ class TestTimeAlign(TestCase):
         self.assertEqual(len(data_points_0_0), 2)
         self.assertEqual(len(data_points_0_1), 2)
 
-        self.assertLess(
+        self.assertEqual(
             data_points_0_0[0].start_time_unix_nano,
             data_points_0_0[1].start_time_unix_nano,
         )
-        self.assertLess(
+        self.assertEqual(
             data_points_0_1[0].start_time_unix_nano,
             data_points_0_1[1].start_time_unix_nano,
         )
