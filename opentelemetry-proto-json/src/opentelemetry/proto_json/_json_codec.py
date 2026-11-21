@@ -237,9 +237,13 @@ def validate_type(
         expected_types: A type or tuple of types that the value is expected to be.
         field_name: The name of the field being validated (for error messages).
     """
-    expected = expected_types if isinstance(expected_types, tuple) else (expected_types,)
-    if (isinstance(value, bool) and bool not in expected) or not isinstance(value, expected_types):
-        raise TypeError(f"Field '{field_name}' expected {expected_types}, got {type(value).__name__}")
+    value_type = type(value)
+    if value_type is expected_types:
+        return
+    if (value_type is bool and (not isinstance(expected_types, tuple) or bool not in expected_types)) or not isinstance(
+        value, expected_types
+    ):
+        raise TypeError(f"Field '{field_name}' expected {expected_types}, got {value_type.__name__}")
 
 
 def decode_enum(value: int | str, enum_type: type[EnumT], field_name: str) -> EnumT:
