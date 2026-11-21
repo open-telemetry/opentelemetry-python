@@ -1,0 +1,24 @@
+description: >
+  Exports a span, a metric and a log record as OTLP/HTTP json over TLS, verifying the collector's certificate against a custom CA.
+until:
+  - spans:
+      name: tls-span
+  - metric:
+      name: tls.requests
+      min: 1
+  - logs:
+      body_pattern: tls log
+expect:
+  - resource:
+      attributes: {values: {service.name: declconfig-otlp-http-json-tls}}
+  - spans:
+      name: tls-span
+      count: 1
+  - metric:
+      name: tls.requests
+      type: sum
+      data_point: {value: 1}
+  - logs:
+      body: tls log
+      span: {name: tls-span}
+      count: 1

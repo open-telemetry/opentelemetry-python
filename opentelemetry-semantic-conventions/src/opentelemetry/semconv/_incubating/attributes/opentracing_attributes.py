@@ -4,13 +4,17 @@
 from enum import Enum
 from typing import Final
 
+from typing_extensions import deprecated
+
 OPENTRACING_REF_TYPE: Final = "opentracing.ref_type"
 """
-Parent-child Reference type.
-Note: The causal relationship between a child Span and a parent Span.
+Deprecated: OpenTracing compatibility requirements are [deprecated in OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/compatibility/opentracing/).
 """
 
 
+@deprecated(
+    "The attribute opentracing.ref_type is deprecated - OpenTracing compatibility requirements are [deprecated in OpenTelemetry Specification](https://opentelemetry.io/docs/specs/otel/compatibility/opentracing/)"
+)
 class OpentracingRefTypeValues(Enum):
     CHILD_OF = "child_of"
     """The parent Span depends on the child Span in some capacity."""

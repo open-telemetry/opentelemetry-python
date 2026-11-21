@@ -347,3 +347,38 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e precommit
+
+  contrib-typecheck:
+    name: contrib-typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CORE_REPO_API: ${{ github.workspace }}/opentelemetry-api
+      CORE_REPO_SDK: ${{ github.workspace }}/opentelemetry-sdk
+      CORE_REPO_SEMCONV: ${{ github.workspace }}/opentelemetry-semantic-conventions
+      CORE_REPO_TEST_UTILS: ${{ github.workspace }}/tests/opentelemetry-test-utils
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Checkout contrib repo @ ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+          path: opentelemetry-python-contrib
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run contrib typecheck
+        working-directory: opentelemetry-python-contrib
+        run: uv run --frozen --group tox tox -e typecheck
