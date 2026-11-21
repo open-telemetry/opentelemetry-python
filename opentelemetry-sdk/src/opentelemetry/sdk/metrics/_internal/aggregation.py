@@ -1269,6 +1269,29 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         boundaries: Sequence[float] | None = None,
         record_min_max: bool = True,
     ) -> None:
+        if boundaries is not None:
+            invalid_boundaries = False
+            # Boundaries must be an iterable sequence of numbers (not strings or bytes)
+            if isinstance(boundaries, Sequence) and not isinstance(boundaries, (str, bytes)):
+                try:
+                    for idx, bound in enumerate(boundaries):
+                        # Ensure bound is a finite numeric value and not a bool (bool is a subclass of int)
+                        if not isinstance(bound, (int, float)) or isinstance(bound, bool) or not math.isfinite(bound):
+                            invalid_boundaries = True
+                            break
+                        # Boundaries must be strictly increasing
+                        if idx and boundaries[idx - 1] >= bound:
+                            invalid_boundaries = True
+                            break
+                except (KeyError, TypeError):
+                    invalid_boundaries = True
+            else:
+                invalid_boundaries = True
+
+            if invalid_boundaries:
+                boundaries = None
+                _logger.warning("boundaries must be a sequence of finite, strictly increasing numbers")
+
         self._boundaries = boundaries
         self._record_min_max = record_min_max
 

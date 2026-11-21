@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: validate `ExplicitBucketHistogramAggregation` boundaries for finite, strictly increasing numbers and fallback to defaults with a warning on invalid values
