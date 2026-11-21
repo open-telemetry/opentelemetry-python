@@ -19,6 +19,7 @@ from opentelemetry.codegen.json.runtime.json_codec import (
     encode_hex,
     encode_int64,
     encode_repeated,
+    validate_int_type,
     validate_type,
 )
 
@@ -114,8 +115,15 @@ def test_decode_int64(value: int | str | None, expected: int) -> None:
 
 
 def test_decode_int64_errors() -> None:
+    bad_list: Any = []
+    bad_true: Any = True
+    bad_false: Any = False
     with pytest.raises(TypeError):
-        decode_int64([], "field")  # type: ignore
+        decode_int64(bad_list, "field")
+    with pytest.raises(TypeError, match="got bool"):
+        decode_int64(bad_true, "field")
+    with pytest.raises(TypeError, match="got bool"):
+        decode_int64(bad_false, "field")
     with pytest.raises(ValueError, match="Invalid int64 value"):
         decode_int64("abc", "field")
 
@@ -158,8 +166,15 @@ def test_decode_float(value: float | str | None, expected: float) -> None:
 
 
 def test_decode_float_errors() -> None:
+    bad_list: Any = []
+    bad_true: Any = True
+    bad_false: Any = False
     with pytest.raises(TypeError):
-        decode_float([], "field")  # type: ignore
+        decode_float(bad_list, "field")
+    with pytest.raises(TypeError, match="got bool"):
+        decode_float(bad_true, "field")
+    with pytest.raises(TypeError, match="got bool"):
+        decode_float(bad_false, "field")
     with pytest.raises(ValueError, match="Invalid float value"):
         decode_float("abc", "field")
 
@@ -183,6 +198,7 @@ def test_decode_repeated_errors() -> None:
 def test_validate_type() -> None:
     validate_type("s", str, "field")
     validate_type(1, int, "field")
+    validate_type(True, bool, "field")
     validate_type(1, (int, str), "field")
     validate_type("s", (int, str), "field")
 
@@ -194,6 +210,24 @@ def test_validate_type() -> None:
         match=r"Field 'field' expected \(<class 'int'>, <class 'float'>\), got str",
     ):
         validate_type("s", (int, float), "field")
+
+
+def test_validate_int_type() -> None:
+    validate_int_type(0, "field")
+    validate_int_type(1, "field")
+    validate_int_type(_Color.GREEN, "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got bool"):
+        validate_int_type(True, "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got bool"):
+        validate_int_type(False, "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got str"):
+        validate_int_type("1", "field")
+
+    with pytest.raises(TypeError, match="Field 'field' expected <class 'int'>, got float"):
+        validate_int_type(1.0, "field")
 
 
 @pytest.mark.parametrize(

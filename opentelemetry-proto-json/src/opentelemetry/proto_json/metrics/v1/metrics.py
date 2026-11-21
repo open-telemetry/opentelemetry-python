@@ -552,7 +552,7 @@ class NumberDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("exemplars")) is not None:
             _args["exemplars"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "flags")
             _args["flags"] = _value
         if (_value := data.get("asInt")) is not None:
             _args["as_int"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "as_int")
@@ -644,7 +644,7 @@ class HistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("exemplars")) is not None:
             _args["exemplars"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
         if (_value := data.get("flags")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "flags")
             _args["flags"] = _value
         if (_value := data.get("min")) is not None:
             _args["min"] = opentelemetry.proto_json._json_codec.decode_float(_value, "min")
@@ -700,7 +700,7 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
             _args = {}
 
             if (_value := data.get("offset")) is not None:
-                opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "offset")
+                opentelemetry.proto_json._json_codec.validate_int_type(_value, "offset")
                 _args["offset"] = _value
             if (_value := data.get("bucketCounts")) is not None:
                 _args["bucket_counts"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json._json_codec.decode_int64(_v, "bucket_counts"), "bucket_counts")
@@ -785,7 +785,7 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
         if (_value := data.get("sum")) is not None:
             _args["sum"] = opentelemetry.proto_json._json_codec.decode_float(_value, "sum")
         if (_value := data.get("scale")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "scale")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "scale")
             _args["scale"] = _value
         if (_value := data.get("zeroCount")) is not None:
             _args["zero_count"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "zero_count")
@@ -794,7 +794,7 @@ class ExponentialHistogramDataPoint(opentelemetry.proto_json._json_codec.JsonMes
         if (_value := data.get("negative")) is not None:
             _args["negative"] = ExponentialHistogramDataPoint.Buckets.from_dict(_value)
         if (_value := data.get("flags")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "flags")
             _args["flags"] = _value
         if (_value := data.get("exemplars")) is not None:
             _args["exemplars"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: Exemplar.from_dict(_v), "exemplars")
@@ -919,7 +919,7 @@ class SummaryDataPoint(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("quantileValues")) is not None:
             _args["quantile_values"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: SummaryDataPoint.ValueAtQuantile.from_dict(_v), "quantile_values")
         if (_value := data.get("flags")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "flags")
             _args["flags"] = _value
 
         return cls(**_args)

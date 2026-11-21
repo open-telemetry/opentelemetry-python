@@ -281,10 +281,10 @@ class LogRecord(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("attributes")) is not None:
             _args["attributes"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json.common.v1.common.KeyValue.from_dict(_v), "attributes")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("flags")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "flags")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "flags")
             _args["flags"] = _value
         if (_value := data.get("traceId")) is not None:
             _args["trace_id"] = opentelemetry.proto_json._json_codec.decode_hex(_value, "trace_id")

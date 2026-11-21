@@ -703,7 +703,10 @@ class OtlpJsonGenerator:
             )
         else:
             allowed_types = get_json_allowed_types(field_desc.type, field_desc.name)
-            writer.writeln(f'{codec}.validate_type({var_name}, {allowed_types}, "{field_desc.name}")')
+            if allowed_types == "builtins.int":
+                writer.writeln(f'{codec}.validate_int_type({var_name}, "{field_desc.name}")')
+            else:
+                writer.writeln(f'{codec}.validate_type({var_name}, {allowed_types}, "{field_desc.name}")')
             writer.assignment(f'{target_dict}["{field_desc.name}"]', var_name)
 
     # pylint: disable-next=too-many-return-statements
