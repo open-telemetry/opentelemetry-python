@@ -16,6 +16,7 @@ from opentelemetry.configuration._common import (
     _additional_properties,
     _grpc_credentials_from_tls,
     _grpc_insecure_from_tls,
+    _include_exclude_predicate,
     _map_compression,
     _matches_glob,
     _parse_headers,
@@ -25,14 +26,19 @@ from opentelemetry.configuration._common import (
     _resolve_export_timeout,
     _resolve_otlp_grpc_endpoint,
     _resolve_otlp_http_endpoint,
+    _validate_http_tls,
     _validate_mtls_pair,
+    _warn_unsupported_otlp_size_limits,
     load_entry_point,
 )
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.configuration.models import (
     ExperimentalResourceDetector,
     GrpcTls,
+    HttpTls,
+    IncludeExclude,
     LogRecordExporter,
+    NameStringValuePair,
     OpenTelemetryConfiguration,
     PushMetricExporter,
     Sampler,
@@ -88,9 +94,30 @@ class TestParseHeaders(unittest.TestCase):
             {"x-api-key": "secret", "env": "prod"},
         )
 
-    def test_struct_header_none_value_becomes_empty_string(self):
-        headers = [SimpleNamespace(name="x-key", value=None)]
-        self.assertEqual(_parse_headers(headers, None), {"x-key": ""})
+    def test_struct_header_null_value_is_ignored(self):
+        for null_pair in (
+            NameStringValuePair(name="auth", value=None),
+            {"name": "auth", "value": None},
+            {"name": "auth"},
+        ):
+            with self.subTest(null_pair=null_pair):
+                self.assertEqual(_parse_headers([null_pair], None), {})
+                self.assertEqual(
+                    _parse_headers([null_pair], "auth=keep"),
+                    {"auth": "keep"},
+                )
+
+    def test_struct_header_empty_string_value_is_kept(self):
+        for empty_pair in (
+            NameStringValuePair(name="auth", value=""),
+            {"name": "auth", "value": ""},
+        ):
+            with self.subTest(empty_pair=empty_pair):
+                self.assertEqual(_parse_headers([empty_pair], None), {"auth": ""})
+                self.assertEqual(
+                    _parse_headers([empty_pair], "auth=keep"),
+                    {"auth": ""},
+                )
 
     def test_struct_headers_override_headers_list(self):
         # struct takes priority over headers_list for same key
@@ -133,6 +160,46 @@ class TestResolveOtlpEndpoint(unittest.TestCase):
         ):
             with self.subTest(endpoint=endpoint):
                 self.assertEqual(_resolve_otlp_grpc_endpoint(endpoint), expected)
+
+
+class TestWarnUnsupportedOtlpSizeLimits(unittest.TestCase):
+    def test_unset_or_supported_limits_do_not_warn(self):
+        cases = [(None, False), (None, True), (0, True), (1024, True)]
+        for max_request_size, supported in cases:
+            with (
+                self.subTest(max_request_size=max_request_size, supported=supported),
+                self.assertNoLogs("opentelemetry.configuration._common", level="WARNING"),
+            ):
+                _warn_unsupported_otlp_size_limits(
+                    "otlp_http", "metrics", max_request_size, None, max_request_size_supported=supported
+                )
+
+    def test_unsupported_limits_warn(self):
+        cases = [
+            (1024, None, False, ["max_request_size"]),
+            (0, None, False, ["max_request_size"]),
+            (None, 1024, False, ["max_response_size"]),
+            (None, 0, False, ["max_response_size"]),
+            (1024, 1024, False, ["max_request_size", "max_response_size"]),
+            (1024, 1024, True, ["max_response_size"]),
+        ]
+        for max_request_size, max_response_size, supported, expected_limits in cases:
+            with (
+                self.subTest(
+                    max_request_size=max_request_size, max_response_size=max_response_size, supported=supported
+                ),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                _warn_unsupported_otlp_size_limits(
+                    "otlp_http", "metrics", max_request_size, max_response_size, max_request_size_supported=supported
+                )
+            self.assertEqual(
+                [record.getMessage() for record in logs.records],
+                [
+                    f"{limit} is not yet supported for otlp_http exporter for metrics and will be ignored."
+                    for limit in expected_limits
+                ],
+            )
 
 
 class TestLoadEntryPoint(unittest.TestCase):
@@ -532,6 +599,43 @@ class TestValidateMtlsPair(unittest.TestCase):
                 self.assertIn("otlp_http", str(ctx.exception))
 
 
+class TestValidateHttpTls(unittest.TestCase):
+    def test_none_tls_noop(self):
+        self.assertIsNone(_validate_http_tls(None))
+
+    def test_valid_files_pass(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ca_file = os.path.join(tmp_dir, "ca.pem")
+            cert_file = os.path.join(tmp_dir, "cert.pem")
+            key_file = os.path.join(tmp_dir, "key.pem")
+            for path in (ca_file, cert_file, key_file):
+                with open(path, "wb") as file:
+                    file.write(b"data")
+            self.assertIsNone(_validate_http_tls(HttpTls(ca_file=ca_file, cert_file=cert_file, key_file=key_file)))
+
+    def test_missing_ca_file_raises(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ca_file = os.path.join(tmp_dir, "nonexistent.pem")
+            with self.assertRaises(ConfigurationError) as ctx:
+                _validate_http_tls(HttpTls(ca_file=ca_file))
+            self.assertIn("tls.ca_file", str(ctx.exception))
+
+    def test_missing_cert_file_raises(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            key_file = os.path.join(tmp_dir, "key.pem")
+            with open(key_file, "wb") as file:
+                file.write(b"data")
+            cert_file = os.path.join(tmp_dir, "nonexistent.pem")
+            with self.assertRaises(ConfigurationError) as ctx:
+                _validate_http_tls(HttpTls(key_file=key_file, cert_file=cert_file))
+            self.assertIn("tls.cert_file", str(ctx.exception))
+
+    def test_mismatched_mtls_pair_raises(self):
+        with self.assertRaises(ConfigurationError) as ctx:
+            _validate_http_tls(HttpTls(key_file="/path/to/key.pem"))
+        self.assertIn("otlp_http", str(ctx.exception))
+
+
 class TestReadTlsFile(unittest.TestCase):
     def test_reads_bytes(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -661,3 +765,27 @@ class TestMatchesGlob(unittest.TestCase):
         for value, pattern, expected in cases:
             with self.subTest(value=value, pattern=pattern):
                 self.assertEqual(_matches_glob(value, pattern), expected)
+
+
+class TestIncludeExcludePredicate(unittest.TestCase):
+    def test_include_exclude_predicate(self):
+        cases = [
+            (IncludeExclude(), "anything", True),
+            (IncludeExclude(), "", True),
+            (IncludeExclude(included=["service.*"]), "service.name", True),
+            (IncludeExclude(included=["service.*"]), "host.name", False),
+            (IncludeExclude(included=["service.name"]), "service.name", True),
+            (IncludeExclude(included=["service.name"]), "Service.name", False),
+            (IncludeExclude(included=["host.?d"]), "host.id", True),
+            (IncludeExclude(included=["host.?d"]), "host.uuid", False),
+            (IncludeExclude(included=["a", "b"]), "b", True),
+            (IncludeExclude(excluded=["host.*"]), "host.name", False),
+            (IncludeExclude(excluded=["host.*"]), "service.name", True),
+            (IncludeExclude(included=["service.*"], excluded=["service.namespace"]), "service.name", True),
+            (IncludeExclude(included=["service.*"], excluded=["service.namespace"]), "service.namespace", False),
+            (IncludeExclude(included=["service.name"], excluded=["service.*"]), "service.name", False),
+            (IncludeExclude(included=["service.*"], excluded=["host.*"]), "host.name", False),
+        ]
+        for config, value, expected in cases:
+            with self.subTest(config=config, value=value):
+                self.assertEqual(_include_exclude_predicate(config)(value), expected)
