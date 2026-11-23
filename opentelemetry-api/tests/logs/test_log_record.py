@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import unittest
+from collections.abc import Callable
+from typing import cast
 from unittest.mock import patch
 
 from opentelemetry.logs import LogRecord
@@ -39,19 +41,15 @@ class TestLogRecord(unittest.TestCase):
         self.assertEqual(log_record.span_id, SPAN_CONTEXT.span_id)
         self.assertEqual(log_record.trace_flags, SPAN_CONTEXT.trace_flags)
 
-    def test_log_record_explicit_span_context_fields(self):
-        span_context = SpanContext(
-            trace_id=SPAN_CONTEXT.trace_id,
-            span_id=SPAN_CONTEXT.span_id,
-            is_remote=False,
-            trace_flags=TraceFlags(TraceFlags.DEFAULT),
-        )
-        with use_span(NonRecordingSpan(span_context)):
-            log_record = LogRecord(
-                trace_id=1,
-                span_id=2,
-                trace_flags=TraceFlags(TraceFlags.SAMPLED),
-            )
-        self.assertEqual(log_record.trace_id, 1)
-        self.assertEqual(log_record.span_id, 2)
-        self.assertEqual(log_record.trace_flags, TraceFlags(TraceFlags.SAMPLED))
+    def test_log_record_span_context_fields_from_current_span(self):
+        with use_span(NonRecordingSpan(SPAN_CONTEXT)):
+            log_record = LogRecord()
+        self.assertEqual(log_record.trace_id, SPAN_CONTEXT.trace_id)
+        self.assertEqual(log_record.span_id, SPAN_CONTEXT.span_id)
+        self.assertEqual(log_record.trace_flags, SPAN_CONTEXT.trace_flags)
+
+    def test_log_record_rejects_deprecated_span_context_fields(self):
+        constructor = cast(Callable[..., LogRecord], LogRecord)
+        for name in ("trace_id", "span_id", "trace_flags"):
+            with self.subTest(parameter=name), self.assertRaisesRegex(TypeError, name):
+                constructor(**{name: getattr(SPAN_CONTEXT, name)})

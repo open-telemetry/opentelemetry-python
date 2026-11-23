@@ -30,14 +30,11 @@ from os import environ
 from time import time_ns
 from typing import cast, overload
 
-from typing_extensions import deprecated
-
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.logs.severity import SeverityNumber
 from opentelemetry.trace import get_current_span
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._compat import SignatureCompatABC
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
@@ -69,48 +66,12 @@ class LogRecord(ABC):
         "exception",
     )
 
-    @overload
     def __init__(
         self,
         *,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: Attributes = None,
-        event_name: str | None = None,
-        exception: BaseException | None = None,
-    ) -> None: ...
-
-    @overload
-    @deprecated(
-        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
-    )
-    def __init__(
-        self,
-        *,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: Attributes = None,
-    ) -> None: ...
-
-    def __init__(
-        self,
-        *,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        context: Context | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
@@ -126,9 +87,9 @@ class LogRecord(ABC):
             observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
         self.context = context
-        self.trace_id = trace_id or span_context.trace_id
-        self.span_id = span_id or span_context.span_id
-        self.trace_flags = trace_flags or span_context.trace_flags
+        self.trace_id = span_context.trace_id
+        self.span_id = span_context.span_id
+        self.trace_flags = span_context.trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
         self.body = body
