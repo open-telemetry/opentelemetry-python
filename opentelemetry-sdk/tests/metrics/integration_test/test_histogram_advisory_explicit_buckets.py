@@ -191,3 +191,29 @@ class TestHistogramAdvisory(TestCase):
             metric.data.data_points[0].explicit_bounds,
             _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES,
         )
+
+    def test_invalid_advisory_falls_back_to_defaults(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(
+            metric_readers=[reader],
+        )
+        meter = meter_provider.get_meter("testmeter")
+
+        with self.assertLogs(level="WARNING") as log:
+            histogram = meter.create_histogram(
+                "testhistogram",
+                explicit_bucket_boundaries_advisory=[100.0, 10.0, 50.0],
+            )
+            histogram.record(1, {"label": "value"})
+
+        self.assertIn("Advised explicit bucket boundaries", log.output[0])
+        metrics = reader.get_metrics_data()
+        self.assertEqual(len(metrics.resource_metrics), 1)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1)
+        metric = metrics.resource_metrics[0].scope_metrics[0].metrics[0]
+        self.assertEqual(metric.name, "testhistogram")
+        self.assertEqual(
+            metric.data.data_points[0].explicit_bounds,
+            _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES,
+        )
