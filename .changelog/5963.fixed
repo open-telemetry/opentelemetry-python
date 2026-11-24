@@ -1,0 +1,1 @@
+opentelemetry-sdk: Validate numeric amount on synchronous metric instruments to prevent TypeError on non-numeric types
