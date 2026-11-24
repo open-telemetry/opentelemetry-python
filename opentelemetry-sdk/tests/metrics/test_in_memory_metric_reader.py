@@ -107,6 +107,37 @@ class TestInMemoryMetricReader(TestCase):
             1,
         )
 
+    def test_collect_preserves_scope_schema_urls(self):
+        reader = InMemoryMetricReader()
+        provider = MeterProvider(metric_readers=[reader])
+        self.addCleanup(provider.shutdown)
+        schema_url = "https://example.com/schemas/1.0.0"
+
+        meter_with_schema = provider.get_meter("with_schema", schema_url=schema_url)
+        meter_without_schema = provider.get_meter("without_schema")
+        meter_with_schema.create_counter("first").add(1)
+        meter_without_schema.create_counter("second").add(1)
+        meter_with_schema.create_counter("third").add(1)
+
+        metrics = reader.get_metrics_data()
+
+        self.assertIsNotNone(metrics)
+        (resource_metrics,) = metrics.resource_metrics
+        self.assertCountEqual(
+            [
+                (
+                    scope_metrics.scope.name,
+                    scope_metrics.schema_url,
+                    tuple(metric.name for metric in scope_metrics.metrics),
+                )
+                for scope_metrics in resource_metrics.scope_metrics
+            ],
+            [
+                ("with_schema", schema_url, ("first", "third")),
+                ("without_schema", "", ("second",)),
+            ],
+        )
+
     def test_cumulative_multiple_collect(self):
         reader = InMemoryMetricReader(preferred_temporality={Counter: AggregationTemporality.CUMULATIVE})
         meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")

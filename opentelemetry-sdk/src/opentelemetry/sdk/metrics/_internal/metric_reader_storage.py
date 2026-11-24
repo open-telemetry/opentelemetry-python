@@ -1,6 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
+from collections import defaultdict
 from collections.abc import Sequence
 from logging import getLogger
 from threading import RLock
@@ -141,7 +142,7 @@ class MetricReaderStorage:
         collection_start_nanos = time_ns()
 
         with self._lock:
-            instrumentation_scope_scope_metrics: dict[InstrumentationScope, ScopeMetrics] = {}
+            metrics_by_scope: defaultdict[InstrumentationScope, list[Metric]] = defaultdict(list)
 
             instrument_matches_snapshot = list(self._instrument_view_instrument_matches.items())
 
@@ -216,26 +217,17 @@ class MetricReaderStorage:
                     )
 
                 if metrics:
-                    if instrument.instrumentation_scope not in (instrumentation_scope_scope_metrics):
-                        instrumentation_scope_scope_metrics[instrument.instrumentation_scope] = ScopeMetrics(
-                            scope=instrument.instrumentation_scope,
-                            metrics=metrics,
-                            schema_url=instrument.instrumentation_scope.schema_url or "",
-                        )
-                    else:
-                        scope_metrics = instrumentation_scope_scope_metrics[instrument.instrumentation_scope]
-                        instrumentation_scope_scope_metrics[instrument.instrumentation_scope] = ScopeMetrics(
-                            scope=scope_metrics.scope,
-                            metrics=(*scope_metrics.metrics, *metrics),
-                            schema_url=scope_metrics.schema_url,
-                        )
+                    metrics_by_scope[instrument.instrumentation_scope].extend(metrics)
 
-            if instrumentation_scope_scope_metrics:
+            if metrics_by_scope:
                 return MetricsData(
                     resource_metrics=[
                         ResourceMetrics(
                             resource=self._sdk_config.resource,
-                            scope_metrics=list(instrumentation_scope_scope_metrics.values()),
+                            scope_metrics=[
+                                ScopeMetrics(scope=scope, metrics=metrics, schema_url=scope.schema_url or "")
+                                for scope, metrics in metrics_by_scope.items()
+                            ],
                             schema_url=self._sdk_config.resource.schema_url,
                         )
                     ]
