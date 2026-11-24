@@ -430,6 +430,15 @@ _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES: Sequence[float] = (
 )
 
 
+def _validate_boundaries(boundaries: Sequence[float] | None) -> None:
+    if boundaries:
+        for idx, bound in enumerate(boundaries):
+            if not math.isfinite(bound):
+                raise ValueError(f"invalid boundary: {bound!r}")
+            if idx and boundaries[idx - 1] >= bound:
+                raise ValueError("boundaries must be strictly increasing")
+
+
 def _explicit_bucket_boundaries_from_advisory(
     instrument: _Instrument,
 ) -> Sequence[float] | None:
@@ -437,7 +446,17 @@ def _explicit_bucket_boundaries_from_advisory(
     histogram advisory, such as non-histogram instruments selected by a view."""
 
     advisory = getattr(instrument, "_advisory", None)
-    return advisory.explicit_bucket_boundaries if isinstance(advisory, _HistogramAdvisory) else None
+    if not isinstance(advisory, _HistogramAdvisory) or advisory.explicit_bucket_boundaries is None:
+        return None
+    try:
+        _validate_boundaries(advisory.explicit_bucket_boundaries)
+        return advisory.explicit_bucket_boundaries
+    except ValueError:
+        _logger.warning(
+            "Advised explicit bucket boundaries %s are invalid; falling back to default boundaries",
+            advisory.explicit_bucket_boundaries,
+        )
+        return None
 
 
 class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
@@ -452,12 +471,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     ):
         if boundaries is None:
             boundaries = _DEFAULT_EXPLICIT_BUCKET_HISTOGRAM_AGGREGATION_BOUNDARIES
-        if boundaries:
-            for idx, bound in enumerate(boundaries):
-                if not math.isfinite(bound):
-                    raise ValueError(f"invalid boundary: {bound!r}")
-                if idx and boundaries[idx - 1] >= bound:
-                    raise ValueError("boundaries must be strictly increasing")
+        _validate_boundaries(boundaries)
         super().__init__(
             attributes,
             reservoir_builder=partial(reservoir_builder, boundaries=boundaries),
@@ -1269,6 +1283,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         boundaries: Sequence[float] | None = None,
         record_min_max: bool = True,
     ) -> None:
+        _validate_boundaries(boundaries)
         self._boundaries = boundaries
         self._record_min_max = record_min_max
 

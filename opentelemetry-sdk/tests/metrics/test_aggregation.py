@@ -537,6 +537,18 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 boundaries=[float("-inf"), 50, 100],
             )
 
+    def test_explicit_bucket_histogram_aggregation_invalid_boundaries(self):
+        with self.assertRaises(ValueError):
+            ExplicitBucketHistogramAggregation(boundaries=[100, 10, 50])
+        with self.assertRaises(ValueError):
+            ExplicitBucketHistogramAggregation(boundaries=[10, 50, 50, 100])
+        with self.assertRaises(ValueError):
+            ExplicitBucketHistogramAggregation(boundaries=[10, float("nan"), 100])
+        with self.assertRaises(ValueError):
+            ExplicitBucketHistogramAggregation(boundaries=[10, 50, float("inf")])
+        with self.assertRaises(ValueError):
+            ExplicitBucketHistogramAggregation(boundaries=[float("-inf"), 50, 100])
+
 
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):
