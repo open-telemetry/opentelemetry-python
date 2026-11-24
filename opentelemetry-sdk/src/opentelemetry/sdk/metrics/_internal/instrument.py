@@ -200,9 +200,10 @@ class Counter(_Synchronous, APICounter):
             super().add(amount, attributes=attributes, context=context)
             return
 
-        if not math.isfinite(amount):
+        # Amount must be a finite real number (not bool, str, None, or other non-numeric types)
+        if not isinstance(amount, (int, float)) or isinstance(amount, bool) or not math.isfinite(amount):
             _logger.warning(
-                "Add amount %s is not finite on Counter %s, ignoring measurement.",
+                "Add amount %s is not a finite number on Counter %s, ignoring measurement.",
                 amount,
                 self.name,
             )
@@ -238,9 +239,10 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
             super().add(amount, attributes=attributes, context=context)
             return
 
-        if not math.isfinite(amount):
+        # Amount must be a finite real number (not bool, str, None, or other non-numeric types)
+        if not isinstance(amount, (int, float)) or isinstance(amount, bool) or not math.isfinite(amount):
             _logger.warning(
-                "Add amount %s is not finite on UpDownCounter %s, ignoring measurement.",
+                "Add amount %s is not a finite number on UpDownCounter %s, ignoring measurement.",
                 amount,
                 self.name,
             )
@@ -287,9 +289,10 @@ class Histogram(_Synchronous, APIHistogram):
             super().record(amount, attributes=attributes, context=context)
             return
 
-        if not math.isfinite(amount):
+        # Amount must be a finite real number (not bool, str, None, or other non-numeric types)
+        if not isinstance(amount, (int, float)) or isinstance(amount, bool) or not math.isfinite(amount):
             _logger.warning(
-                "Record amount %s is not finite on Histogram %s, ignoring measurement.",
+                "Record amount %s is not a finite number on Histogram %s, ignoring measurement.",
                 amount,
                 self.name,
             )
@@ -328,9 +331,10 @@ class Gauge(_Synchronous, APIGauge):
             super().set(amount, attributes=attributes, context=context)
             return
 
-        if not math.isfinite(amount):
+        # Amount must be a finite real number (not bool, str, None, or other non-numeric types)
+        if not isinstance(amount, (int, float)) or isinstance(amount, bool) or not math.isfinite(amount):
             _logger.warning(
-                "Set amount %s is not finite on Gauge %s, ignoring measurement.",
+                "Set amount %s is not a finite number on Gauge %s, ignoring measurement.",
                 amount,
                 self.name,
             )

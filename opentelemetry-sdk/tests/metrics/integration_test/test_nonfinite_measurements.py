@@ -78,3 +78,50 @@ class TestNonFiniteMeasurements(TestCase):
         dp = self._get_data_point("udc_nan")
         self.assertIsNotNone(dp)
         self.assertEqual(dp.value, 7)
+
+    def test_non_numeric_and_boolean_measurements_are_ignored(self):
+        counter = self.meter.create_counter("c_invalid")
+        udc = self.meter.create_up_down_counter("udc_invalid")
+        hist = self.meter.create_histogram("h_invalid")
+        gauge = self.meter.create_gauge("g_invalid")
+
+        invalid_values = ["10", None, [1], {"a": 1}, object(), True, False]
+
+        for val in invalid_values:
+            with self.assertLogs(level="WARNING") as cm:
+                counter.add(val)
+            self.assertIn("is not a finite number on Counter", cm.output[0])
+
+            with self.assertLogs(level="WARNING") as cm:
+                udc.add(val)
+            self.assertIn("is not a finite number on UpDownCounter", cm.output[0])
+
+            with self.assertLogs(level="WARNING") as cm:
+                hist.record(val)
+            self.assertIn("is not a finite number on Histogram", cm.output[0])
+
+            with self.assertLogs(level="WARNING") as cm:
+                gauge.set(val)
+            self.assertIn("is not a finite number on Gauge", cm.output[0])
+
+        # Verify valid values still work and weren't affected
+        counter.add(10)
+        dp_c = self._get_data_point("c_invalid")
+        self.assertIsNotNone(dp_c)
+        self.assertEqual(dp_c.value, 10)
+
+        udc.add(5)
+        dp_udc = self._get_data_point("udc_invalid")
+        self.assertIsNotNone(dp_udc)
+        self.assertEqual(dp_udc.value, 5)
+
+        hist.record(15)
+        dp_h = self._get_data_point("h_invalid")
+        self.assertIsNotNone(dp_h)
+        self.assertEqual(dp_h.count, 1)
+        self.assertEqual(dp_h.sum, 15)
+
+        gauge.set(42)
+        dp_g = self._get_data_point("g_invalid")
+        self.assertIsNotNone(dp_g)
+        self.assertEqual(dp_g.value, 42)
