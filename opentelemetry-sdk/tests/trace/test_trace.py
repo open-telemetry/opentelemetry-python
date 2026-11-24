@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import unittest
+from collections.abc import Mapping
 from importlib import reload
 from logging import ERROR, WARNING
 from pathlib import Path
@@ -966,6 +967,11 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["attr-key"], "val")
             self.assertEqual(root.attributes["attr-key2"], "val2")
             self.assertEqual(root.attributes["attr-in-both"], "span-attr")
+
+        with self.tracer.start_as_current_span("empty_span") as empty_span:
+            # ReadableSpan.attributes is guaranteed to be a Mapping, never None
+            self.assertIsInstance(empty_span.attributes, Mapping)
+            self.assertEqual(empty_span.attributes, {})
 
     def test_invalid_attribute_values(self):
         # This class has no __str__ or __repr__ method, so BoundedAttributes does
