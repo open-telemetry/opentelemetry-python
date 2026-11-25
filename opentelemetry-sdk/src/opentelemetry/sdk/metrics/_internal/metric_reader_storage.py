@@ -111,7 +111,8 @@ class MetricReaderStorage:
 
             # if no view targeted the instrument, use the default
             if not view_instrument_matches:
-                view_instrument_matches.append(self._new_view_instrument_match(_DEFAULT_VIEW, instrument))
+                default_view_instrument_match = self._new_view_instrument_match(_DEFAULT_VIEW, instrument)
+                self._check_conflicts_and_add_match(default_view_instrument_match, view_instrument_matches)
             self._instrument_view_instrument_matches[instrument] = view_instrument_matches
 
             return view_instrument_matches
@@ -245,16 +246,23 @@ class MetricReaderStorage:
 
             new_view_instrument_match = self._new_view_instrument_match(view, instrument)
 
-            for existing_view_instrument_matches in self._instrument_view_instrument_matches.values():
-                for existing_view_instrument_match in existing_view_instrument_matches:
-                    if existing_view_instrument_match.conflicts(new_view_instrument_match):
-                        _logger.warning(
-                            "Views %s and %s will cause conflicting metrics identities",
-                            existing_view_instrument_match._view,
-                            new_view_instrument_match._view,
-                        )
+            self._check_conflicts_and_add_match(new_view_instrument_match, view_instrument_matches)
 
-            view_instrument_matches.append(new_view_instrument_match)
+    def _check_conflicts_and_add_match(
+        self,
+        new_view_instrument_match: "_ViewInstrumentMatch",
+        view_instrument_matches: list["_ViewInstrumentMatch"],
+    ) -> None:
+        for existing_view_instrument_matches in self._instrument_view_instrument_matches.values():
+            for existing_view_instrument_match in existing_view_instrument_matches:
+                if existing_view_instrument_match.conflicts(new_view_instrument_match):
+                    _logger.warning(
+                        "Views %s and %s will cause conflicting metrics identities",
+                        existing_view_instrument_match._view,
+                        new_view_instrument_match._view,
+                    )
+
+        view_instrument_matches.append(new_view_instrument_match)
 
     @staticmethod
     def _check_view_instrument_compatibility(view: View, instrument: _Instrument) -> bool:
