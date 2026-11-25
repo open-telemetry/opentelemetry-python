@@ -149,6 +149,9 @@ class FixedSizeExemplarReservoirABC(ExemplarReservoir):
         self._reservoir_storage: Mapping[int, ExemplarBucket] = defaultdict(ExemplarBucket)
         self._lock = Lock()
 
+    def _at_fork_reinit(self) -> None:
+        self._lock = Lock()
+
     def collect(self, point_attributes: Attributes) -> list[Exemplar]:
         """Returns accumulated Exemplars and also resets the reservoir for the next
         sampling period

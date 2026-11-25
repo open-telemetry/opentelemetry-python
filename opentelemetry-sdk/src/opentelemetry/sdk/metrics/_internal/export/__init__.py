@@ -587,6 +587,7 @@ class PeriodicExportingMetricReader(MetricReader):
                 os.register_at_fork(after_in_child=_after_in_child)
 
     def _at_fork_reinit(self):
+        self._export_lock = Lock()
         self._daemon_thread = Thread(
             name="OtelPeriodicExportingMetricReader",
             target=self._ticker,
