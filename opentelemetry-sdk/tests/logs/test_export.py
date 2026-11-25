@@ -265,6 +265,45 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
 
+    def test_simple_log_record_processor_force_flush(self):
+        exporter = Mock()
+        exporter.force_flush.return_value = True
+
+        processor = SimpleLogRecordProcessor(exporter)
+        result = processor.force_flush(timeout_millis=5000)
+
+        self.assertTrue(result)
+        exporter.force_flush.assert_called_once_with(timeout_millis=5000)
+
+        # When exporter returns False
+        exporter.reset_mock()
+        exporter.force_flush.return_value = False
+        result = processor.force_flush(timeout_millis=1000)
+        self.assertFalse(result)
+        exporter.force_flush.assert_called_once_with(timeout_millis=1000)
+
+        # When exporter does not implement force_flush
+        class NoForceFlushLogExporter:
+            def export(self, batch):
+                pass
+
+            def shutdown(self):
+                pass
+
+        processor_no_flush = SimpleLogRecordProcessor(NoForceFlushLogExporter())
+        self.assertTrue(processor_no_flush.force_flush())
+
+        # When exporter raises an exception during force_flush
+        exporter.reset_mock()
+        exporter.force_flush.side_effect = RuntimeError("flush failed")
+        with self.assertLogs(level="ERROR") as cm:
+            self.assertFalse(processor.force_flush())
+        self.assertIn("Exception while flushing exporter", cm.output[0])
+
+        # When processor is shut down
+        processor.shutdown()
+        self.assertFalse(processor.force_flush())
+
     def test_simple_log_record_processor_different_msg_types(self):
         exporter = InMemoryLogRecordExporter()
         log_record_processor = BatchLogRecordProcessor(exporter)
