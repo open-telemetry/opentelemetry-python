@@ -119,6 +119,35 @@ pipeline used for SDK component configuration before being forwarded to
 ``opentelemetry-instrument`` ran before the file was applied) are silently
 skipped.
 
+Metric producers
+----------------
+
+Metric producers listed under a periodic reader's ``producers`` are loaded
+from the ``opentelemetry_metrics_producer`` entry-point group, by the name used
+in the configuration file. Their metrics are collected alongside the SDK's own
+metrics each time the reader collects.
+
+.. code-block:: yaml
+
+    meter_provider:
+      readers:
+        - periodic:
+            exporter:
+              console:
+            producers:
+              - my_producer:
+                  x: 1
+
+.. code-block:: toml
+
+    [project.entry-points.opentelemetry_metrics_producer]
+    my_producer = "my_package.producers:MyProducer"
+
+The entry point is called with the producer's configuration mapping as keyword
+arguments (``MyProducer(x=1)`` above), or with no arguments when the mapping is
+empty or ``null``. The returned object must implement
+:class:`opentelemetry.sdk.metrics.export.MetricProducer`.
+
 Environment variable substitution
 ----------------------------------
 
