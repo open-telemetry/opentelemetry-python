@@ -56,7 +56,8 @@ class _CompositeSampler(Sampler):
 
         return SamplingResult(
             decision,
-            intent.attributes,
+            # Intent attributes are only added to sampled spans.
+            intent.attributes if sampled else None,
             _update_trace_state(trace_state, ot_trace_state, intent),
         )
 

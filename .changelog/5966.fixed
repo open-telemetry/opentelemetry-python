@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: stop the composite sampler from returning intent attributes for dropped spans
