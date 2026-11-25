@@ -127,9 +127,10 @@ class TestResources(unittest.TestCase):
         resource = Resource.create(attributes)
         self.assertIsInstance(resource, Resource)
         self.assertEqual(resource.attributes, expected_attributes)
-        self.assertEqual(resource.schema_url, "")
+        # Detectors now set schema URL to V1_44_0 per specification
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
-        schema_url = "https://opentelemetry.io/schemas/1.3.0"
+        schema_url = "https://opentelemetry.io/schemas/1.44.0"
 
         resource = Resource.create(attributes, schema_url)
         self.assertIsInstance(resource, Resource)
@@ -153,25 +154,25 @@ class TestResources(unittest.TestCase):
                     SERVICE_INSTANCE_ID: self._service_instance_id,
                     SERVICE_NAME: "unknown_service:python3",
                 },
-                "",
+                "https://opentelemetry.io/schemas/1.44.0",
             )
         )
 
         resource = Resource.create(None)
         self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
         resource = Resource.create(None, None)
         self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
         resource = Resource.create({})
         self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
         resource = Resource.create({}, None)
         self.assertEqual(resource, expected_default)
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
     def test_resource_merge(self):
         left = Resource({"service": "ui"})
@@ -185,20 +186,21 @@ class TestResources(unittest.TestCase):
             "https://opentelemetry.io/schemas/1.3.0",
         )
 
-        left = Resource.create({}, None)
-        right = Resource.create({}, None)
+        # Test merge semantics with direct Resource construction (not Resource.create)
+        left = Resource({}, "")
+        right = Resource({}, "")
         self.assertEqual(left.merge(right).schema_url, "")
 
-        left = Resource.create({}, None)
-        right = Resource.create({}, schema_urls[0])
+        left = Resource({}, "")
+        right = Resource({}, schema_urls[0])
         self.assertEqual(left.merge(right).schema_url, schema_urls[0])
 
-        left = Resource.create({}, schema_urls[0])
-        right = Resource.create({}, None)
+        left = Resource({}, schema_urls[0])
+        right = Resource({}, "")
         self.assertEqual(left.merge(right).schema_url, schema_urls[0])
 
-        left = Resource.create({}, schema_urls[0])
-        right = Resource.create({}, schema_urls[0])
+        left = Resource({}, schema_urls[0])
+        right = Resource({}, schema_urls[0])
         self.assertEqual(left.merge(right).schema_url, schema_urls[0])
 
         left = Resource({"a": "left", "shared": "left"}, schema_urls[0])
@@ -277,6 +279,8 @@ class TestResources(unittest.TestCase):
 
         resource = Resource.create(attributes)
         self.assertEqual(resource.attributes, attributes_copy)
+        # Detectors now set schema URL to V1_44_0 per specification
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
         with self.assertRaises(TypeError):
             resource.attributes["has_bugs"] = False
@@ -288,7 +292,8 @@ class TestResources(unittest.TestCase):
         with self.assertRaises(AttributeError):
             resource.schema_url = "bug"
 
-        self.assertEqual(resource.schema_url, "")
+        # Detectors now set schema URL to V1_44_0 per specification
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
     def test_invalid_resource_attribute_values(self):
         # This class has no __str__ or __repr__ method, so BoundedAttributes does
@@ -316,14 +321,15 @@ class TestResources(unittest.TestCase):
         self.assertEqual(len(resource.attributes), 2)
 
     @patch("sys.executable", "/usr/bin/python3")
-    def test_aggregated_resources_no_detectors(self):
+    @patch("opentelemetry.sdk.resources._build_resource_detectors")
+    def test_aggregated_resources_no_detectors(self, mock_build_detectors):
+        mock_build_detectors.return_value = []
         aggregated_resources = get_aggregated_resources([])
         self.assertEqual(
             aggregated_resources,
             _DEFAULT_RESOURCE.merge(
                 Resource(
                     {
-                        SERVICE_INSTANCE_ID: self._service_instance_id,
                         SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
@@ -356,7 +362,9 @@ class TestResources(unittest.TestCase):
         )
 
     @patch("sys.executable", "/usr/bin/python3")
-    def test_aggregated_resources_multiple_detectors(self):
+    @patch("opentelemetry.sdk.resources._build_resource_detectors")
+    def test_aggregated_resources_multiple_detectors(self, mock_build_detectors):
+        mock_build_detectors.return_value = []
         resource_detector1 = Mock(spec=ResourceDetector)
         resource_detector1.detect.return_value = Resource({"key1": "value1"})
         resource_detector2 = Mock(spec=ResourceDetector)
@@ -375,7 +383,6 @@ class TestResources(unittest.TestCase):
             _DEFAULT_RESOURCE.merge(
                 Resource(
                     {
-                        SERVICE_INSTANCE_ID: self._service_instance_id,
                         SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
@@ -393,7 +400,9 @@ class TestResources(unittest.TestCase):
         )
 
     @patch("sys.executable", "/usr/bin/python3")
-    def test_aggregated_resources_different_schema_urls(self):
+    @patch("opentelemetry.sdk.resources._build_resource_detectors")
+    def test_aggregated_resources_different_schema_urls(self, mock_build_detectors):
+        mock_build_detectors.return_value = []
         resource_detector1 = Mock(spec=ResourceDetector)
         resource_detector1.detect.return_value = Resource({"key1": "value1"}, "")
         resource_detector2 = Mock(spec=ResourceDetector)
@@ -421,7 +430,6 @@ class TestResources(unittest.TestCase):
             _DEFAULT_RESOURCE.merge(
                 Resource(
                     {
-                        SERVICE_INSTANCE_ID: self._service_instance_id,
                         SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
@@ -439,7 +447,6 @@ class TestResources(unittest.TestCase):
                 _DEFAULT_RESOURCE.merge(
                     Resource(
                         {
-                            SERVICE_INSTANCE_ID: self._service_instance_id,
                             SERVICE_NAME: "unknown_service:python3",
                         },
                         "",
@@ -472,7 +479,6 @@ class TestResources(unittest.TestCase):
                 _DEFAULT_RESOURCE.merge(
                     Resource(
                         {
-                            SERVICE_INSTANCE_ID: self._service_instance_id,
                             SERVICE_NAME: "unknown_service:python3",
                         },
                         "",
@@ -505,7 +511,9 @@ class TestResources(unittest.TestCase):
             self.assertIn("url2", log_entry.output[0])
 
     @patch("sys.executable", "/usr/bin/python3")
-    def test_resource_detector_ignore_error(self):
+    @patch("opentelemetry.sdk.resources._build_resource_detectors")
+    def test_resource_detector_ignore_error(self, mock_build_detectors):
+        mock_build_detectors.return_value = []
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.side_effect = Exception()
         resource_detector.raise_on_error = False
@@ -515,7 +523,6 @@ class TestResources(unittest.TestCase):
                 _DEFAULT_RESOURCE.merge(
                     Resource(
                         {
-                            SERVICE_INSTANCE_ID: self._service_instance_id,
                             SERVICE_NAME: "unknown_service:python3",
                         },
                         "",
@@ -589,7 +596,9 @@ class TestResources(unittest.TestCase):
 
     @patch("sys.executable", "/usr/bin/python3")
     @patch("opentelemetry.sdk.resources.logger")
-    def test_resource_detector_timeout(self, mock_logger):
+    @patch("opentelemetry.sdk.resources._build_resource_detectors")
+    def test_resource_detector_timeout(self, mock_build_detectors, mock_logger):
+        mock_build_detectors.return_value = []
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.side_effect = TimeoutError()
         resource_detector.raise_on_error = False
@@ -598,7 +607,6 @@ class TestResources(unittest.TestCase):
             _DEFAULT_RESOURCE.merge(
                 Resource(
                     {
-                        SERVICE_INSTANCE_ID: self._service_instance_id,
                         SERVICE_NAME: "unknown_service:python3",
                     },
                     "",
@@ -897,7 +905,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["telemetry.sdk.language"], "python")
         self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
         self.assertEqual(resource.attributes["service.name"], "unknown_service:python3")
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
         resource = Resource({}).create({"a": "b", "c": "d"})
 
@@ -906,14 +914,14 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["service.name"], "unknown_service:python3")
         self.assertEqual(resource.attributes["a"], "b")
         self.assertEqual(resource.attributes["c"], "d")
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
     @patch.dict(environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock"}, clear=True)
     @patch(
         "opentelemetry.util._importlib_metadata.entry_points",
         Mock(
             return_value=[
-                Mock(**{"load.return_value": Mock(return_value=Mock(**{"detect.return_value": Resource({"a": "b"})}))})
+                Mock(**{"load.return_value": Mock(return_value=Mock(**{"detect.return_value": Resource({"a": "b"}, "https://opentelemetry.io/schemas/1.44.0")}))})
             ]
         ),
     )
@@ -924,7 +932,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["telemetry.sdk.name"], "opentelemetry")
         self.assertEqual(resource.attributes["service.name"], "unknown_service:python3")
         self.assertEqual(resource.attributes["a"], "b")
-        self.assertEqual(resource.schema_url, "")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
     @patch.dict(environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: ""}, clear=True)
     def test_resource_detector_entry_points_empty(self):
@@ -972,7 +980,7 @@ class TestOTELResourceDetector(unittest.TestCase):
             self.assertEqual(resource.attributes["service.name"], "unknown_service:python4")
             self.assertEqual(resource.attributes["a"], "b")
             self.assertEqual(resource.attributes["c"], "d")
-            self.assertEqual(resource.schema_url, "")
+            self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
         with patch.dict(
             environ,
@@ -994,7 +1002,7 @@ class TestOTELResourceDetector(unittest.TestCase):
             self.assertIn(PROCESS_RUNTIME_NAME, resource.attributes.keys())
             self.assertIn(PROCESS_RUNTIME_DESCRIPTION, resource.attributes.keys())
             self.assertIn(PROCESS_RUNTIME_VERSION, resource.attributes.keys())
-            self.assertEqual(resource.schema_url, "")
+            self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
 
     @patch.dict(
         environ,
@@ -1455,3 +1463,116 @@ else:
         resource = Resource.create()
         self.assertIn(SERVICE_INSTANCE_ID, resource.attributes)
         uuid.UUID(resource.attributes[SERVICE_INSTANCE_ID])
+
+
+class TestResourceSchemaURL(unittest.TestCase):
+    """Test class for schema URL functionality in Resource.create()."""
+
+    def test_user_schema_url_preserved(self):
+        """Test that a user-supplied schema URL takes precedence over detector schema URLs."""
+        attributes = {"service": "ui"}
+        schema_url = "https://opentelemetry.io/schemas/1.3.0"
+
+        resource = Resource.create(attributes, schema_url)
+        # User's explicit schema_url should override detector schema URLs
+        self.assertEqual(resource.schema_url, schema_url)
+
+    def test_no_user_schema_url(self):
+        """Test that schema URL comes from detectors when user provides none."""
+        attributes = {"service": "ui"}
+
+        resource = Resource.create(attributes)
+        # When user provides no schema_url, detectors with schema URLs set it
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
+
+    def test_sdk_detectors_with_schema_url(self):
+        """Test that SDK detectors set schema URLs per specification."""
+        process_detector = ProcessResourceDetector()
+        process_resource = process_detector.detect()
+        self.assertEqual(
+            process_resource.schema_url, "https://opentelemetry.io/schemas/1.44.0"
+        )
+
+        os_detector = OsResourceDetector()
+        os_resource = os_detector.detect()
+        self.assertEqual(
+            os_resource.schema_url, "https://opentelemetry.io/schemas/1.44.0"
+        )
+
+        host_detector = _HostResourceDetector()
+        host_resource = host_detector.detect()
+        self.assertEqual(
+            host_resource.schema_url, "https://opentelemetry.io/schemas/1.44.0"
+        )
+
+        service_instance_detector = ServiceInstanceIdResourceDetector()
+        service_instance_resource = service_instance_detector.detect()
+        self.assertEqual(
+            service_instance_resource.schema_url, "https://opentelemetry.io/schemas/1.44.0"
+        )
+
+        # OTELResourceDetector reads arbitrary environment attributes and should NOT set a schema URL
+        otel_detector = OTELResourceDetector()
+        otel_resource = otel_detector.detect()
+        self.assertEqual(otel_resource.schema_url, "")
+
+    def test_custom_detector_with_schema_url(self):
+        """Test that custom detectors can set their own schema URLs."""
+        custom_schema_url = "https://opentelemetry.io/schemas/1.25.0"
+
+        class CustomDetector(ResourceDetector):
+            def detect(self) -> Resource:
+                return Resource({"custom": "attribute"}, custom_schema_url)
+
+        custom_detector = CustomDetector()
+        custom_resource = custom_detector.detect()
+        self.assertEqual(custom_resource.schema_url, custom_schema_url)
+
+    def test_user_schema_url_with_detectors(self):
+        """Test that user schema URL takes precedence over detector schema URLs."""
+        attributes = {"service": "ui"}
+        schema_url = "https://opentelemetry.io/schemas/1.3.0"
+
+        # User's explicit schema_url should override detector schema URLs
+        resource = Resource.create(attributes, schema_url)
+        self.assertEqual(resource.schema_url, schema_url)
+        # Attributes from detectors should still be present
+        self.assertIn("telemetry.sdk.language", resource.attributes)
+        self.assertIn("service.instance.id", resource.attributes)
+
+        # When user provides the same schema URL as detectors, it should also work
+        resource = Resource.create(attributes, "https://opentelemetry.io/schemas/1.44.0")
+        self.assertEqual(resource.schema_url, "https://opentelemetry.io/schemas/1.44.0")
+        self.assertIn("telemetry.sdk.language", resource.attributes)
+        self.assertIn("service.instance.id", resource.attributes)
+
+    def test_resource_merge_schema_url_semantics(self):
+        """Test Resource.merge() schema URL semantics per specification."""
+        schema_url_v1 = "https://opentelemetry.io/schemas/1.3.0"
+        schema_url_v2 = "https://opentelemetry.io/schemas/1.4.0"
+
+        # Empty + non-empty = non-empty
+        resource_without_schema = Resource({"key": "value"}, "")
+        resource_with_schema = Resource({"other": "data"}, schema_url_v1)
+        merged = resource_without_schema.merge(resource_with_schema)
+        self.assertEqual(merged.schema_url, schema_url_v1)
+
+        # Non-empty + empty = non-empty
+        merged = resource_with_schema.merge(resource_without_schema)
+        self.assertEqual(merged.schema_url, schema_url_v1)
+
+        # Same schema URL = same schema URL
+        resource_with_schema_2 = Resource({"another": "item"}, schema_url_v1)
+        merged = resource_with_schema.merge(resource_with_schema_2)
+        self.assertEqual(merged.schema_url, schema_url_v1)
+
+        # Different non-empty schema URLs = warning, clears schema_url, merges attributes
+        resource_with_different_schema = Resource({"conflict": "data"}, schema_url_v2)
+        with self.assertLogs(level=WARNING) as log_entry:
+            merged = resource_with_schema.merge(resource_with_different_schema)
+            self.assertEqual(merged.schema_url, "")
+            self.assertIn(schema_url_v1, log_entry.output[0])
+            self.assertIn(schema_url_v2, log_entry.output[0])
+            # Attributes are still merged
+            self.assertEqual(merged.attributes["other"], "data")
+            self.assertEqual(merged.attributes["conflict"], "data")
