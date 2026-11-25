@@ -51,7 +51,10 @@ _GRPC_COMPONENT_TYPES = frozenset(
 @dataclass
 class ExportResult:
     error: Exception | None = None
-    error_attrs: Attributes = None
+    # ``error.type`` for failures without an exception, e.g. an HTTP status code.
+    error_type: str | None = None
+    # Recorded on the operation duration for every response, successful or not.
+    response_attrs: Attributes = None
 
 
 class ExporterMetricsT(Protocol):
@@ -122,15 +125,14 @@ class ExporterMetrics:
             yield result
         finally:
             error = result.error
-            error_attrs = result.error_attrs
+            error_type = type(error).__qualname__ if error else result.error_type
+            response_attrs = result.response_attrs
 
             end_time = perf_counter()
             self._inflight.add(-num_items, self._standard_attrs)
-            exported_attrs = (
-                {**self._standard_attrs, ERROR_TYPE: type(error).__qualname__} if error else self._standard_attrs
-            )
+            exported_attrs = {**self._standard_attrs, ERROR_TYPE: error_type} if error_type else self._standard_attrs
             self._exported.add(num_items, exported_attrs)
-            duration_attrs = {**exported_attrs, **error_attrs} if error_attrs else exported_attrs
+            duration_attrs = {**exported_attrs, **response_attrs} if response_attrs else exported_attrs
             self._duration.record(end_time - start_time, duration_attrs)
 
 
