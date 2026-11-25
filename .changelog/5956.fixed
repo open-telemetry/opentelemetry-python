@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: fix `ReadableSpan.attributes` type hint so it is no longer optional

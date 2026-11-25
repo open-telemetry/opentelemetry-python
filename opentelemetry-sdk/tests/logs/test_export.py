@@ -521,6 +521,26 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
         self.assertEqual(log_record_processor.on_emit.call_count, 1)
         log_record_processor.shutdown()
 
+    def test_on_emit_clears_exception_on_copied_record(self):
+        exporter = InMemoryLogRecordExporter()
+        processor = BatchLogRecordProcessor(exporter)
+        exc = ValueError("boom")
+        original_log_record = LogRecord(body="error", exception=exc)
+        rw_record = ReadWriteLogRecord(
+            log_record=original_log_record,
+            instrumentation_scope=InstrumentationScope("example", "example"),
+        )
+
+        processor.on_emit(rw_record)
+        processor.shutdown()
+
+        # Original record keeps its exception reference for downstream processors
+        self.assertIs(original_log_record.exception, exc)
+        # Exported record has its exception cleared to avoid retaining stack frames
+        finished_logs = exporter.get_finished_logs()
+        self.assertEqual(len(finished_logs), 1)
+        self.assertIsNone(finished_logs[0].log_record.exception)
+
     def test_with_multiple_threads(self):  # pylint: disable=no-self-use
         exporter = InMemoryLogRecordExporter()
         batch_processor = BatchLogRecordProcessor(
@@ -782,6 +802,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_log_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.log.queue.size")
+        self.assertEqual(metrics[2].unit, "{log_record}")
+        self.assertEqual(
+            metrics[2].description,
+            "The number of log records in the queue of a given instance of an SDK log processor.",
+        )
         queue_size_data_point = metrics[2].data.data_points[0]
         self.assertEqual(queue_size_data_point.value, 1)
         self.assertEqual(
@@ -839,6 +864,11 @@ class TestBatchLogRecordProcessor(unittest.TestCase):
             queue_capacity_data_point.attributes["otel.component.name"].startswith("batching_log_processor/")
         )
         self.assertEqual(metrics[2].name, "otel.sdk.processor.log.queue.size")
+        self.assertEqual(metrics[2].unit, "{log_record}")
+        self.assertEqual(
+            metrics[2].description,
+            "The number of log records in the queue of a given instance of an SDK log processor.",
+        )
         queue_size_data_point = metrics[2].data.data_points[0]
         self.assertEqual(queue_size_data_point.value, 0)
         self.assertEqual(

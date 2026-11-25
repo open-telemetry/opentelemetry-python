@@ -7,6 +7,7 @@
 import math
 import os
 import sys
+import tempfile
 import unittest
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -45,9 +46,7 @@ from opentelemetry.configuration.models import (
     ExperimentalPrometheusMetricExporter as PrometheusMetricExporterConfig,
 )
 from opentelemetry.configuration.models import (
-    ExplicitBucketHistogramAggregation as ExplicitBucketConfig,
-)
-from opentelemetry.configuration.models import (
+    ExperimentalViewMatchingMode,
     ExporterDefaultHistogramAggregation,
     ExporterTemporalityPreference,
     IncludeExclude,
@@ -55,6 +54,15 @@ from opentelemetry.configuration.models import (
     OtlpHttpEncoding,
     ViewSelector,
     ViewStream,
+)
+from opentelemetry.configuration.models import (
+    ExplicitBucketHistogramAggregation as ExplicitBucketConfig,
+)
+from opentelemetry.configuration.models import (
+    GrpcTls as GrpcTlsConfig,
+)
+from opentelemetry.configuration.models import (
+    HttpTls as HttpTlsConfig,
 )
 from opentelemetry.configuration.models import (
     MeterProvider as MeterProviderConfig,
@@ -159,6 +167,12 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
         self.assertIsInstance(reader, PeriodicExportingMetricReader)
         self.assertEqual(reader._export_interval_millis, 60000.0)
 
+    def test_view_matching_mode_warns(self):
+        config = MeterProviderConfig(readers=[], view_matching_mode_development=ExperimentalViewMatchingMode.composable)
+        with self.assertLogs("opentelemetry.configuration._meter_provider", level="WARNING") as logs:
+            create_meter_provider(config)
+        self.assertIn("view_matching_mode/development is not yet supported", logs.output[0])
+
     def test_configure_none_does_not_set_global(self):
         original = __import__("opentelemetry.metrics", fromlist=["get_meter_provider"]).get_meter_provider()
         configure_meter_provider(None)
@@ -174,7 +188,7 @@ class TestCreateMeterProviderBasic(unittest.TestCase):
             self.assertIsInstance(arg, MeterProvider)
 
 
-class TestCreateMetricReaders(unittest.TestCase):
+class TestCreateMetricReaders(unittest.TestCase):  # pylint: disable=too-many-public-methods
     @staticmethod
     def _make_periodic_config(exporter_config, interval=None, timeout=None):
         return MeterProviderConfig(
@@ -326,8 +340,8 @@ class TestCreateMetricReaders(unittest.TestCase):
         _, kwargs = mock_exporter_cls.call_args
         self.assertEqual(kwargs["endpoint"], "http://localhost:4318")
         self.assertIsNone(kwargs["headers"])
-        self.assertIsNone(kwargs["timeout"])
-        self.assertIsNone(kwargs["compression"])
+        self.assertEqual(kwargs["timeout"], 10.0)
+        self.assertEqual(kwargs["compression"], mock_compression_cls.NoCompression)
 
     def test_otlp_http_zero_timeout_is_unlimited(self):
         mock_exporter_cls = MagicMock()
@@ -443,6 +457,155 @@ class TestCreateMetricReaders(unittest.TestCase):
             create_meter_provider(config)
         self.assertIn("otlp-proto-grpc", str(ctx.exception))
 
+    def test_otlp_http_tls_files_passed(self):
+        for encoding in (None, OtlpHttpEncoding.protobuf, OtlpHttpEncoding.json):
+            with self.subTest(encoding=encoding):
+                protocol = "json" if encoding == OtlpHttpEncoding.json else "proto"
+                mock_exporter_cls = MagicMock()
+                mock_module = MagicMock()
+                mock_module.OTLPMetricExporter = mock_exporter_cls
+
+                with (
+                    tempfile.TemporaryDirectory() as tmp_dir,
+                    patch.dict(
+                        sys.modules,
+                        {
+                            f"opentelemetry.exporter.otlp.{protocol}.http.metric_exporter": mock_module,
+                            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                        },
+                    ),
+                ):
+                    paths = {}
+                    for name in ("ca", "client", "client_key"):
+                        paths[name] = os.path.join(tmp_dir, f"{name}.pem")
+                        with open(paths[name], "wb") as file:
+                            file.write(b"data")
+
+                    config = self._make_periodic_config(
+                        PushMetricExporterConfig(
+                            otlp_http=OtlpHttpMetricExporterConfig(
+                                encoding=encoding,
+                                tls=HttpTlsConfig(
+                                    ca_file=paths["ca"],
+                                    key_file=paths["client_key"],
+                                    cert_file=paths["client"],
+                                ),
+                            )
+                        )
+                    )
+                    create_meter_provider(config)
+
+                _, kwargs = mock_exporter_cls.call_args
+                self.assertEqual(kwargs["certificate_file"], paths["ca"])
+                self.assertEqual(kwargs["client_key_file"], paths["client_key"])
+                self.assertEqual(kwargs["client_certificate_file"], paths["client"])
+
+    def test_otlp_http_tls_missing_file_raises(self):
+        mock_module = MagicMock()
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http.metric_exporter": mock_module,
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(
+                        tls=HttpTlsConfig(ca_file=os.path.join(tmp_dir, "missing.pem"))
+                    )
+                )
+            )
+            create_meter_provider(config)
+        self.assertIn("tls.ca_file", str(ctx.exception))
+        mock_module.OTLPMetricExporter.assert_not_called()
+
+    def test_otlp_grpc_http_endpoint_overrides_tls_insecure(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with patch.dict(
+            sys.modules, {"grpc": MagicMock(), "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": mock_module}
+        ):
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_grpc=OtlpGrpcMetricExporterConfig(
+                        endpoint="http://collector:4317", tls=GrpcTlsConfig(insecure=False)
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertTrue(kwargs["insecure"])
+
+    @patch.dict(os.environ, {"OTEL_EXPORTER_OTLP_INSECURE": "true", "OTEL_EXPORTER_OTLP_METRICS_INSECURE": "true"})
+    def test_otlp_grpc_secure_default_ignores_insecure_env(self):
+        for tls in (None, GrpcTlsConfig()):
+            mock_module = MagicMock()
+            with (
+                self.subTest(tls=tls),
+                patch.dict(
+                    sys.modules,
+                    {
+                        "grpc": MagicMock(),
+                        "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": mock_module,
+                    },
+                ),
+            ):
+                mock_exporter_cls = mock_module.OTLPMetricExporter
+                config = self._make_periodic_config(
+                    PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(endpoint="collector:4317", tls=tls))
+                )
+                provider = create_meter_provider(config)
+                try:
+                    self.assertIs(mock_exporter_cls.call_args.kwargs["insecure"], False)
+                finally:
+                    provider.shutdown()
+
+    def test_otlp_grpc_tls_files_build_credentials(self):
+        mock_exporter_cls = MagicMock()
+        mock_grpc = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "grpc": mock_grpc,
+                    "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": mock_module,
+                },
+            ),
+        ):
+            ca_file = os.path.join(tmp_dir, "ca.pem")
+            with open(ca_file, "wb") as file:
+                file.write(b"ca-bytes")
+            config = self._make_periodic_config(
+                PushMetricExporterConfig(
+                    otlp_grpc=OtlpGrpcMetricExporterConfig(
+                        endpoint="https://collector:4317", tls=GrpcTlsConfig(ca_file=ca_file, insecure=False)
+                    )
+                )
+            )
+            create_meter_provider(config)
+
+        mock_grpc.ssl_channel_credentials.assert_called_once_with(
+            root_certificates=b"ca-bytes",
+            private_key=None,
+            certificate_chain=None,
+        )
+        _, kwargs = mock_exporter_cls.call_args
+        self.assertIs(kwargs["credentials"], mock_grpc.ssl_channel_credentials.return_value)
+        self.assertFalse(kwargs["insecure"])
+
     def test_otlp_file_development_missing_package_raises(self):
         config = self._make_periodic_config(
             PushMetricExporterConfig(otlp_file_development=ExperimentalOtlpFileMetricExporterConfig())
@@ -539,6 +702,66 @@ class TestCreateMetricReaders(unittest.TestCase):
         self.assertIn("output_stream", str(ctx.exception))
         mock_exporter_cls.assert_not_called()
 
+    def test_otlp_http_max_request_size_passed_through(self):
+        mock_exporter_cls = MagicMock()
+        mock_module = MagicMock()
+        mock_module.OTLPMetricExporter = mock_exporter_cls
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                "opentelemetry.exporter.otlp.proto.http.metric_exporter": mock_module,
+            },
+        ):
+            create_meter_provider(
+                self._make_periodic_config(
+                    PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(max_request_size=1024))
+                )
+            )
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["max_request_size"], 1024)
+
+    def test_otlp_unsupported_size_limits_warn(self):
+        modules = {
+            "grpc": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.grpc.metric_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http.metric_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+            "opentelemetry.exporter.otlp.json.http.metric_exporter": MagicMock(),
+        }
+        cases = [
+            (
+                "grpc max_request_size",
+                PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(max_request_size=1024)),
+                "max_request_size is not yet supported for otlp_grpc exporter for metrics",
+            ),
+            (
+                "grpc max_response_size",
+                PushMetricExporterConfig(otlp_grpc=OtlpGrpcMetricExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_grpc exporter for metrics",
+            ),
+            (
+                "http max_response_size",
+                PushMetricExporterConfig(otlp_http=OtlpHttpMetricExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_http exporter for metrics",
+            ),
+            (
+                "http json max_request_size",
+                PushMetricExporterConfig(
+                    otlp_http=OtlpHttpMetricExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
+                ),
+                "max_request_size is not yet supported for otlp_http JSON exporter for metrics",
+            ),
+        ]
+        for name, exporter_config, expected in cases:
+            with (
+                self.subTest(name),
+                patch.dict(sys.modules, modules),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_meter_provider(self._make_periodic_config(exporter_config))
+                self.assertTrue(any(expected in message for message in logs.output), logs.output)
+
 
 class TestCreatePullMetricReaders(unittest.TestCase):
     def test_pull_prometheus_creates_reader(self):
@@ -569,7 +792,12 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             )
             provider = create_meter_provider(config)
 
-        mock_reader_cls.assert_called_once_with(disable_target_info=True, cardinality_limits=None)
+        mock_reader_cls.assert_called_once_with(
+            disable_target_info=True,
+            scope_info_enabled=True,
+            resource_attribute_filter=None,
+            cardinality_limits=None,
+        )
         mock_start_server.assert_called_once_with(port=9090, addr="0.0.0.0")
         self.assertEqual(len(provider._metric_readers), 1)
 
@@ -595,9 +823,70 @@ class TestCreatePullMetricReaders(unittest.TestCase):
             )
             provider = create_meter_provider(config)
 
-        mock_reader_cls.assert_called_once_with(disable_target_info=False, cardinality_limits=None)
+        mock_reader_cls.assert_called_once_with(
+            disable_target_info=False,
+            scope_info_enabled=True,
+            resource_attribute_filter=None,
+            cardinality_limits=None,
+        )
         mock_start_server.assert_called_once_with(port=9464, addr="localhost")
         self.assertEqual(len(provider._metric_readers), 1)
+
+    @staticmethod
+    def _create_prometheus_reader_kwargs(exporter_config):
+        mock_module = MagicMock()
+        with patch.dict(
+            sys.modules,
+            {"opentelemetry.exporter.prometheus": mock_module},
+        ):
+            create_meter_provider(
+                MeterProviderConfig(
+                    readers=[
+                        MetricReaderConfig(
+                            pull=PullMetricReaderConfig(
+                                exporter=PullMetricExporterConfig(prometheus_development=exporter_config)
+                            )
+                        )
+                    ]
+                )
+            )
+        mock_module.PrometheusMetricReader.assert_called_once()
+        return mock_module.PrometheusMetricReader.call_args.kwargs
+
+    def test_pull_prometheus_scope_info_enabled(self):
+        for configured, expected in ((None, True), (True, True), (False, False)):
+            with self.subTest(configured=configured):
+                with self.assertNoLogs("opentelemetry.configuration._meter_provider", level="WARNING"):
+                    kwargs = self._create_prometheus_reader_kwargs(
+                        PrometheusMetricExporterConfig(scope_info_enabled=configured)
+                    )
+                self.assertIs(kwargs["scope_info_enabled"], expected)
+
+    def test_pull_prometheus_resource_constant_labels(self):
+        with self.assertNoLogs("opentelemetry.configuration._meter_provider", level="WARNING"):
+            kwargs = self._create_prometheus_reader_kwargs(
+                PrometheusMetricExporterConfig(
+                    resource_constant_labels=IncludeExclude(
+                        included=["service.*"],
+                        excluded=["service.namespace"],
+                    )
+                )
+            )
+        resource_attribute_filter = kwargs["resource_attribute_filter"]
+        for key, expected in (
+            ("service.name", True),
+            ("service.version", True),
+            ("service.namespace", False),
+            ("host.name", False),
+        ):
+            with self.subTest(key=key):
+                self.assertIs(resource_attribute_filter(key), expected)
+
+    def test_pull_prometheus_resource_constant_labels_empty_includes_all(self):
+        kwargs = self._create_prometheus_reader_kwargs(
+            PrometheusMetricExporterConfig(resource_constant_labels=IncludeExclude())
+        )
+        self.assertTrue(kwargs["resource_attribute_filter"]("host.name"))
 
     def test_pull_prometheus_missing_package_raises(self):
         with patch.dict(
