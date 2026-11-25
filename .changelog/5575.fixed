@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: pass the remaining shutdown budget to the metric exporter as `timeout_millis`, so `PeriodicExportingMetricReader.shutdown` no longer silently falls back to the exporter default
