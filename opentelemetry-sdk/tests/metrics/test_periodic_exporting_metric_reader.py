@@ -405,6 +405,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         point = metric.data.data_points[0]
         histogram = cast(HistogramDataPoint, point)
         self.assertEqual(histogram.count, 1)
+        self.assertEqual(histogram.explicit_bounds, ())
         attrs = histogram.attributes
         assert attrs is not None
         self.assertEqual(attrs["otel.component.type"], "periodic_metric_reader")

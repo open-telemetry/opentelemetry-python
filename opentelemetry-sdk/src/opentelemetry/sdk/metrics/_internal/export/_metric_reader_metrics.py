@@ -10,7 +10,7 @@ from opentelemetry.semconv._incubating.attributes.otel_attributes import (
     OTEL_COMPONENT_TYPE,
 )
 from opentelemetry.semconv._incubating.metrics.otel_metrics import (
-    create_otel_sdk_metric_reader_collection_duration,
+    OTEL_SDK_METRIC_READER_COLLECTION_DURATION,
 )
 
 _component_counter = Counter()
@@ -37,7 +37,12 @@ class MetricReaderMetrics:
             OTEL_COMPONENT_NAME: f"{component_type}/{count}",
         }
 
-        self._collection_duration = create_otel_sdk_metric_reader_collection_duration(meter)
+        self._collection_duration = meter.create_histogram(
+            name=OTEL_SDK_METRIC_READER_COLLECTION_DURATION,
+            description="The duration of the collect operation of the metric reader.",
+            unit="s",
+            explicit_bucket_boundaries_advisory=[],
+        )
 
     def record_collection(self, duration: float) -> None:
         self._collection_duration.record(duration, self._standard_attrs)
