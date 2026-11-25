@@ -21,13 +21,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install toml
-        run: pip install toml
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Set environment variables
         run: |
-          stable_version=$(./scripts/eachdist.py version --mode stable)
-          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          stable_version=$(uv run --frozen --only-dev ./scripts/eachdist.py version --mode stable)
+          unstable_version=$(uv run --frozen --only-dev ./scripts/eachdist.py version --mode prerelease)
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
             stable_major="${BASH_REMATCH[1]}"
@@ -84,10 +84,6 @@ jobs:
       - name: Build wheels
         run: ./scripts/build.sh
 
-      - name: Install twine
-        run: |
-          pip install twine
-
       # The step below publishes to testpypi in order to catch any issues
       # with the package configuration that would cause a failure to upload
       # to pypi. One example of such a failure is if a classifier is
@@ -99,14 +95,14 @@ jobs:
           TWINE_USERNAME: '__token__'
           TWINE_PASSWORD: ${{ secrets.test_pypi_token }}
         run: |
-          twine upload --repository testpypi --skip-existing --verbose dist/*
+          uv run --frozen --only-dev twine upload --repository testpypi --skip-existing --verbose dist/*
 
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: '__token__'
           TWINE_PASSWORD: ${{ secrets.pypi_password }}
         run: |
-          twine upload --skip-existing --verbose dist/*
+          uv run --frozen --only-dev twine upload --skip-existing --verbose dist/*
 
       - name: Generate release notes
         env:
