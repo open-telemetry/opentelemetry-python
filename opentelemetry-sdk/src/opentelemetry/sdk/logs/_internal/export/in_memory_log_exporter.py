@@ -5,7 +5,7 @@ import collections.abc
 import threading
 
 from opentelemetry.sdk.logs import ReadableLogRecord
-from opentelemetry.sdk.logs.export import (
+from opentelemetry.sdk.logs._internal.export import (
     LogRecordExporter,
     LogRecordExportResult,
 )

@@ -736,7 +736,10 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_disable_default(self, logging_mock, tracing_mock):
-        _initialize_components(auto_instrumentation_version="auto-version")
+        with patch.dict(environ):
+            environ.pop("OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED", None)
+            with self.assertNoLogs("opentelemetry.sdk._configuration", level=WARNING):
+                _initialize_components(auto_instrumentation_version="auto-version")
         self.assertEqual(tracing_mock.call_count, 1)
         logging_mock.assert_called_once_with(
             mock.ANY,
@@ -747,26 +750,21 @@ class TestLoggingInit(TestCase):
             logger_configurator=None,
         )
 
-    @patch.dict(
-        environ,
-        {
-            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
-            "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "True",
-        },
-    )
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
-    def test_logging_init_ignores_removed_auto_instrumentation_env(self, logging_mock, tracing_mock):
-        _initialize_components(auto_instrumentation_version="auto-version")
-        logging_mock.assert_called_once_with(
-            mock.ANY,
-            mock.ANY,
-            exporter_args_map=None,
-            log_record_processors=None,
-            export_log_record_processor=None,
-            logger_configurator=None,
-        )
-        self.assertEqual(tracing_mock.call_count, 1)
+    def test_logging_init_warns_when_legacy_auto_instrumentation_env_is_set(self, logging_mock, tracing_mock):
+        legacy_logging_env_var = "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
+        for value in ("true", "false", ""):
+            with self.subTest(value=value), patch.dict(environ, {legacy_logging_env_var: value}):
+                with self.assertLogs("opentelemetry.sdk._configuration", level=WARNING) as logs:
+                    _initialize_components(auto_instrumentation_version="auto-version")
+
+                self.assertEqual(len(logs.records), 1)
+                self.assertIn("install opentelemetry-instrumentation-logging", logs.output[0])
+                self.assertIn(f"unset {legacy_logging_env_var}", logs.output[0])
+
+        self.assertEqual(logging_mock.call_count, 3)
+        self.assertEqual(tracing_mock.call_count, 3)
 
     @patch.dict(
         environ,
