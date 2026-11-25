@@ -1,0 +1,1 @@
+`opentelemetry-codegen-json`, `opentelemetry-proto-json`: reject `bool` values for non-`bool` fields in `validate_type`

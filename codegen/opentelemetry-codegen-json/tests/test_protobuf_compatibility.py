@@ -212,3 +212,31 @@ def test_parity_optional_scalars(optional_msg_classes: tuple[type[Any], type[Any
             use_integers_for_enums=True,
         )
     )
+
+
+@pytest.mark.parametrize(
+    "invalid_payload",
+    [
+        {"i32Val": True},
+        {"u32Val": False},
+        {"si32Val": True},
+        {"f32Val": False},
+        {"sf32Val": True},
+        {"i64Val": True},
+        {"u64Val": False},
+        {"si64Val": True},
+        {"f64Val": False},
+        {"sf64Val": True},
+    ],
+)
+def test_parity_integer_rejects_bool(
+    numeric_msg_classes: tuple[type[Any], type[Any]],
+    invalid_payload: dict[str, Any],
+) -> None:
+    JSONNumericTest, ProtoNumericTest = numeric_msg_classes
+
+    with pytest.raises(json_format.ParseError):
+        json_format.ParseDict(invalid_payload, ProtoNumericTest())
+
+    with pytest.raises(TypeError, match="got bool"):
+        JSONNumericTest.from_dict(invalid_payload)

@@ -170,7 +170,8 @@ def decode_int64(value: int | str | None, field_name: str) -> int:
     """
     if value is None:
         return 0
-    validate_type(value, (int, str), field_name)
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise TypeError(f"Field '{field_name}' expected {(int, str)}, got {type(value).__name__}")
     try:
         return int(value)
     except (ValueError, TypeError):
@@ -189,7 +190,8 @@ def decode_float(value: float | str | None, field_name: str) -> float:
     """
     if value is None:
         return 0.0
-    validate_type(value, (float, int, str), field_name)
+    if isinstance(value, bool) or not isinstance(value, (float, int, str)):
+        raise TypeError(f"Field '{field_name}' expected {(float, int, str)}, got {type(value).__name__}")
     if value == "NaN":
         return math.nan
     if value == "Infinity":
@@ -241,6 +243,22 @@ def validate_type(
         raise TypeError(f"Field '{field_name}' expected {expected_types}, got {type(value).__name__}")
 
 
+def validate_int_type(
+    value: typing.Any,
+    field_name: str,
+) -> None:
+    """
+    Validate that a value is an integer (excluding bool).
+    Raises TypeError if validation fails.
+
+    Args:
+        value: The value to validate.
+        field_name: The name of the field being validated (for error messages).
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"Field '{field_name}' expected {int}, got {type(value).__name__}")
+
+
 def decode_enum(value: int | str, enum_type: type[EnumT], field_name: str) -> EnumT:
     """
     Decode a JSON enum value into an enum member.
@@ -255,9 +273,8 @@ def decode_enum(value: int | str, enum_type: type[EnumT], field_name: str) -> En
     Returns:
         The corresponding enum member.
     """
-    if isinstance(value, bool):
-        raise TypeError(f"Field '{field_name}' expected int or str, got bool")
-    validate_type(value, (int, str), field_name)
+    if isinstance(value, bool) or not isinstance(value, (int, str)):
+        raise TypeError(f"Field '{field_name}' expected {(int, str)}, got {type(value).__name__}")
     if isinstance(value, str):
         try:
             return enum_type[value]

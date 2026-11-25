@@ -316,7 +316,7 @@ class Profile(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("profileId")) is not None:
             _args["profile_id"] = opentelemetry.proto_json._json_codec.decode_base64(_value, "profile_id")
         if (_value := data.get("droppedAttributesCount")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "dropped_attributes_count")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "dropped_attributes_count")
             _args["dropped_attributes_count"] = _value
         if (_value := data.get("originalPayloadFormat")) is not None:
             opentelemetry.proto_json._json_codec.validate_type(_value, builtins.str, "original_payload_format")
@@ -414,10 +414,10 @@ class ValueType(opentelemetry.proto_json._json_codec.JsonMessage):
         _args = {}
 
         if (_value := data.get("typeStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "type_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "type_strindex")
             _args["type_strindex"] = _value
         if (_value := data.get("unitStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "unit_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)
@@ -471,12 +471,12 @@ class Sample(opentelemetry.proto_json._json_codec.JsonMessage):
         _args = {}
 
         if (_value := data.get("stackIndex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "stack_index")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "stack_index")
             _args["stack_index"] = _value
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "attribute_indices")
         if (_value := data.get("linkIndex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "link_index")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "link_index")
             _args["link_index"] = _value
         if (_value := data.get("values")) is not None:
             _args["values"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: opentelemetry.proto_json._json_codec.decode_int64(_v, "values"), "values")
@@ -540,7 +540,7 @@ class Mapping(opentelemetry.proto_json._json_codec.JsonMessage):
         if (_value := data.get("fileOffset")) is not None:
             _args["file_offset"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "file_offset")
         if (_value := data.get("filenameStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "filename_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("attributeIndices")) is not None:
             _args["attribute_indices"] = opentelemetry.proto_json._json_codec.decode_repeated(_value, lambda _v: _v, "attribute_indices")
@@ -634,7 +634,7 @@ class Location(opentelemetry.proto_json._json_codec.JsonMessage):
         _args = {}
 
         if (_value := data.get("mappingIndex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "mapping_index")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "mapping_index")
             _args["mapping_index"] = _value
         if (_value := data.get("address")) is not None:
             _args["address"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "address")
@@ -688,7 +688,7 @@ class Line(opentelemetry.proto_json._json_codec.JsonMessage):
         _args = {}
 
         if (_value := data.get("functionIndex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "function_index")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "function_index")
             _args["function_index"] = _value
         if (_value := data.get("line")) is not None:
             _args["line"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "line")
@@ -743,13 +743,13 @@ class Function(opentelemetry.proto_json._json_codec.JsonMessage):
         _args = {}
 
         if (_value := data.get("nameStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "name_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "name_strindex")
             _args["name_strindex"] = _value
         if (_value := data.get("systemNameStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "system_name_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "system_name_strindex")
             _args["system_name_strindex"] = _value
         if (_value := data.get("filenameStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "filename_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "filename_strindex")
             _args["filename_strindex"] = _value
         if (_value := data.get("startLine")) is not None:
             _args["start_line"] = opentelemetry.proto_json._json_codec.decode_int64(_value, "start_line")
@@ -799,12 +799,12 @@ class KeyValueAndUnit(opentelemetry.proto_json._json_codec.JsonMessage):
         _args = {}
 
         if (_value := data.get("keyStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "key_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "key_strindex")
             _args["key_strindex"] = _value
         if (_value := data.get("value")) is not None:
             _args["value"] = opentelemetry.proto_json.common.v1.common.AnyValue.from_dict(_value)
         if (_value := data.get("unitStrindex")) is not None:
-            opentelemetry.proto_json._json_codec.validate_type(_value, builtins.int, "unit_strindex")
+            opentelemetry.proto_json._json_codec.validate_int_type(_value, "unit_strindex")
             _args["unit_strindex"] = _value
 
         return cls(**_args)
