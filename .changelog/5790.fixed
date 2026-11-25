@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: run process-dependent resource detectors synchronously in fork handlers to avoid post-fork deadlock when thread pool locks are held
