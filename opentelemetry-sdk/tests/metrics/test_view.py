@@ -3,11 +3,13 @@
 
 # pylint: disable=protected-access
 
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.view import View
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation, View
 
 
 class TestView(TestCase):
@@ -236,3 +238,29 @@ class TestView(TestCase):
         self.assertEqual(view_with_counter._name, "custom_name")
         self.assertEqual(view_with_counter._instrument_name, "my_counter")
         self.assertIs(view_with_counter._instrument_type, Counter)
+
+    def test_view_with_invalid_explicit_bucket_boundaries_does_not_crash_record(self):
+        # Configuring a View with unsorted or non-finite boundaries should not cause
+        # subsequent record() calls to raise unhandled exceptions. The invalid boundaries
+        # are rejected with a warning and default boundaries are used safely.
+        with self.assertLogs(level=WARNING):
+            aggregation = ExplicitBucketHistogramAggregation(boundaries=[100, 10, 50])
+
+        reader = InMemoryMetricReader()
+        view = View(
+            instrument_name="latency",
+            aggregation=aggregation,
+        )
+        meter_provider = MeterProvider(metric_readers=[reader], views=[view])
+        meter = meter_provider.get_meter("test_meter")
+        histogram = meter.create_histogram("latency")
+
+        # Must record successfully without raising ValueError
+        histogram.record(25)
+        histogram.record(10)
+
+        metrics_data = reader.get_metrics_data()
+        data_points = metrics_data.resource_metrics[0].scope_metrics[0].metrics[0].data.data_points
+        self.assertEqual(len(data_points), 1)
+        self.assertEqual(data_points[0].count, 2)
+        self.assertEqual(data_points[0].sum, 35)

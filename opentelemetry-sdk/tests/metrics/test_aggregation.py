@@ -4,6 +4,7 @@
 # pylint: disable=protected-access
 
 from json import loads
+from logging import WARNING
 from math import inf
 from time import sleep, time_ns
 from unittest import TestCase
@@ -536,6 +537,41 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 _default_reservoir_factory(_ExplicitBucketHistogramAggregation),
                 boundaries=[float("-inf"), 50, 100],
             )
+
+    def test_public_aggregation_invalid_boundaries_fallback(self):
+        invalid_boundaries_list = [
+            [100, 10, 50],
+            [10, 50, 50, 100],
+            [10, float("nan"), 100],
+            [10, 50, float("inf")],
+            [float("-inf"), 50, 100],
+            [True, 10, 20],
+            "invalid_string_boundaries",
+        ]
+        for invalid_boundaries in invalid_boundaries_list:
+            with self.subTest(boundaries=invalid_boundaries):
+                with self.assertLogs(level=WARNING) as cm:
+                    aggregation = ExplicitBucketHistogramAggregation(boundaries=invalid_boundaries)
+                self.assertIsNone(aggregation._boundaries)
+                self.assertTrue(
+                    any(
+                        "boundaries must be a sequence of finite, strictly increasing numbers" in msg
+                        for msg in cm.output
+                    )
+                )
+
+    def test_public_aggregation_valid_boundaries(self):
+        valid_boundaries_list = [
+            None,
+            [],
+            (),
+            [0.0, 10.0, 50.0],
+            (1, 2, 3),
+        ]
+        for valid_boundaries in valid_boundaries_list:
+            with self.subTest(boundaries=valid_boundaries):
+                aggregation = ExplicitBucketHistogramAggregation(boundaries=valid_boundaries)
+                self.assertEqual(aggregation._boundaries, valid_boundaries)
 
 
 class TestAggregationFactory(TestCase):
