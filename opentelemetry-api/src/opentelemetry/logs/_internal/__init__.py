@@ -24,7 +24,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
@@ -43,7 +43,7 @@ from opentelemetry.util.types import AnyValue, Attributes
 _logger = getLogger(__name__)
 
 
-class LogRecord(ABC):
+class LogRecord:
     """A LogRecord instance represents an event being logged.
 
     LogRecord instances are created and emitted via `Logger`
@@ -246,9 +246,9 @@ class ProxyLogger(Logger):
         if _LOGGER_PROVIDER:
             self._real_logger = _LOGGER_PROVIDER.get_logger(
                 self._name,
-                self._version,
-                self._schema_url,
-                self._attributes,
+                version=self._version,
+                schema_url=self._schema_url,
+                attributes=self._attributes,
             )
             return self._real_logger
         return self._noop_logger
@@ -326,6 +326,7 @@ class LoggerProvider(SignatureCompatABC):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -365,6 +366,7 @@ class NoOpLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -377,6 +379,7 @@ class ProxyLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -438,11 +441,12 @@ def set_logger_provider(logger_provider: LoggerProvider) -> None:
 
 
 def get_logger(
-    instrumenting_module_name: str,
-    instrumenting_library_version: str = "",
-    logger_provider: LoggerProvider | None = None,
+    name: str,
+    *,
+    version: str | None = None,
     schema_url: str | None = None,
     attributes: Attributes = None,
+    logger_provider: LoggerProvider | None = None,
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 
@@ -454,8 +458,8 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name,
-        instrumenting_library_version,
-        schema_url,
-        attributes,
+        name,
+        version=version,
+        schema_url=schema_url,
+        attributes=attributes,
     )

@@ -15,6 +15,7 @@ from opentelemetry.sdk._logs import (
     ReadWriteLogRecord,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace.span import TraceFlags
 
 
@@ -34,12 +35,23 @@ class TestLogRecord(unittest.TestCase):
                 event_name="a.event",
             ),
             resource=Resource({"service.name": "foo"}),
+            instrumentation_scope=InstrumentationScope("first_name", "first_version"),
         )
 
         self.assertEqual(
             log_record.to_json(indent=None),
-            '{"body": {"key": "logLine", "bytes": "MTIz"}, "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "0x00000000000000000000000000000000", "span_id": "0x0000000000000000", "trace_flags": 0, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}, "event_name": "a.event"}',
+            '{"body": {"key": "logLine", "bytes": "MTIz"}, "severity_number": null, "severity_text": null, "attributes": {"mapping": {"key": "value"}, "none": null, "sequence": [1, 2], "str": "string"}, "dropped_attributes": 0, "timestamp": "1970-01-01T00:00:00.000000Z", "observed_timestamp": "1970-01-01T00:00:00.000000Z", "trace_id": "0x00000000000000000000000000000000", "span_id": "0x0000000000000000", "trace_flags": 0, "resource": {"attributes": {"service.name": "foo"}, "schema_url": ""}, "instrumentation_scope": {"name": "first_name", "version": "first_version", "schema_url": "", "attributes": null}, "event_name": "a.event"}',
         )
+
+    def test_log_record_to_json_null_scope(self):
+        record = LogRecord(timestamp=0, observed_timestamp=0, body="a log line")
+        actual = ReadableLogRecord(
+            record,
+            resource=Resource({"service.name": "foo"}),
+        )
+
+        decoded = json.loads(actual.to_json())
+        self.assertIsNone(decoded["instrumentation_scope"])
 
     def test_log_record_to_json_serializes_severity_number_as_int(self):
         actual = ReadableLogRecord(
