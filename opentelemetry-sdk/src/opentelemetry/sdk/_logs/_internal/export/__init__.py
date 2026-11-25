@@ -244,10 +244,16 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         self._exporter.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
+        if self._shutdown:
+            return False
         # Exporters are optional in custom setups and may not implement force_flush
         flush_fn = getattr(self._exporter, "force_flush", None)
         if callable(flush_fn):
-            return bool(flush_fn(timeout_millis=timeout_millis))
+            try:
+                return bool(flush_fn(timeout_millis=timeout_millis))
+            except Exception:  # pylint: disable=broad-exception-caught
+                _logger.exception("Exception while flushing exporter.")
+                return False
         return True
 
 

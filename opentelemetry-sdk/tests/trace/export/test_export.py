@@ -105,6 +105,17 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         processor_no_flush = export.SimpleSpanProcessor(NoForceFlushExporter())
         self.assertTrue(processor_no_flush.force_flush())
 
+        # When exporter raises an exception during force_flush
+        exporter.reset_mock()
+        exporter.force_flush.side_effect = RuntimeError("flush failed")
+        with self.assertLogs(level="ERROR") as cm:
+            self.assertFalse(span_processor.force_flush())
+        self.assertIn("Exception while flushing exporter", cm.output[0])
+
+        # When processor is shut down
+        span_processor.shutdown()
+        self.assertFalse(span_processor.force_flush())
+
     def test_simple_span_processor_no_context(self):
         """Check that we process spans that are never made active.
 
