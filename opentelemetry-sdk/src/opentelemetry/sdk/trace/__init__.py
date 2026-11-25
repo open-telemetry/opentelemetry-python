@@ -525,7 +525,7 @@ class ReadableSpan:
         return self._status
 
     @property
-    def attributes(self) -> types.Attributes:
+    def attributes(self) -> Mapping[str, types.AnyValue]:
         return MappingProxyType(self._attributes or {})
 
     @property
