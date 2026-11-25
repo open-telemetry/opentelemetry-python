@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: Removed the `jsonschema` runtime dependency. Configuration files are now checked against a validator compiled from `schema.json` at development time, which also drops `attrs`, `referencing`, `jsonschema-specifications` and `rpds-py` from the installed tree.
