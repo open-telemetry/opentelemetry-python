@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import unittest
+from collections.abc import Mapping
 from importlib import reload
 from logging import ERROR, WARNING
 from pathlib import Path
@@ -19,6 +20,8 @@ from random import randint
 from time import time_ns
 from unittest import mock
 from unittest.mock import Mock, patch
+
+from typing_extensions import assert_type
 
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
@@ -68,6 +71,7 @@ from opentelemetry.trace import (
     get_tracer,
     set_tracer_provider,
 )
+from opentelemetry.util.types import AnyValue
 
 
 class TestTracer(unittest.TestCase):
@@ -797,6 +801,11 @@ class TestSpanCreation(unittest.TestCase):
 
 
 class TestReadableSpan(unittest.TestCase):
+    def test_attributes_type(self):
+        span = new_tracer().start_span("test")
+        assert_type(span.attributes, Mapping[str, AnyValue])
+        span.end()
+
     def test_links(self):
         span = trace.ReadableSpan("test")
         self.assertEqual(span.links, ())
