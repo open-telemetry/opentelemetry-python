@@ -237,6 +237,50 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertEqual(exporter.metrics[0], metrics)
         pmr.shutdown()
 
+    def test_ticker_maintains_schedule(self):
+        for duration, wake_delay, timeout, expected in (
+            (0.25, 0, False, [1, 2, 3]),
+            (1.0, 0, False, [1, 3, 5]),
+            (2.5, 0, False, [1, 4, 7]),
+            (0.25, 0, True, [1, 2, 3]),
+            (0.25, 2.25, False, [3.25, 4, 5]),
+        ):
+            with self.subTest(duration=duration, wake_delay=wake_delay, timeout=timeout):
+                self._assert_ticker_schedule(duration, wake_delay, timeout, expected)
+
+    def _assert_ticker_schedule(self, duration, wake_delay, timeout, expected):
+        now = 0.0
+        starts = []
+        stopped = False
+
+        def wait(delay):
+            nonlocal now, stopped
+            if len(starts) == len(expected):
+                stopped = True
+                return True
+            now += delay + (wake_delay if not starts else 0)
+            return False
+
+        def collect(reader, timeout_millis):
+            nonlocal now
+            if not stopped:
+                starts.append(now)
+                now += duration
+                if timeout:
+                    raise MetricsTimeoutError("test timeout")
+            return metrics
+
+        pmr = PeriodicExportingMetricReader(FakeMetricsExporter(), export_interval_millis=math.inf)
+        self.addCleanup(pmr.shutdown)
+        pmr._export_interval_millis = 1000
+        pmr._set_collect_callback(collect)
+        with (
+            patch("opentelemetry.sdk.metrics._internal.export.monotonic", side_effect=lambda: now),
+            patch.object(pmr._shutdown_event, "wait", side_effect=wait),
+        ):
+            pmr._ticker()
+        self.assertEqual(starts, expected)
+
     def test_shutdown(self):
         exporter = FakeMetricsExporter()
 
