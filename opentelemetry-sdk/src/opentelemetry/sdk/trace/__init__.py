@@ -8,6 +8,7 @@ import concurrent.futures
 import json
 import logging
 import os
+import re
 import threading
 import traceback
 import typing
@@ -75,6 +76,25 @@ from opentelemetry.util import types
 from opentelemetry.util._decorator import _agnosticcontextmanager
 
 logger = logging.getLogger(__name__)
+
+_SPAN_TYPE_ERROR_MESSAGE = (
+    "Dropping span type: expected ASCII string of maximum length 255 characters "
+    "starting with a letter, followed by letters, digits, '_' or '.' but got %s"
+)
+
+_SPAN_TYPE_PATTERN = re.compile(r"[A-Za-z][A-Za-z0-9_.]{0,254}")
+
+
+def _is_valid_span_type(span_type: object) -> bool:
+    """Checks the span type for compliance with the span type syntax."""
+    return isinstance(span_type, str) and _SPAN_TYPE_PATTERN.fullmatch(span_type) is not None
+
+
+def _checked_span_type(span_type: str) -> str | None:
+    if _is_valid_span_type(span_type):
+        return span_type
+    logger.error(_SPAN_TYPE_ERROR_MESSAGE, span_type)
+    return None
 
 
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
@@ -457,10 +477,13 @@ class ReadableSpan:
         start_time: int | None = None,
         end_time: int | None = None,
         instrumentation_scope: InstrumentationScope | None = None,
+        *,
+        _type: str | None = None,
     ) -> None:
         self._name = name
         self._context = context
         self._kind = kind
+        self._type_value = _type
         self._instrumentation_info = instrumentation_info
         self._instrumentation_scope = instrumentation_scope
         self._parent = parent
@@ -507,6 +530,11 @@ class ReadableSpan:
     @property
     def kind(self) -> trace_api.SpanKind:
         return self._kind
+
+    @property
+    def _type(self) -> str | None:
+        """Experimental: the span type, if set. Becomes public as ``type`` once span type is stable."""
+        return self._type_value
 
     @property
     def parent(self) -> trace_api.SpanContext | None:
@@ -829,6 +857,7 @@ class Span(trace_api.Span, ReadableSpan):
         instrumentation_scope: InstrumentationScope | None = None,
         *,
         record_end_metrics: Callable[[], None] | None = None,
+        _type: str | None = None,
     ) -> None:
         if resource is None:
             resource = Resource.create({})
@@ -837,6 +866,7 @@ class Span(trace_api.Span, ReadableSpan):
             context=context,
             parent=parent,
             kind=kind,
+            _type=_type,
             resource=resource,
             instrumentation_info=instrumentation_info,
             instrumentation_scope=instrumentation_scope,
@@ -978,6 +1008,7 @@ class Span(trace_api.Span, ReadableSpan):
             events=self._events,
             links=self._links,
             kind=self.kind,
+            _type=self._type,
             status=self._status,
             start_time=self._start_time,
             end_time=self._end_time,
@@ -1197,6 +1228,8 @@ class Tracer(trace_api.Tracer):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
+        *,
+        _type: str | None = None,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(
             name=name,
@@ -1207,6 +1240,7 @@ class Tracer(trace_api.Tracer):
             start_time=start_time,
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
+            _type=_type,
         )
         with trace_api.use_span(
             span,
@@ -1226,7 +1260,11 @@ class Tracer(trace_api.Tracer):
         start_time: int | None = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        *,
+        _type: str | None = None,
     ) -> trace_api.Span:
+        # Spec: validate before ShouldSample; empty is the same as unset.
+        _type = _checked_span_type(_type) if _type else None
         links = links or ()
         parent_span_context = trace_api.get_current_span(context).get_span_context()
 
@@ -1287,6 +1325,7 @@ class Tracer(trace_api.Tracer):
                 attributes=sampling_result.attributes,
                 span_processor=self.span_processor,
                 kind=kind,
+                _type=_type,
                 links=links,
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
