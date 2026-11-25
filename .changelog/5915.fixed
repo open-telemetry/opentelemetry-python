@@ -1,0 +1,1 @@
+opentelemetry-api: Remove per-member length limit from W3CBaggagePropagator to conform to the latest W3C specification.
