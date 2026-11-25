@@ -134,6 +134,27 @@ class TestAlignedHistogramBucketExemplarReservoir(TestCase):
         self.assertEqual(exemplars[2].value, 80)  # outliner
         self.assertEqual(len(exemplars[0].filtered_attributes), 0)
 
+    def test_replacing_measurement_without_span_drops_previous_trace_ids(self):
+        reservoir = AlignedHistogramBucketExemplarReservoir([10, 20])
+        span_context = SpanContext(
+            trace_id=self.TRACE_ID,
+            span_id=self.SPAN_ID,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+            trace_state={},
+        )
+        ctx = trace.set_span_in_context(trace.NonRecordingSpan(span_context))
+
+        reservoir.offer(1, time_ns(), {}, ctx)
+        reservoir.offer(2, time_ns(), {}, Context())
+
+        exemplars = reservoir.collect({})
+
+        self.assertEqual(len(exemplars), 1)
+        self.assertEqual(exemplars[0].value, 2)
+        self.assertIsNone(exemplars[0].trace_id)
+        self.assertIsNone(exemplars[0].span_id)
+
     def test_last_measurement_in_bucket(self):
         reservoir = AlignedHistogramBucketExemplarReservoir([0, 5, 10, 25])
         span_context = SpanContext(
