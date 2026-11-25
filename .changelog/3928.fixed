@@ -1,0 +1,1 @@
+`opentelemetry-exporter-prometheus`: handle metric label key collisions by concatenating colliding values in lexicographical order of original keys per OpenMetrics specification
