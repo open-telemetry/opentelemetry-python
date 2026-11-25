@@ -19,7 +19,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 
     logger = get_logger("example-logger")
 
-.. versionadded:: 1.15.0
+.. versionadded:: 1.46.0
 """
 
 from opentelemetry.logs._internal import (

@@ -3,7 +3,7 @@
 
 import unittest
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry.logs import SeverityNumber
 
 
 class TestSeverityNumber(unittest.TestCase):
