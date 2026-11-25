@@ -19,7 +19,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 
     logger = get_logger("example-logger")
 
-.. versionadded:: 1.15.0
+.. versionadded:: 1.46.0
 """
 
 from opentelemetry.logs._internal import (
@@ -33,6 +33,18 @@ from opentelemetry.logs._internal import (
     set_logger_provider,
 )
 from opentelemetry.logs.severity import SeverityNumber
+
+for obj in [
+    LogRecord,
+    Logger,
+    LoggerProvider,
+    NoOpLogger,
+    NoOpLoggerProvider,
+    get_logger,
+    get_logger_provider,
+    set_logger_provider,
+]:
+    obj.__module__ = __name__
 
 __all__ = [
     "LogRecord",

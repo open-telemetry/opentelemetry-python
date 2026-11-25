@@ -504,30 +504,59 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 mock_log_module = MagicMock()
                 mock_log_module.OTLPLogExporter = mock_exporter_cls
 
-                with patch.dict(
-                    sys.modules,
-                    {
-                        "opentelemetry.exporter.otlp.proto.http": MagicMock(),
-                        "opentelemetry.exporter.otlp.common.http": MagicMock(),
-                        f"opentelemetry.exporter.otlp.{protocol}.http.log_exporter": mock_log_module,
-                    },
+                with (
+                    tempfile.TemporaryDirectory() as tmp_dir,
+                    patch.dict(
+                        sys.modules,
+                        {
+                            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+                            f"opentelemetry.exporter.otlp.{protocol}.http.log_exporter": mock_log_module,
+                        },
+                    ),
                 ):
+                    paths = {}
+                    for name in ("ca", "client", "client_key"):
+                        paths[name] = os.path.join(tmp_dir, f"{name}.pem")
+                        with open(paths[name], "wb") as file:
+                            file.write(b"data")
+
                     config = LogRecordExporterConfig(
                         otlp_http=OtlpHttpExporterConfig(
                             encoding=encoding,
                             tls=HttpTlsConfig(
-                                ca_file="/certs/ca.pem",
-                                key_file="/certs/client.key",
-                                cert_file="/certs/client.pem",
+                                ca_file=paths["ca"],
+                                key_file=paths["client_key"],
+                                cert_file=paths["client"],
                             ),
                         )
                     )
                     _create_log_record_exporter(config)
 
                 call_kwargs = mock_exporter_cls.call_args.kwargs
-                self.assertEqual(call_kwargs["certificate_file"], "/certs/ca.pem")
-                self.assertEqual(call_kwargs["client_key_file"], "/certs/client.key")
-                self.assertEqual(call_kwargs["client_certificate_file"], "/certs/client.pem")
+                self.assertEqual(call_kwargs["certificate_file"], paths["ca"])
+                self.assertEqual(call_kwargs["client_key_file"], paths["client_key"])
+                self.assertEqual(call_kwargs["client_certificate_file"], paths["client"])
+
+    def test_otlp_http_tls_missing_file_raises(self):
+        mock_log_module = MagicMock()
+        with (
+            tempfile.TemporaryDirectory() as tmp_dir,
+            patch.dict(
+                sys.modules,
+                {
+                    "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                    "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
+                },
+            ),
+            self.assertRaises(ConfigurationError) as ctx,
+        ):
+            config = LogRecordExporterConfig(
+                otlp_http=OtlpHttpExporterConfig(tls=HttpTlsConfig(ca_file=os.path.join(tmp_dir, "missing.pem")))
+            )
+            _create_log_record_exporter(config)
+        self.assertIn("tls.ca_file", str(ctx.exception))
+        mock_log_module.OTLPLogExporter.assert_not_called()
 
     def test_otlp_grpc_http_endpoint_overrides_tls_insecure(self):
         mock_exporter_cls = MagicMock()
@@ -628,6 +657,64 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 _create_log_record_exporter(config)
                 self.assertEqual(mock_exporter_cls.call_args.kwargs["timeout"], math.inf)
 
+    def test_otlp_http_max_request_size_passed_through(self):
+        mock_exporter_cls = MagicMock()
+        mock_exporter_module = MagicMock()
+        mock_exporter_module.OTLPLogExporter = mock_exporter_cls
+        with patch.dict(
+            sys.modules,
+            {
+                "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_exporter_module,
+            },
+        ):
+            _create_log_record_exporter(
+                LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(max_request_size=1024))
+            )
+        self.assertEqual(mock_exporter_cls.call_args.kwargs["max_request_size"], 1024)
+
+    def test_otlp_unsupported_size_limits_warn(self):
+        modules = {
+            "grpc": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.grpc.log_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http.log_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.common.http": MagicMock(),
+            "opentelemetry.exporter.otlp.json.http.log_exporter": MagicMock(),
+        }
+        cases = [
+            (
+                "grpc max_request_size",
+                LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_request_size=1024)),
+                "max_request_size is not yet supported for otlp_grpc exporter for logs",
+            ),
+            (
+                "grpc max_response_size",
+                LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_grpc exporter for logs",
+            ),
+            (
+                "http max_response_size",
+                LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(max_response_size=1024)),
+                "max_response_size is not yet supported for otlp_http exporter for logs",
+            ),
+            (
+                "http json max_request_size",
+                LogRecordExporterConfig(
+                    otlp_http=OtlpHttpExporterConfig(max_request_size=1024, encoding=OtlpHttpEncoding.json)
+                ),
+                "max_request_size is not yet supported for otlp_http JSON exporter for logs",
+            ),
+        ]
+        for name, exporter_config, expected in cases:
+            with (
+                self.subTest(name),
+                patch.dict(sys.modules, modules),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                _create_log_record_exporter(exporter_config)
+                self.assertTrue(any(expected in message for message in logs.output), logs.output)
+
 
 class TestLogRecordLimits(unittest.TestCase):
     def test_default_limits(self):
@@ -702,6 +789,22 @@ class TestLogRecordLimits(unittest.TestCase):
         with patch("opentelemetry.configuration._logger_provider._logger") as mock_logger:
             create_logger_provider(config)
             mock_logger.warning.assert_not_called()
+
+    def test_attribute_value_depth_limit_warns(self):
+        for name, config, global_limits in (
+            (
+                "per-signal",
+                LoggerProviderConfig(processors=[], limits=LogRecordLimitsConfig(attribute_value_depth_limit=3)),
+                None,
+            ),
+            ("global", None, AttributeLimits(attribute_value_depth_limit=3)),
+        ):
+            with (
+                self.subTest(name),
+                self.assertLogs("opentelemetry.configuration._common", level="WARNING") as logs,
+            ):
+                create_logger_provider(config, global_attribute_limits=global_limits)
+                self.assertIn("attribute_value_depth_limit is not yet supported", logs.output[0])
 
     def test_global_attribute_count_limit_used_when_no_per_signal_limits(self):
         global_limits = AttributeLimits(attribute_count_limit=42)

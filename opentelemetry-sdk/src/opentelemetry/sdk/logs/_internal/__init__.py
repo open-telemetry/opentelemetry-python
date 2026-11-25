@@ -68,6 +68,7 @@ from opentelemetry.sdk.util.instrumentation import (
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
+    get_current_span,
 )
 from opentelemetry.util.types import AnyValue, Attributes
 
@@ -240,6 +241,9 @@ class ReadableLogRecord:
                 ),
                 "trace_flags": self.log_record.trace_flags,
                 "resource": json.loads(self.resource.to_json()),
+                "instrumentation_scope": json.loads(self.instrumentation_scope.to_json())
+                if self.instrumentation_scope is not None
+                else None,
                 "event_name": self.log_record.event_name if self.log_record.event_name else "",
             },
             indent=indent,
@@ -477,6 +481,7 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         self._log_record_processors = ()  # type: tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
+        self._shutdown = False
 
     def add_log_record_processor(self, log_record_processor: LogRecordProcessor) -> None:
         with self._lock:
@@ -488,10 +493,10 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         *args: Any,
         **kwargs: Any,
     ):
-        futures = []
-        for lp in self._log_record_processors:
-            future = self._executor.submit(func(lp), *args, **kwargs)
-            futures.append(future)
+        with self._lock:
+            if self._shutdown:
+                return
+            futures = [self._executor.submit(func(lp), *args, **kwargs) for lp in self._log_record_processors]
         for future in futures:
             future.result()
 
@@ -506,6 +511,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         severity_number: SeverityNumber | None = None,
         event_name: str | None = None,
     ) -> bool:
+        if self._shutdown:
+            return False
         for lp in self._log_record_processors:
             if lp.enabled(
                 context=context,
@@ -517,7 +524,16 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         return False
 
     def shutdown(self) -> None:
-        self._submit_and_wait(lambda lp: lp.shutdown)
+        with self._lock:
+            if self._shutdown:
+                return
+            self._shutdown = True
+            futures = [self._executor.submit(lp.shutdown) for lp in self._log_record_processors]
+        try:
+            for future in futures:
+                future.result()
+        finally:
+            self._executor.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors in parallel.
@@ -530,10 +546,10 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
             True if all the log processors flushes the logs within timeout,
             False otherwise.
         """
-        futures = []
-        for lp in self._log_record_processors:
-            future = self._executor.submit(lp.force_flush, timeout_millis)
-            futures.append(future)
+        with self._lock:
+            if self._shutdown:
+                return False
+            futures = [self._executor.submit(lp.force_flush, timeout_millis) for lp in self._log_record_processors]
 
         done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_millis / 1e3)
 
@@ -550,6 +566,8 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
 @dataclass
 class _LoggerConfig:
     is_enabled: bool = True
+    minimum_severity: SeverityNumber = SeverityNumber.UNSPECIFIED
+    trace_based: bool = False
 
     @classmethod
     def default(cls) -> _LoggerConfig:
@@ -589,6 +607,16 @@ class Logger(APILogger):
     ) -> bool:
         if not self._logger_config.is_enabled:
             return False
+        if (
+            severity_number is not None
+            and severity_number is not SeverityNumber.UNSPECIFIED
+            and severity_number < self._logger_config.minimum_severity
+        ):
+            return False
+        if self._logger_config.trace_based:
+            span_context = get_current_span(context).get_span_context()
+            if span_context.is_valid and not span_context.trace_flags.sampled:
+                return False
         return self._multi_log_record_processor.enabled(
             context=context,
             instrumentation_scope=self._instrumentation_scope,
@@ -799,6 +827,7 @@ class LoggerProvider(APILoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,

@@ -24,20 +24,17 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from logging import getLogger
 from os import environ
 from time import time_ns
 from typing import cast, overload
-
-from typing_extensions import deprecated
 
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.logs.severity import SeverityNumber
 from opentelemetry.trace import get_current_span
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._compat import SignatureCompatABC
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
@@ -46,7 +43,7 @@ from opentelemetry.util.types import AnyValue, Attributes
 _logger = getLogger(__name__)
 
 
-class LogRecord(ABC):
+class LogRecord:
     """A LogRecord instance represents an event being logged.
 
     LogRecord instances are created and emitted via `Logger`
@@ -69,48 +66,12 @@ class LogRecord(ABC):
         "exception",
     )
 
-    @overload
     def __init__(
         self,
         *,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: Attributes = None,
-        event_name: str | None = None,
-        exception: BaseException | None = None,
-    ) -> None: ...
-
-    @overload
-    @deprecated(
-        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
-    )
-    def __init__(
-        self,
-        *,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: Attributes = None,
-    ) -> None: ...
-
-    def __init__(
-        self,
-        *,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        context: Context | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
@@ -126,9 +87,9 @@ class LogRecord(ABC):
             observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
         self.context = context
-        self.trace_id = trace_id or span_context.trace_id
-        self.span_id = span_id or span_context.span_id
-        self.trace_flags = trace_flags or span_context.trace_flags
+        self.trace_id = span_context.trace_id
+        self.span_id = span_context.span_id
+        self.trace_flags = span_context.trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
         self.body = body
@@ -285,9 +246,9 @@ class ProxyLogger(Logger):
         if _LOGGER_PROVIDER:
             self._real_logger = _LOGGER_PROVIDER.get_logger(
                 self._name,
-                self._version,
-                self._schema_url,
-                self._attributes,
+                version=self._version,
+                schema_url=self._schema_url,
+                attributes=self._attributes,
             )
             return self._real_logger
         return self._noop_logger
@@ -365,6 +326,7 @@ class LoggerProvider(SignatureCompatABC):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -404,6 +366,7 @@ class NoOpLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -416,6 +379,7 @@ class ProxyLoggerProvider(LoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
@@ -477,11 +441,12 @@ def set_logger_provider(logger_provider: LoggerProvider) -> None:
 
 
 def get_logger(
-    instrumenting_module_name: str,
-    instrumenting_library_version: str = "",
-    logger_provider: LoggerProvider | None = None,
+    name: str,
+    *,
+    version: str | None = None,
     schema_url: str | None = None,
     attributes: Attributes = None,
+    logger_provider: LoggerProvider | None = None,
 ) -> Logger:
     """Returns a `Logger` for use within a python process.
 
@@ -493,8 +458,8 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name,
-        instrumenting_library_version,
-        schema_url,
-        attributes,
+        name,
+        version=version,
+        schema_url=schema_url,
+        attributes=attributes,
     )

@@ -6,8 +6,12 @@ import unittest
 from unittest.mock import Mock, patch
 
 import opentelemetry.logs._internal as logs_internal
-from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
-from opentelemetry.logs import get_logger_provider, set_logger_provider
+from opentelemetry.environment_variables import OTEL_PYTHON_LOGGER_PROVIDER
+from opentelemetry.logs import (
+    get_logger,
+    get_logger_provider,
+    set_logger_provider,
+)
 from opentelemetry.test.globals_test import reset_logging_globals
 
 
@@ -28,6 +32,32 @@ class TestGlobals(unittest.TestCase):
         self.assertIs(logs_internal._LOGGER_PROVIDER, lp_mock)
         self.assertIs(get_logger_provider(), lp_mock)
 
+    def test_get_logger_params_and_defaults(self):
+        lp_mock = Mock()
+        logger = get_logger("test-logger", logger_provider=lp_mock)
+        self.assertIs(logger, lp_mock.get_logger.return_value)
+        lp_mock.get_logger.assert_called_once_with(
+            "test-logger",
+            version=None,
+            schema_url=None,
+            attributes=None,
+        )
+        lp_mock.reset_mock()
+        logger = get_logger(
+            name="test-logger",
+            version="1.0.0",
+            schema_url="https://opentelemetry.io/schemas/1.11.0",
+            attributes={"key": "val"},
+            logger_provider=lp_mock,
+        )
+        self.assertIs(logger, lp_mock.get_logger.return_value)
+        lp_mock.get_logger.assert_called_once_with(
+            "test-logger",
+            version="1.0.0",
+            schema_url="https://opentelemetry.io/schemas/1.11.0",
+            attributes={"key": "val"},
+        )
+
     def test_get_logger_provider(self):
         # pylint: disable=protected-access
         self.assertIsNone(logs_internal._LOGGER_PROVIDER)
@@ -39,7 +69,7 @@ class TestGlobals(unittest.TestCase):
         with (
             patch.dict(
                 "os.environ",
-                {_OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"},
+                {OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"},
             ),
             patch("opentelemetry.logs._internal._load_provider", Mock()),
         ):

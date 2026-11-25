@@ -476,6 +476,15 @@ def _initialize_components(
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals,too-many-branches
+    legacy_logging_env_var = "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
+    if legacy_logging_env_var in environ:
+        _logger.warning(
+            "%s is no longer supported. To export standard library logs, "
+            "install opentelemetry-instrumentation-logging and unset %s.",
+            legacy_logging_env_var,
+            legacy_logging_env_var,
+        )
+
     if resource_attributes is None:
         resource_attributes = {}
     # populate version if using auto-instrumentation

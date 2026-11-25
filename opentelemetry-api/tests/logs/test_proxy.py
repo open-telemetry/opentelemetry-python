@@ -15,6 +15,7 @@ class TestProvider(logs.NoOpLoggerProvider):
     def get_logger(
         self,
         name: str,
+        *,
         version: str | None = None,
         schema_url: str | None = None,
         attributes: Attributes = None,
