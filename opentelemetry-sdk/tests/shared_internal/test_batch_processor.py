@@ -332,6 +332,77 @@ class TestBatchProcessor:
         assert exporter.sleep_interrupted is True
         assert 2 == exporter.num_export_calls
 
+    def test_repeated_fork_fallback_reinitializes(self, batch_processor_class, telemetry):
+        exporter = Mock()
+        with unittest.mock.patch(
+            "opentelemetry.sdk._shared_internal.threading.Thread"
+        ) as mock_thread:
+            processor = batch_processor_class(
+                exporter,
+                max_queue_size=200,
+                max_export_batch_size=10,
+                schedule_delay_millis=30000,
+                export_timeout_millis=500,
+            )
+            bp = processor._batch_processor
+            initial_pid = bp._pid
+
+            try:
+                with unittest.mock.patch("os.getpid") as mock_getpid:
+                    # First fork fallback
+                    mock_getpid.return_value = initial_pid + 1
+                    bp.emit(telemetry)
+                    assert bp._pid == initial_pid + 1
+
+                    # Second fork fallback
+                    mock_getpid.return_value = initial_pid + 2
+                    bp.emit(telemetry)
+                    assert bp._pid == initial_pid + 2
+
+                assert mock_thread.call_count == 3
+            finally:
+                processor.shutdown()
+
+    def test_fork_fallback_concurrent_emit_race_does_not_duplicate_reinit(
+        self, batch_processor_class, telemetry
+    ):
+        exporter = Mock()
+        with unittest.mock.patch(
+            "opentelemetry.sdk._shared_internal.threading.Thread"
+        ) as mock_thread:
+            processor = batch_processor_class(
+                exporter,
+                max_queue_size=200,
+                max_export_batch_size=10,
+                schedule_delay_millis=30000,
+                export_timeout_millis=500,
+            )
+            bp = processor._batch_processor
+            initial_pid = bp._pid
+            new_pid = initial_pid + 1
+
+            try:
+                # Capture the guard before the PID check to simulate a thread
+                # that checked the PID right before a concurrent emit completed recovery.
+                guard_before_fork = bp._bsp_reset_once
+
+                with unittest.mock.patch("os.getpid", return_value=new_pid):
+                    # Concurrent thread runs emit(), triggering _at_fork_reinit and enqueuing telemetry
+                    bp.emit(telemetry)
+                    assert len(bp._queue) == 1
+                    assert bp._pid == new_pid
+                    assert bp._bsp_reset_once is not guard_before_fork
+                    assert mock_thread.call_count == 2
+
+                    # Resumed thread uses its captured guard instance:
+                    guard_before_fork.do_once(bp._at_fork_reinit)
+
+                    # Ensure recovery is not re-executed: telemetry is preserved and no extra worker is spawned
+                    assert len(bp._queue) == 1
+                    assert mock_thread.call_count == 2
+            finally:
+                processor.shutdown()
+
 
 class TestCommonFuncs(unittest.TestCase):
     def test_duplicate_logs_filter_works(self):
