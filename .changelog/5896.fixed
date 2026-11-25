@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: register processor queue capacity as an asynchronous counter
