@@ -75,11 +75,12 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         scope_info_enabled: bool = False,
         resource: Resource | None = None,
         resource_attr_filter: Callable[[str], bool] | None = None,
+        disable_target_info: bool = True,
     ) -> None:
         metrics_data = MetricsData(
             resource_metrics=[
                 ResourceMetrics(
-                    resource=resource or Mock(),
+                    resource=resource if resource is not None else Mock(),
                     scope_metrics=[
                         ScopeMetrics(
                             scope=scope or Mock(),
@@ -93,7 +94,7 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
         )
 
         collector = _CustomCollector(
-            disable_target_info=True,
+            disable_target_info=disable_target_info,
             scope_info_enabled=scope_info_enabled,
             prefix=prefix,
             resource_attribute_filter=resource_attr_filter,
@@ -407,6 +408,66 @@ class TestPrometheusMetricReader(TestCase):  # pylint: disable=too-many-public-m
             self.assertNotEqual(prometheus_metric.documentation, "Target metadata")
             self.assertNotIn("os", prometheus_metric.samples[0].labels)
             self.assertNotIn("version", prometheus_metric.samples[0].labels)
+
+    def test_target_info_omitted_when_resource_empty(self):
+        metric_reader = PrometheusMetricReader(disable_target_info=False)
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource.get_empty(),
+        )
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        result = list(metric_reader._collector.collect())
+
+        self.assertEqual(len(result), 1)
+        for prometheus_metric in result:
+            self.assertNotEqual(type(prometheus_metric), InfoMetricFamily)
+            self.assertNotEqual(prometheus_metric.name, "target")
+            self.assertNotEqual(prometheus_metric.documentation, "Target metadata")
+
+    def test_target_info_text_format(self):
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"env": "prod"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP target_info Target metadata
+                # TYPE target_info gauge
+                target_info{service_name="my-service",version="1.2.3"} 1.0
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{env="prod"} 42.0
+                """
+            ),
+            resource=Resource({"service.name": "my-service", "version": "1.2.3"}),
+            disable_target_info=False,
+        )
+
+    def test_target_info_omitted_when_resource_empty_text_format(self):
+        self.verify_text_format(
+            _generate_gauge(
+                "test_gauge",
+                42,
+                attributes={"env": "prod"},
+                description="testdesc",
+                unit="",
+            ),
+            dedent(
+                """\
+                # HELP test_gauge testdesc
+                # TYPE test_gauge gauge
+                test_gauge{env="prod"} 42.0
+                """
+            ),
+            resource=Resource.get_empty(),
+            disable_target_info=False,
+        )
 
     def test_target_info_sanitize(self):
         metric_reader = PrometheusMetricReader()
