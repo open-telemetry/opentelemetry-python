@@ -20,6 +20,7 @@ from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+    OTEL_METRICS_EXEMPLAR_FILTER,
     OTEL_SDK_DISABLED,
 )
 from opentelemetry.sdk.metrics import (
@@ -40,6 +41,11 @@ from opentelemetry.sdk.metrics._internal import (
     _MeterConfig,
     _ProxyMeterConfig,
     _RuleBasedMeterConfigurator,
+)
+from opentelemetry.sdk.metrics._internal.exemplar import (
+    AlwaysOffExemplarFilter,
+    AlwaysOnExemplarFilter,
+    TraceBasedExemplarFilter,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics.export import (
@@ -742,6 +748,28 @@ class TestMeter(TestCase):
                     instrument_name, callbacks=[Mock()], unknown=1
                 )
                 self.assertEqual(instrument.name, instrument_name)
+
+    def test_exemplar_filter_from_env(self):
+        for value, expected in (
+            ("always_on", AlwaysOnExemplarFilter),
+            ("ALWAYS_OFF", AlwaysOffExemplarFilter),
+            (" Trace_Based ", TraceBasedExemplarFilter),
+            ("", TraceBasedExemplarFilter),
+        ):
+            with self.subTest(value=value):
+                with patch.dict("os.environ", {OTEL_METRICS_EXEMPLAR_FILTER: value}):
+                    meter_provider = MeterProvider(shutdown_on_exit=False)
+                self.assertIsInstance(meter_provider._sdk_config.exemplar_filter, expected)
+
+    @patch.dict("os.environ", {OTEL_METRICS_EXEMPLAR_FILTER: "bogus"})
+    def test_exemplar_filter_from_env_invalid(self):
+        with self.assertLogs(level=WARNING) as logs:
+            meter_provider = MeterProvider(shutdown_on_exit=False)
+        self.assertIsInstance(
+            meter_provider._sdk_config.exemplar_filter,
+            TraceBasedExemplarFilter,
+        )
+        self.assertIn("bogus", logs.output[0])
 
     @patch.dict("os.environ", {OTEL_SDK_DISABLED: "true"})
     def test_get_meter_with_sdk_disabled(self):

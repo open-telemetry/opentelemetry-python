@@ -418,14 +418,17 @@ class Meter(APIMeter):
 
 
 def _get_exemplar_filter(exemplar_filter: str) -> ExemplarFilter:
-    if exemplar_filter == "trace_based":
-        return TraceBasedExemplarFilter()
-    if exemplar_filter == "always_on":
+    value = exemplar_filter.strip().lower()
+    if value == "always_on":
         return AlwaysOnExemplarFilter()
-    if exemplar_filter == "always_off":
+    if value == "always_off":
         return AlwaysOffExemplarFilter()
-    msg = f"Unknown exemplar filter '{exemplar_filter}'."
-    raise ValueError(msg)
+    if value not in ("", "trace_based"):
+        _logger.warning(
+            "Unknown exemplar filter %r, using 'trace_based'.",
+            exemplar_filter,
+        )
+    return TraceBasedExemplarFilter()
 
 
 _MeterConfiguratorT = Callable[[InstrumentationScope], _MeterConfig]

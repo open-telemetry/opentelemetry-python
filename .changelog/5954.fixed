@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: don't raise on an empty, padded, differently-cased or unknown `OTEL_METRICS_EXEMPLAR_FILTER`; warn and fall back to `trace_based` instead.
