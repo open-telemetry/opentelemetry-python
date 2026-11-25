@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: validate that `th` and `rv` in `OtelTraceState` strictly match lowercase hexadecimal syntax.

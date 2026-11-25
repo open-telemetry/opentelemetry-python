@@ -86,14 +86,14 @@ class OtelTraceState:
         return res
 
 
+_HEX_CHARACTERS = frozenset("0123456789abcdef")
+
+
 def _parse_th(value: str, default: int) -> int:
-    if not value or len(value) > _MAX_VALUE_LENGTH:
+    if not value or len(value) > _MAX_VALUE_LENGTH or not all(c in _HEX_CHARACTERS for c in value):
         return default
 
-    try:
-        parsed = int(value, 16)
-    except ValueError:
-        return default
+    parsed = int(value, 16)
 
     # th value is compressed by removing all trailing zeros,
     # so we restore them to get the real value.
@@ -102,13 +102,10 @@ def _parse_th(value: str, default: int) -> int:
 
 
 def _parse_rv(value: str, default: int) -> int:
-    if not value or len(value) != _MAX_VALUE_LENGTH:
+    if not value or len(value) != _MAX_VALUE_LENGTH or not all(c in _HEX_CHARACTERS for c in value):
         return default
 
-    try:
-        return int(value, 16)
-    except ValueError:
-        return default
+    return int(value, 16)
 
 
 def serialize_th(threshold: int) -> str:
