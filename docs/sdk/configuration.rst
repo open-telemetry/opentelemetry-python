@@ -119,6 +119,35 @@ pipeline used for SDK component configuration before being forwarded to
 ``opentelemetry-instrument`` ran before the file was applied) are silently
 skipped.
 
+Custom processors
+-----------------
+
+Span and log record processors other than the built-in ``batch`` and
+``simple`` types are loaded from entry points, by the name used in the
+configuration file:
+
+* span processors: the ``opentelemetry_traces_processor`` group
+* log record processors: the ``opentelemetry_logs_processor`` group
+
+.. code-block:: yaml
+
+    tracer_provider:
+      processors:
+        - my_processor:
+            x: 1
+
+.. code-block:: toml
+
+    [project.entry-points.opentelemetry_traces_processor]
+    my_processor = "my_package.processors:MyProcessor"
+
+The entry point is called with the processor's configuration mapping as
+keyword arguments (``MyProcessor(x=1)`` above), or with no arguments when the
+mapping is empty or ``null``. The mapping is passed as written, so a processor
+that wraps an exporter must create that exporter itself. The returned object
+must implement :class:`opentelemetry.sdk.trace.SpanProcessor` or
+:class:`opentelemetry.sdk._logs.LogRecordProcessor`.
+
 Environment variable substitution
 ----------------------------------
 
