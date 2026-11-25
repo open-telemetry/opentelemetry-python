@@ -12,6 +12,9 @@ from opentelemetry.exporter.otlp.common import http as _http
 from opentelemetry.exporter.otlp.common._exporter_metrics import (
     create_exporter_metrics,
 )
+from opentelemetry.exporter.otlp.common._partial_success import (
+    _report_partial_success,
+)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -23,12 +26,16 @@ from opentelemetry.exporter.otlp.proto.http._common import (
     _is_request_too_large,
     _load_session_from_envvar,
     _normalize_compression,
+    _parse_export_response,
     _resolve_compression,
     _resolve_endpoint,
     _resolve_headers,
     _resolve_timeout,
 )
 from opentelemetry.metrics import MeterProvider
+from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
+    ExportTraceServiceResponse,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_EXPORTER_OTLP_HTTP_TRACES_CREDENTIAL_PROVIDER,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
@@ -205,6 +212,16 @@ class OTLPSpanExporter(SpanExporter):
                     else None
                 )
                 return SpanExportResult.FAILURE
+
+            response = _parse_export_response(export_result.content, ExportTraceServiceResponse, _logger)
+            if response is not None:
+                result.rejected = _report_partial_success(
+                    _logger,
+                    "spans",
+                    self._endpoint,
+                    response.partial_success.rejected_spans,
+                    response.partial_success.error_message,
+                )
         return SpanExportResult.SUCCESS
 
     def shutdown(self):

@@ -512,3 +512,26 @@ class TestOTLPLogExporter(unittest.TestCase):
 
         self.assertEqual(result, LogRecordExportResult.FAILURE)
         self.assertIsNone(Mocket.last_request())
+
+    @mocketize
+    def test_partial_success_is_logged(self):
+        body = json.dumps({"partialSuccess": {"rejectedLogRecords": "3", "errorMessage": "quota exceeded"}})
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200, body=body)
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertLogs(_LOGGER_NAME, level="WARNING") as logs:
+            result = exporter.export(self._make_log())
+
+        self.assertEqual(result, LogRecordExportResult.SUCCESS)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            f"OTLP partial success exporting logs to {_TEST_ENDPOINT} (rejected=3): quota exceeded",
+        )
+
+    @mocketize
+    def test_full_success_logs_nothing(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200, body=json.dumps({"partialSuccess": {}}))
+        exporter = OTLPLogExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertNoLogs(_LOGGER_NAME, level="WARNING"):
+            self.assertEqual(exporter.export(self._make_log()), LogRecordExportResult.SUCCESS)

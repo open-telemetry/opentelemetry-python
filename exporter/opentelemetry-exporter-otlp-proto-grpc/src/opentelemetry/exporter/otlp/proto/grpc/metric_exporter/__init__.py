@@ -26,6 +26,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (  # noqa: F401
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
+    ExportMetricsServiceResponse,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceStub,
@@ -267,6 +268,17 @@ class OTLPMetricExporter(
 
     def set_meter_provider(self, meter_provider: MeterProvider):
         return self._set_meter_provider(meter_provider)
+
+    def _rejected_and_error_message(self, response: ExportMetricsServiceResponse | None) -> tuple[int, str]:
+        """Read the partial success an export response reports.
+
+        :param response: The response the metrics service returned.
+        :returns: The number of rejected data points and the error message the
+            server sent.
+        """
+        if response is None:
+            return 0, ""
+        return response.partial_success.rejected_data_points, response.partial_success.error_message
 
     @property
     def _exporting(self) -> str:

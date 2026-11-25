@@ -512,3 +512,50 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         self.assertEqual(result, SpanExportResult.FAILURE)
         self.assertIsNone(Mocket.last_request())
+
+    @mocketize
+    def test_partial_success_is_logged(self):
+        body = json.dumps({"partialSuccess": {"rejectedSpans": "2", "errorMessage": "quota exceeded"}})
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200, body=body)
+        exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertLogs(_LOGGER_NAME, level="WARNING") as logs:
+            result = exporter.export(self._make_span())
+
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            f"OTLP partial success exporting spans to {_TEST_ENDPOINT} (rejected=2): quota exceeded",
+        )
+
+    @mocketize
+    def test_partial_success_warning_without_rejected_spans_is_logged(self):
+        body = json.dumps({"partialSuccess": {"errorMessage": "deprecated attribute in use"}})
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200, body=body)
+        exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertLogs(_LOGGER_NAME, level="WARNING") as logs:
+            result = exporter.export(self._make_span())
+
+        self.assertEqual(result, SpanExportResult.SUCCESS)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            f"OTLP partial success exporting spans to {_TEST_ENDPOINT} (rejected=0): deprecated attribute in use",
+        )
+
+    def test_full_success_logs_nothing(self):
+        for body in ("", "{}", json.dumps({"partialSuccess": {}})):
+            with self.subTest(body=body), Mocketizer():
+                Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200, body=body)
+                exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
+
+                with self.assertNoLogs(_LOGGER_NAME, level="WARNING"):
+                    self.assertEqual(exporter.export(self._make_span()), SpanExportResult.SUCCESS)
+
+    @mocketize
+    def test_an_unparsable_body_does_not_fail_the_export(self):
+        Entry.single_register(Entry.POST, _TEST_ENDPOINT, status=200, body="<html>ok</html>")
+        exporter = OTLPSpanExporter(endpoint=_TEST_ENDPOINT)
+
+        with self.assertNoLogs(_LOGGER_NAME, level="WARNING"):
+            self.assertEqual(exporter.export(self._make_span()), SpanExportResult.SUCCESS)
