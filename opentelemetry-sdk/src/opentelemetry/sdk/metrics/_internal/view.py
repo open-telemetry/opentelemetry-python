@@ -174,11 +174,11 @@ class View:
                 return False
 
         if self._instrument_name is not None:
-            # Instrument names are treated case-insensitively and are stored
-            # lower-cased by the SDK, so the pattern is lower-cased to match.
+            # Instrument names are treated case-insensitively while preserving
+            # their original casing, so both operands are lower-cased to match.
             # fnmatchcase is used instead of fnmatch so it does not rely
             # on the host platform's filename case sensitivity (normcase).
-            if not fnmatchcase(instrument.name, self._instrument_name.lower()):
+            if not fnmatchcase(instrument.name.lower(), self._instrument_name.lower()):
                 return False
 
         if self._instrument_unit is not None:

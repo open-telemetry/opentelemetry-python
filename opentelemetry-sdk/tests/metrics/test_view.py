@@ -35,12 +35,12 @@ class TestView(TestCase):
         self.assertTrue(View(instrument_name="instrument_name")._match(mock_instrument))
 
     def test_instrument_name_case_insensitive(self):
-        # The SDK stores instrument names lower-cased, so a view pattern that
-        # reuses the instrument's original name must still match regardless of
-        # case (and regardless of the host platform).
+        # A view must match regardless of the instrument name's preserved case
+        # and regardless of the host platform.
         mock_instrument = Mock()
-        mock_instrument.configure_mock(name="instrument_name")
+        mock_instrument.configure_mock(name="Instrument_Name")
 
+        self.assertTrue(View(instrument_name="instrument_name")._match(mock_instrument))
         self.assertTrue(View(instrument_name="Instrument_Name")._match(mock_instrument))
         self.assertTrue(View(instrument_name="INSTRUMENT_*")._match(mock_instrument))
         self.assertFalse(View(instrument_name="other_name")._match(mock_instrument))
