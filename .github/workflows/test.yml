@@ -120,6 +120,7 @@ jobs:
   py314-test-opentelemetry-api_ubuntu-latest:
     name: opentelemetry-api 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -138,8 +139,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-api -- -ra
 
-  py314t-test-opentelemetry-api_ubuntu-latest:
-    name: opentelemetry-api 3.14t Ubuntu
+  py315-test-opentelemetry-api_ubuntu-latest:
+    name: opentelemetry-api 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -148,16 +149,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-api -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-api -- -ra
+
+  py315t-test-opentelemetry-api_ubuntu-latest:
+    name: opentelemetry-api 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-api -- -ra
 
   pypy3-test-opentelemetry-api_ubuntu-latest:
     name: opentelemetry-api pypy-3.10 Ubuntu
@@ -357,6 +379,7 @@ jobs:
   py314-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
     name: opentelemetry-proto-gen-oldest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -378,6 +401,7 @@ jobs:
   py314-test-opentelemetry-proto-gen-latest_ubuntu-latest:
     name: opentelemetry-proto-gen-latest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -396,8 +420,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-proto-gen-latest -- -ra
 
-  py314t-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
-    name: opentelemetry-proto-gen-oldest 3.14t Ubuntu
+  py315-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -406,19 +430,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py314t-test-opentelemetry-proto-gen-latest_ubuntu-latest:
-    name: opentelemetry-proto-gen-latest 3.14t Ubuntu
+  py315-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -427,16 +451,58 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-proto-gen-latest -- -ra
+
+  py315t-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
+    name: opentelemetry-proto-gen-oldest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-proto-gen-oldest -- -ra
+
+  py315t-test-opentelemetry-proto-gen-latest_ubuntu-latest:
+    name: opentelemetry-proto-gen-latest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-proto-gen-latest -- -ra
 
   pypy3-test-opentelemetry-proto-gen-oldest_ubuntu-latest:
     name: opentelemetry-proto-gen-oldest pypy-3.10 Ubuntu
@@ -657,6 +723,7 @@ jobs:
   py314-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
     name: opentelemetry-protojson-gen-oldest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -678,6 +745,7 @@ jobs:
   py314-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
     name: opentelemetry-protojson-gen-latest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -696,8 +764,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-protojson-gen-latest -- -ra
 
-  py314t-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
-    name: opentelemetry-protojson-gen-oldest 3.14t Ubuntu
+  py315-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -706,19 +774,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-protojson-gen-oldest -- -ra
 
-  py314t-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
-    name: opentelemetry-protojson-gen-latest 3.14t Ubuntu
+  py315-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -727,16 +795,58 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py315t-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-oldest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py315t-test-opentelemetry-protojson-gen-latest_ubuntu-latest:
+    name: opentelemetry-protojson-gen-latest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-protojson-gen-latest -- -ra
 
   pypy3-test-opentelemetry-protojson-gen-oldest_ubuntu-latest:
     name: opentelemetry-protojson-gen-oldest pypy-3.10 Ubuntu
@@ -870,6 +980,7 @@ jobs:
   py314-test-opentelemetry-codegen-json_ubuntu-latest:
     name: opentelemetry-codegen-json 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -887,6 +998,27 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-codegen-json -- -ra
+
+  py315-test-opentelemetry-codegen-json_ubuntu-latest:
+    name: opentelemetry-codegen-json 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-codegen-json -- -ra
 
   py310-test-opentelemetry-sdk_ubuntu-latest:
     name: opentelemetry-sdk 3.10 Ubuntu
@@ -993,8 +1125,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-sdk -- -ra
 
-  py314t-test-opentelemetry-sdk_ubuntu-latest:
-    name: opentelemetry-sdk 3.14t Ubuntu
+  py315-test-opentelemetry-sdk_ubuntu-latest:
+    name: opentelemetry-sdk 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1003,16 +1135,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-sdk -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-sdk -- -ra
+
+  py315t-test-opentelemetry-sdk_ubuntu-latest:
+    name: opentelemetry-sdk 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-sdk -- -ra
 
   pypy3-test-opentelemetry-sdk_ubuntu-latest:
     name: opentelemetry-sdk pypy-3.10 Ubuntu
@@ -1125,6 +1278,7 @@ jobs:
   py314-test-opentelemetry-configuration_ubuntu-latest:
     name: opentelemetry-configuration 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1143,8 +1297,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-configuration -- -ra
 
-  py314t-test-opentelemetry-configuration_ubuntu-latest:
-    name: opentelemetry-configuration 3.14t Ubuntu
+  py315-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1153,16 +1307,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-configuration -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-configuration -- -ra
+
+  py315t-test-opentelemetry-configuration_ubuntu-latest:
+    name: opentelemetry-configuration 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-configuration -- -ra
 
   pypy3-test-opentelemetry-configuration_ubuntu-latest:
     name: opentelemetry-configuration pypy-3.10 Ubuntu
@@ -1275,6 +1450,7 @@ jobs:
   py314-test-opentelemetry-semantic-conventions_ubuntu-latest:
     name: opentelemetry-semantic-conventions 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1293,8 +1469,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-semantic-conventions -- -ra
 
-  py314t-test-opentelemetry-semantic-conventions_ubuntu-latest:
-    name: opentelemetry-semantic-conventions 3.14t Ubuntu
+  py315-test-opentelemetry-semantic-conventions_ubuntu-latest:
+    name: opentelemetry-semantic-conventions 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1303,16 +1479,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-semantic-conventions -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-semantic-conventions -- -ra
+
+  py315t-test-opentelemetry-semantic-conventions_ubuntu-latest:
+    name: opentelemetry-semantic-conventions 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-semantic-conventions -- -ra
 
   pypy3-test-opentelemetry-semantic-conventions_ubuntu-latest:
     name: opentelemetry-semantic-conventions pypy-3.10 Ubuntu
@@ -1457,6 +1654,7 @@ jobs:
   py314-test-opentelemetry-getting-started_ubuntu-latest:
     name: opentelemetry-getting-started 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1482,6 +1680,35 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-getting-started -- -ra
+
+  py315-test-opentelemetry-getting-started_ubuntu-latest:
+    name: opentelemetry-getting-started 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Checkout contrib repo @ ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+          path: opentelemetry-python-contrib
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-getting-started -- -ra
 
   py310-test-opentelemetry-opentracing-shim_ubuntu-latest:
     name: opentelemetry-opentracing-shim 3.10 Ubuntu
@@ -1573,6 +1800,7 @@ jobs:
   py314-test-opentelemetry-opentracing-shim_ubuntu-latest:
     name: opentelemetry-opentracing-shim 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1591,8 +1819,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opentracing-shim -- -ra
 
-  py314t-test-opentelemetry-opentracing-shim_ubuntu-latest:
-    name: opentelemetry-opentracing-shim 3.14t Ubuntu
+  py315-test-opentelemetry-opentracing-shim_ubuntu-latest:
+    name: opentelemetry-opentracing-shim 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1601,16 +1829,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-opentracing-shim -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-opentracing-shim -- -ra
+
+  py315t-test-opentelemetry-opentracing-shim_ubuntu-latest:
+    name: opentelemetry-opentracing-shim 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-opentracing-shim -- -ra
 
   pypy3-test-opentelemetry-opentracing-shim_ubuntu-latest:
     name: opentelemetry-opentracing-shim pypy-3.10 Ubuntu
@@ -1723,6 +1972,7 @@ jobs:
   py314-test-opentelemetry-opencensus-shim_ubuntu-latest:
     name: opentelemetry-opencensus-shim 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1740,6 +1990,27 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opencensus-shim -- -ra
+
+  py315-test-opentelemetry-opencensus-shim_ubuntu-latest:
+    name: opentelemetry-opencensus-shim 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-opencensus-shim -- -ra
 
   py310-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.10 Ubuntu
@@ -1918,6 +2189,7 @@ jobs:
   py314-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1939,6 +2211,7 @@ jobs:
   py314-test-opentelemetry-exporter-http-transport-latest_ubuntu-latest:
     name: opentelemetry-exporter-http-transport-latest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -1957,8 +2230,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-http-transport-latest -- -ra
 
-  py314t-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-http-transport-oldest 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-http-transport-oldest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1967,19 +2240,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-http-transport-oldest -- -ra
 
-  py314t-test-opentelemetry-exporter-http-transport-latest_ubuntu-latest:
-    name: opentelemetry-exporter-http-transport-latest 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-http-transport-latest_ubuntu-latest:
+    name: opentelemetry-exporter-http-transport-latest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -1988,16 +2261,58 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-http-transport-latest -- -ra
+
+  py315t-test-opentelemetry-exporter-http-transport-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-http-transport-oldest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-http-transport-oldest -- -ra
+
+  py315t-test-opentelemetry-exporter-http-transport-latest_ubuntu-latest:
+    name: opentelemetry-exporter-http-transport-latest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-http-transport-latest -- -ra
 
   py310-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.10 Ubuntu
@@ -2176,6 +2491,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2197,6 +2513,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2215,8 +2532,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
-    name: opentelemetry-exporter-otlpcommon-oldest 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -2225,19 +2542,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
-    name: opentelemetry-exporter-otlpcommon-latest 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -2246,16 +2563,58 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlpcommon-latest -- -ra
+
+  py315t-test-opentelemetry-exporter-otlpcommon-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
+
+  py315t-test-opentelemetry-exporter-otlpcommon-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
   py310-test-opentelemetry-exporter-opencensus_ubuntu-latest:
     name: opentelemetry-exporter-opencensus 3.10 Ubuntu
@@ -2347,6 +2706,7 @@ jobs:
   py314-test-opentelemetry-exporter-opencensus_ubuntu-latest:
     name: opentelemetry-exporter-opencensus 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2364,6 +2724,27 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-opencensus -- -ra
+
+  py315-test-opentelemetry-exporter-opencensus_ubuntu-latest:
+    name: opentelemetry-exporter-opencensus 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-opencensus -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.10 Ubuntu
@@ -2455,6 +2836,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2473,8 +2855,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-proto-common 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -2483,16 +2865,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-common -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-proto-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-common pypy-3.10 Ubuntu
@@ -2605,6 +3008,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-common 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2623,8 +3027,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-common -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-json-common 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-json-common 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -2633,16 +3037,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-common -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-json-common -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-json-common 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-json-common -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-json-common_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-common pypy-3.10 Ubuntu
@@ -2755,6 +3180,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-combined_ubuntu-latest:
     name: opentelemetry-exporter-otlp-combined 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2772,6 +3198,27 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py315-test-opentelemetry-exporter-otlp-combined_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-combined 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py310-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-file 3.10 Ubuntu
@@ -2863,6 +3310,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-file 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -2881,8 +3329,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-file -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-json-file 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-json-file 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -2891,16 +3339,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-file -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-json-file -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-json-file 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-json-file -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-json-file_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-file pypy-3.10 Ubuntu
@@ -3013,6 +3482,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-http 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3031,8 +3501,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-http -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-json-http 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-json-http 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -3041,16 +3511,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-http -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-json-http -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-json-http 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-json-http -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-json-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-json-http pypy-3.10 Ubuntu
@@ -3250,6 +3741,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3271,6 +3763,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3288,6 +3781,48 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py315-test-opentelemetry-exporter-otlp-proto-grpc-oldest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py315-test-opentelemetry-exporter-otlp-proto-grpc-latest_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.10 Ubuntu
@@ -3379,6 +3914,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3397,8 +3933,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
-    name: opentelemetry-exporter-otlp-proto-http 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-http 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -3407,16 +3943,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-http -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-http -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
+    name: opentelemetry-exporter-otlp-proto-http 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-otlp-proto-http pypy-3.10 Ubuntu
@@ -3529,6 +4086,7 @@ jobs:
   py314-test-opentelemetry-exporter-prometheus_ubuntu-latest:
     name: opentelemetry-exporter-prometheus 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3547,8 +4105,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-prometheus -- -ra
 
-  py314t-test-opentelemetry-exporter-prometheus_ubuntu-latest:
-    name: opentelemetry-exporter-prometheus 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-prometheus_ubuntu-latest:
+    name: opentelemetry-exporter-prometheus 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -3557,16 +4115,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-prometheus -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-prometheus -- -ra
+
+  py315t-test-opentelemetry-exporter-prometheus_ubuntu-latest:
+    name: opentelemetry-exporter-prometheus 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-prometheus -- -ra
 
   pypy3-test-opentelemetry-exporter-prometheus_ubuntu-latest:
     name: opentelemetry-exporter-prometheus pypy-3.10 Ubuntu
@@ -3679,6 +4258,7 @@ jobs:
   py314-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-combined 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3697,8 +4277,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-combined -- -ra
 
-  py314t-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
+    name: opentelemetry-exporter-zipkin-combined 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -3707,16 +4287,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-combined -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-zipkin-combined -- -ra
+
+  py315t-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
+    name: opentelemetry-exporter-zipkin-combined 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-combined_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-combined pypy-3.10 Ubuntu
@@ -3829,6 +4430,7 @@ jobs:
   py314-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3847,8 +4449,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
-  py314t-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
-    name: opentelemetry-exporter-zipkin-proto-http 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
+    name: opentelemetry-exporter-zipkin-proto-http 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -3857,16 +4459,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-zipkin-proto-http -- -ra
+
+  py315t-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
+    name: opentelemetry-exporter-zipkin-proto-http 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-proto-http_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-proto-http pypy-3.10 Ubuntu
@@ -3979,6 +4602,7 @@ jobs:
   py314-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-json 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -3997,8 +4621,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-json -- -ra
 
-  py314t-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
-    name: opentelemetry-exporter-zipkin-json 3.14t Ubuntu
+  py315-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
+    name: opentelemetry-exporter-zipkin-json 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -4007,16 +4631,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-json -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-zipkin-json -- -ra
+
+  py315t-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
+    name: opentelemetry-exporter-zipkin-json 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-zipkin-json -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-json_ubuntu-latest:
     name: opentelemetry-exporter-zipkin-json pypy-3.10 Ubuntu
@@ -4129,6 +4774,7 @@ jobs:
   py314-test-opentelemetry-propagator-b3_ubuntu-latest:
     name: opentelemetry-propagator-b3 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4147,8 +4793,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-b3 -- -ra
 
-  py314t-test-opentelemetry-propagator-b3_ubuntu-latest:
-    name: opentelemetry-propagator-b3 3.14t Ubuntu
+  py315-test-opentelemetry-propagator-b3_ubuntu-latest:
+    name: opentelemetry-propagator-b3 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -4157,16 +4803,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-b3 -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-propagator-b3 -- -ra
+
+  py315t-test-opentelemetry-propagator-b3_ubuntu-latest:
+    name: opentelemetry-propagator-b3 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-propagator-b3 -- -ra
 
   pypy3-test-opentelemetry-propagator-b3_ubuntu-latest:
     name: opentelemetry-propagator-b3 pypy-3.10 Ubuntu
@@ -4279,6 +4946,7 @@ jobs:
   py314-test-opentelemetry-propagator-jaeger_ubuntu-latest:
     name: opentelemetry-propagator-jaeger 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4297,8 +4965,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-jaeger -- -ra
 
-  py314t-test-opentelemetry-propagator-jaeger_ubuntu-latest:
-    name: opentelemetry-propagator-jaeger 3.14t Ubuntu
+  py315-test-opentelemetry-propagator-jaeger_ubuntu-latest:
+    name: opentelemetry-propagator-jaeger 3.15 Ubuntu
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -4307,16 +4975,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-jaeger -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-propagator-jaeger -- -ra
+
+  py315t-test-opentelemetry-propagator-jaeger_ubuntu-latest:
+    name: opentelemetry-propagator-jaeger 3.15t Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-propagator-jaeger -- -ra
 
   pypy3-test-opentelemetry-propagator-jaeger_ubuntu-latest:
     name: opentelemetry-propagator-jaeger pypy-3.10 Ubuntu
@@ -4453,6 +5142,7 @@ jobs:
   py314-test-opentelemetry-test-utils_ubuntu-latest:
     name: opentelemetry-test-utils 3.14 Ubuntu
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Checkout repo @ SHA - ${{ github.sha }}
@@ -4476,6 +5166,33 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-test-utils -- -ra
+
+  py315-test-opentelemetry-test-utils_ubuntu-latest:
+    name: opentelemetry-test-utils 3.15 Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install weaver
+        run: |
+          WEAVER_URL="https://github.com/open-telemetry/weaver/releases/download/${{ env.WEAVER_VERSION }}/weaver-x86_64-unknown-linux-gnu.tar.xz"
+          curl -sSL "$WEAVER_URL" | tar -xJ -C /tmp weaver-x86_64-unknown-linux-gnu/weaver
+          sudo mv /tmp/weaver-x86_64-unknown-linux-gnu/weaver /usr/local/bin/weaver
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-test-utils -- -ra
 
   pypy3-test-opentelemetry-test-utils_ubuntu-latest:
     name: opentelemetry-test-utils pypy-3.10 Ubuntu
@@ -4602,6 +5319,7 @@ jobs:
   py314-test-opentelemetry-api_windows-latest:
     name: opentelemetry-api 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4622,8 +5340,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-api -- -ra
 
-  py314t-test-opentelemetry-api_windows-latest:
-    name: opentelemetry-api 3.14t Windows
+  py315-test-opentelemetry-api_windows-latest:
+    name: opentelemetry-api 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4634,16 +5352,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-api -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-api -- -ra
+
+  py315t-test-opentelemetry-api_windows-latest:
+    name: opentelemetry-api 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-api -- -ra
 
   pypy3-test-opentelemetry-api_windows-latest:
     name: opentelemetry-api pypy-3.10 Windows
@@ -4861,6 +5602,7 @@ jobs:
   py314-test-opentelemetry-proto-gen-oldest_windows-latest:
     name: opentelemetry-proto-gen-oldest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4884,6 +5626,7 @@ jobs:
   py314-test-opentelemetry-proto-gen-latest_windows-latest:
     name: opentelemetry-proto-gen-latest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -4904,8 +5647,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-proto-gen-latest -- -ra
 
-  py314t-test-opentelemetry-proto-gen-oldest_windows-latest:
-    name: opentelemetry-proto-gen-oldest 3.14t Windows
+  py315-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4916,19 +5659,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-proto-gen-oldest -- -ra
 
-  py314t-test-opentelemetry-proto-gen-latest_windows-latest:
-    name: opentelemetry-proto-gen-latest 3.14t Windows
+  py315-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -4939,16 +5682,62 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-proto-gen-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-proto-gen-latest -- -ra
+
+  py315t-test-opentelemetry-proto-gen-oldest_windows-latest:
+    name: opentelemetry-proto-gen-oldest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-proto-gen-oldest -- -ra
+
+  py315t-test-opentelemetry-proto-gen-latest_windows-latest:
+    name: opentelemetry-proto-gen-latest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-proto-gen-latest -- -ra
 
   pypy3-test-opentelemetry-proto-gen-oldest_windows-latest:
     name: opentelemetry-proto-gen-oldest pypy-3.10 Windows
@@ -5189,6 +5978,7 @@ jobs:
   py314-test-opentelemetry-protojson-gen-oldest_windows-latest:
     name: opentelemetry-protojson-gen-oldest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5212,6 +6002,7 @@ jobs:
   py314-test-opentelemetry-protojson-gen-latest_windows-latest:
     name: opentelemetry-protojson-gen-latest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5232,8 +6023,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-protojson-gen-latest -- -ra
 
-  py314t-test-opentelemetry-protojson-gen-oldest_windows-latest:
-    name: opentelemetry-protojson-gen-oldest 3.14t Windows
+  py315-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5244,19 +6035,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-protojson-gen-oldest -- -ra
 
-  py314t-test-opentelemetry-protojson-gen-latest_windows-latest:
-    name: opentelemetry-protojson-gen-latest 3.14t Windows
+  py315-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5267,16 +6058,62 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-protojson-gen-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-protojson-gen-latest -- -ra
+
+  py315t-test-opentelemetry-protojson-gen-oldest_windows-latest:
+    name: opentelemetry-protojson-gen-oldest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-protojson-gen-oldest -- -ra
+
+  py315t-test-opentelemetry-protojson-gen-latest_windows-latest:
+    name: opentelemetry-protojson-gen-latest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-protojson-gen-latest -- -ra
 
   pypy3-test-opentelemetry-protojson-gen-oldest_windows-latest:
     name: opentelemetry-protojson-gen-oldest pypy-3.10 Windows
@@ -5422,6 +6259,7 @@ jobs:
   py314-test-opentelemetry-codegen-json_windows-latest:
     name: opentelemetry-codegen-json 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5441,6 +6279,29 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-codegen-json -- -ra
+
+  py315-test-opentelemetry-codegen-json_windows-latest:
+    name: opentelemetry-codegen-json 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-codegen-json -- -ra
 
   py310-test-opentelemetry-sdk_windows-latest:
     name: opentelemetry-sdk 3.10 Windows
@@ -5557,8 +6418,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-sdk -- -ra
 
-  py314t-test-opentelemetry-sdk_windows-latest:
-    name: opentelemetry-sdk 3.14t Windows
+  py315-test-opentelemetry-sdk_windows-latest:
+    name: opentelemetry-sdk 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5569,16 +6430,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-sdk -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-sdk -- -ra
+
+  py315t-test-opentelemetry-sdk_windows-latest:
+    name: opentelemetry-sdk 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-sdk -- -ra
 
   pypy3-test-opentelemetry-sdk_windows-latest:
     name: opentelemetry-sdk pypy-3.10 Windows
@@ -5701,6 +6585,7 @@ jobs:
   py314-test-opentelemetry-configuration_windows-latest:
     name: opentelemetry-configuration 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5721,8 +6606,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-configuration -- -ra
 
-  py314t-test-opentelemetry-configuration_windows-latest:
-    name: opentelemetry-configuration 3.14t Windows
+  py315-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5733,16 +6618,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-configuration -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-configuration -- -ra
+
+  py315t-test-opentelemetry-configuration_windows-latest:
+    name: opentelemetry-configuration 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-configuration -- -ra
 
   pypy3-test-opentelemetry-configuration_windows-latest:
     name: opentelemetry-configuration pypy-3.10 Windows
@@ -5865,6 +6773,7 @@ jobs:
   py314-test-opentelemetry-semantic-conventions_windows-latest:
     name: opentelemetry-semantic-conventions 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -5885,8 +6794,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-semantic-conventions -- -ra
 
-  py314t-test-opentelemetry-semantic-conventions_windows-latest:
-    name: opentelemetry-semantic-conventions 3.14t Windows
+  py315-test-opentelemetry-semantic-conventions_windows-latest:
+    name: opentelemetry-semantic-conventions 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -5897,16 +6806,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-semantic-conventions -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-semantic-conventions -- -ra
+
+  py315t-test-opentelemetry-semantic-conventions_windows-latest:
+    name: opentelemetry-semantic-conventions 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-semantic-conventions -- -ra
 
   pypy3-test-opentelemetry-semantic-conventions_windows-latest:
     name: opentelemetry-semantic-conventions pypy-3.10 Windows
@@ -6061,6 +6993,7 @@ jobs:
   py314-test-opentelemetry-getting-started_windows-latest:
     name: opentelemetry-getting-started 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6088,6 +7021,37 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-getting-started -- -ra
+
+  py315-test-opentelemetry-getting-started_windows-latest:
+    name: opentelemetry-getting-started 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Checkout contrib repo @ ${{ env.CONTRIB_REPO_SHA }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: open-telemetry/opentelemetry-python-contrib
+          ref: ${{ env.CONTRIB_REPO_SHA }}
+          path: opentelemetry-python-contrib
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-getting-started -- -ra
 
   py310-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim 3.10 Windows
@@ -6187,6 +7151,7 @@ jobs:
   py314-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6207,8 +7172,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opentracing-shim -- -ra
 
-  py314t-test-opentelemetry-opentracing-shim_windows-latest:
-    name: opentelemetry-opentracing-shim 3.14t Windows
+  py315-test-opentelemetry-opentracing-shim_windows-latest:
+    name: opentelemetry-opentracing-shim 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -6219,16 +7184,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-opentracing-shim -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-opentracing-shim -- -ra
+
+  py315t-test-opentelemetry-opentracing-shim_windows-latest:
+    name: opentelemetry-opentracing-shim 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-opentracing-shim -- -ra
 
   pypy3-test-opentelemetry-opentracing-shim_windows-latest:
     name: opentelemetry-opentracing-shim pypy-3.10 Windows
@@ -6351,6 +7339,7 @@ jobs:
   py314-test-opentelemetry-opencensus-shim_windows-latest:
     name: opentelemetry-opencensus-shim 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6370,6 +7359,29 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-opencensus-shim -- -ra
+
+  py315-test-opentelemetry-opencensus-shim_windows-latest:
+    name: opentelemetry-opencensus-shim 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-opencensus-shim -- -ra
 
   py310-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.10 Windows
@@ -6564,6 +7576,7 @@ jobs:
   py314-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
     name: opentelemetry-exporter-http-transport-oldest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6587,6 +7600,7 @@ jobs:
   py314-test-opentelemetry-exporter-http-transport-latest_windows-latest:
     name: opentelemetry-exporter-http-transport-latest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6607,8 +7621,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-http-transport-latest -- -ra
 
-  py314t-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
-    name: opentelemetry-exporter-http-transport-oldest 3.14t Windows
+  py315-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
+    name: opentelemetry-exporter-http-transport-oldest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -6619,19 +7633,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-http-transport-oldest -- -ra
 
-  py314t-test-opentelemetry-exporter-http-transport-latest_windows-latest:
-    name: opentelemetry-exporter-http-transport-latest 3.14t Windows
+  py315-test-opentelemetry-exporter-http-transport-latest_windows-latest:
+    name: opentelemetry-exporter-http-transport-latest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -6642,16 +7656,62 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-http-transport-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-http-transport-latest -- -ra
+
+  py315t-test-opentelemetry-exporter-http-transport-oldest_windows-latest:
+    name: opentelemetry-exporter-http-transport-oldest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-http-transport-oldest -- -ra
+
+  py315t-test-opentelemetry-exporter-http-transport-latest_windows-latest:
+    name: opentelemetry-exporter-http-transport-latest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-http-transport-latest -- -ra
 
   py310-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.10 Windows
@@ -6846,6 +7906,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-oldest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6869,6 +7930,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
     name: opentelemetry-exporter-otlpcommon-latest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -6889,8 +7951,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
-    name: opentelemetry-exporter-otlpcommon-oldest 3.14t Windows
+  py315-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -6901,19 +7963,19 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
 
-  py314t-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
-    name: opentelemetry-exporter-otlpcommon-latest 3.14t Windows
+  py315-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -6924,16 +7986,62 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlpcommon-latest -- -ra
+
+  py315t-test-opentelemetry-exporter-otlpcommon-oldest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-oldest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlpcommon-oldest -- -ra
+
+  py315t-test-opentelemetry-exporter-otlpcommon-latest_windows-latest:
+    name: opentelemetry-exporter-otlpcommon-latest 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlpcommon-latest -- -ra
 
   py310-test-opentelemetry-exporter-opencensus_windows-latest:
     name: opentelemetry-exporter-opencensus 3.10 Windows
@@ -7033,6 +8141,7 @@ jobs:
   py314-test-opentelemetry-exporter-opencensus_windows-latest:
     name: opentelemetry-exporter-opencensus 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7052,6 +8161,29 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-opencensus -- -ra
+
+  py315-test-opentelemetry-exporter-opencensus_windows-latest:
+    name: opentelemetry-exporter-opencensus 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-opencensus -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.10 Windows
@@ -7151,6 +8283,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
     name: opentelemetry-exporter-otlp-proto-common 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7171,8 +8304,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-common 3.14t Windows
+  py315-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -7183,16 +8316,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-common -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-common -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-common 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-proto-common -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-proto-common_windows-latest:
     name: opentelemetry-exporter-otlp-proto-common pypy-3.10 Windows
@@ -7315,6 +8471,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-json-common_windows-latest:
     name: opentelemetry-exporter-otlp-json-common 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7335,8 +8492,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-common -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-json-common_windows-latest:
-    name: opentelemetry-exporter-otlp-json-common 3.14t Windows
+  py315-test-opentelemetry-exporter-otlp-json-common_windows-latest:
+    name: opentelemetry-exporter-otlp-json-common 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -7347,16 +8504,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-common -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-json-common -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-json-common_windows-latest:
+    name: opentelemetry-exporter-otlp-json-common 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-json-common -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-json-common_windows-latest:
     name: opentelemetry-exporter-otlp-json-common pypy-3.10 Windows
@@ -7479,6 +8659,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-combined_windows-latest:
     name: opentelemetry-exporter-otlp-combined 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7498,6 +8679,29 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-combined -- -ra
+
+  py315-test-opentelemetry-exporter-otlp-combined_windows-latest:
+    name: opentelemetry-exporter-otlp-combined 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-combined -- -ra
 
   py310-test-opentelemetry-exporter-otlp-json-file_windows-latest:
     name: opentelemetry-exporter-otlp-json-file 3.10 Windows
@@ -7597,6 +8801,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-json-file_windows-latest:
     name: opentelemetry-exporter-otlp-json-file 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7617,8 +8822,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-file -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-json-file_windows-latest:
-    name: opentelemetry-exporter-otlp-json-file 3.14t Windows
+  py315-test-opentelemetry-exporter-otlp-json-file_windows-latest:
+    name: opentelemetry-exporter-otlp-json-file 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -7629,16 +8834,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-file -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-json-file -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-json-file_windows-latest:
+    name: opentelemetry-exporter-otlp-json-file 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-json-file -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-json-file_windows-latest:
     name: opentelemetry-exporter-otlp-json-file pypy-3.10 Windows
@@ -7761,6 +8989,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-json-http_windows-latest:
     name: opentelemetry-exporter-otlp-json-http 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -7781,8 +9010,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-json-http -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-json-http_windows-latest:
-    name: opentelemetry-exporter-otlp-json-http 3.14t Windows
+  py315-test-opentelemetry-exporter-otlp-json-http_windows-latest:
+    name: opentelemetry-exporter-otlp-json-http 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -7793,16 +9022,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-json-http -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-json-http -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-json-http_windows-latest:
+    name: opentelemetry-exporter-otlp-json-http 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-json-http -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-json-http_windows-latest:
     name: opentelemetry-exporter-otlp-json-http pypy-3.10 Windows
@@ -8020,6 +9272,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8043,6 +9296,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
     name: opentelemetry-exporter-otlp-proto-grpc-latest 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8062,6 +9316,52 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
+
+  py315-test-opentelemetry-exporter-otlp-proto-grpc-oldest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-oldest 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-grpc-oldest -- -ra
+
+  py315-test-opentelemetry-exporter-otlp-proto-grpc-latest_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-grpc-latest 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-grpc-latest -- -ra
 
   py310-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.10 Windows
@@ -8161,6 +9461,7 @@ jobs:
   py314-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8181,8 +9482,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
-  py314t-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
-    name: opentelemetry-exporter-otlp-proto-http 3.14t Windows
+  py315-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-http 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -8193,16 +9494,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-otlp-proto-http -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-otlp-proto-http -- -ra
+
+  py315t-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
+    name: opentelemetry-exporter-otlp-proto-http 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-otlp-proto-http -- -ra
 
   pypy3-test-opentelemetry-exporter-otlp-proto-http_windows-latest:
     name: opentelemetry-exporter-otlp-proto-http pypy-3.10 Windows
@@ -8325,6 +9649,7 @@ jobs:
   py314-test-opentelemetry-exporter-prometheus_windows-latest:
     name: opentelemetry-exporter-prometheus 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8345,8 +9670,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-prometheus -- -ra
 
-  py314t-test-opentelemetry-exporter-prometheus_windows-latest:
-    name: opentelemetry-exporter-prometheus 3.14t Windows
+  py315-test-opentelemetry-exporter-prometheus_windows-latest:
+    name: opentelemetry-exporter-prometheus 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -8357,16 +9682,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-prometheus -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-prometheus -- -ra
+
+  py315t-test-opentelemetry-exporter-prometheus_windows-latest:
+    name: opentelemetry-exporter-prometheus 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-prometheus -- -ra
 
   pypy3-test-opentelemetry-exporter-prometheus_windows-latest:
     name: opentelemetry-exporter-prometheus pypy-3.10 Windows
@@ -8489,6 +9837,7 @@ jobs:
   py314-test-opentelemetry-exporter-zipkin-combined_windows-latest:
     name: opentelemetry-exporter-zipkin-combined 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8509,8 +9858,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-combined -- -ra
 
-  py314t-test-opentelemetry-exporter-zipkin-combined_windows-latest:
-    name: opentelemetry-exporter-zipkin-combined 3.14t Windows
+  py315-test-opentelemetry-exporter-zipkin-combined_windows-latest:
+    name: opentelemetry-exporter-zipkin-combined 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -8521,16 +9870,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-combined -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-zipkin-combined -- -ra
+
+  py315t-test-opentelemetry-exporter-zipkin-combined_windows-latest:
+    name: opentelemetry-exporter-zipkin-combined 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-zipkin-combined -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-combined_windows-latest:
     name: opentelemetry-exporter-zipkin-combined pypy-3.10 Windows
@@ -8653,6 +10025,7 @@ jobs:
   py314-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
     name: opentelemetry-exporter-zipkin-proto-http 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8673,8 +10046,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
-  py314t-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
-    name: opentelemetry-exporter-zipkin-proto-http 3.14t Windows
+  py315-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
+    name: opentelemetry-exporter-zipkin-proto-http 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -8685,16 +10058,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-zipkin-proto-http -- -ra
+
+  py315t-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
+    name: opentelemetry-exporter-zipkin-proto-http 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-zipkin-proto-http -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-proto-http_windows-latest:
     name: opentelemetry-exporter-zipkin-proto-http pypy-3.10 Windows
@@ -8817,6 +10213,7 @@ jobs:
   py314-test-opentelemetry-exporter-zipkin-json_windows-latest:
     name: opentelemetry-exporter-zipkin-json 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -8837,8 +10234,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-exporter-zipkin-json -- -ra
 
-  py314t-test-opentelemetry-exporter-zipkin-json_windows-latest:
-    name: opentelemetry-exporter-zipkin-json 3.14t Windows
+  py315-test-opentelemetry-exporter-zipkin-json_windows-latest:
+    name: opentelemetry-exporter-zipkin-json 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -8849,16 +10246,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-exporter-zipkin-json -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-exporter-zipkin-json -- -ra
+
+  py315t-test-opentelemetry-exporter-zipkin-json_windows-latest:
+    name: opentelemetry-exporter-zipkin-json 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-exporter-zipkin-json -- -ra
 
   pypy3-test-opentelemetry-exporter-zipkin-json_windows-latest:
     name: opentelemetry-exporter-zipkin-json pypy-3.10 Windows
@@ -8981,6 +10401,7 @@ jobs:
   py314-test-opentelemetry-propagator-b3_windows-latest:
     name: opentelemetry-propagator-b3 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -9001,8 +10422,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-b3 -- -ra
 
-  py314t-test-opentelemetry-propagator-b3_windows-latest:
-    name: opentelemetry-propagator-b3 3.14t Windows
+  py315-test-opentelemetry-propagator-b3_windows-latest:
+    name: opentelemetry-propagator-b3 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -9013,16 +10434,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-b3 -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-propagator-b3 -- -ra
+
+  py315t-test-opentelemetry-propagator-b3_windows-latest:
+    name: opentelemetry-propagator-b3 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-propagator-b3 -- -ra
 
   pypy3-test-opentelemetry-propagator-b3_windows-latest:
     name: opentelemetry-propagator-b3 pypy-3.10 Windows
@@ -9145,6 +10589,7 @@ jobs:
   py314-test-opentelemetry-propagator-jaeger_windows-latest:
     name: opentelemetry-propagator-jaeger 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -9165,8 +10610,8 @@ jobs:
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-propagator-jaeger -- -ra
 
-  py314t-test-opentelemetry-propagator-jaeger_windows-latest:
-    name: opentelemetry-propagator-jaeger 3.14t Windows
+  py315-test-opentelemetry-propagator-jaeger_windows-latest:
+    name: opentelemetry-propagator-jaeger 3.15 Windows
     runs-on: windows-latest
     timeout-minutes: 30
     steps:
@@ -9177,16 +10622,39 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python 3.14t
+      - name: Set up Python 3.15
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.14t"
+          python-version: "3.15"
 
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Run tests
-        run: uvx --with tox-uv tox -e py314t-test-opentelemetry-propagator-jaeger -- -ra
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-propagator-jaeger -- -ra
+
+  py315t-test-opentelemetry-propagator-jaeger_windows-latest:
+    name: opentelemetry-propagator-jaeger 3.15t Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15t
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15t"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315t-test-opentelemetry-propagator-jaeger -- -ra
 
   pypy3-test-opentelemetry-propagator-jaeger_windows-latest:
     name: opentelemetry-propagator-jaeger pypy-3.10 Windows
@@ -9309,6 +10777,7 @@ jobs:
   py314-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils 3.14 Windows
     runs-on: windows-latest
+    if: ${{ github.event_name != 'pull_request' }}
     timeout-minutes: 30
     steps:
       - name: Configure git to support long filenames
@@ -9328,6 +10797,29 @@ jobs:
 
       - name: Run tests
         run: uvx --with tox-uv tox -e py314-test-opentelemetry-test-utils -- -ra
+
+  py315-test-opentelemetry-test-utils_windows-latest:
+    name: opentelemetry-test-utils 3.15 Windows
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Configure git to support long filenames
+        run: git config --system core.longpaths true
+      - name: Checkout repo @ SHA - ${{ github.sha }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.15
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.15"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+
+      - name: Run tests
+        run: uvx --with tox-uv tox -e py315-test-opentelemetry-test-utils -- -ra
 
   pypy3-test-opentelemetry-test-utils_windows-latest:
     name: opentelemetry-test-utils pypy-3.10 Windows
