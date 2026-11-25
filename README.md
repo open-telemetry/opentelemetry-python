@@ -23,7 +23,7 @@ Project versioning information and stability guarantees can be found [here](./ra
 > [!IMPORTANT]
 > We are working on stabilizing the Log signal which would require making deprecations and breaking changes. We will try to reduce the releases that may require an update to your code, especially for instrumentations or for SDK developers.
 
-## Getting started
+\## Getting started
 
 You can find the getting started guide for OpenTelemetry Python [here](https://opentelemetry.io/docs/languages/python/getting-started/).
 
@@ -33,11 +33,10 @@ Python SDK, see the [documentation](https://opentelemetry.io/docs/languages/pyth
 
 ## Python Version Support
 
-This project ensures compatibility with the current supported versions of the Python. As new Python versions are released, support for them is added and
+This project ensures compatibility with currently supported Python versions. As new Python versions are released, support for them is added and
 as old Python versions reach their end of life, support for them is removed.
 
-We add support for new Python versions no later than 3 months after they become stable.
-
+We aim to add support for new Python versions within three months of their stable release.
 We remove support for old Python versions 6 months after they reach their [end of life](https://devguide.python.org/devcycle/#end-of-life-branches).
 
 
