@@ -10,6 +10,7 @@ from pytest import param as p
 
 from opentelemetry.sdk.trace._sampling_experimental import (
     ComposableSampler,
+    SamplingIntent,
     composable_always_off,
     composable_always_on,
     composable_parent_threshold,
@@ -179,3 +180,28 @@ def test_sample(input: Input, output: Output):
     assert result.decision == decision
     assert state.threshold == output.threshold
     assert state.random_value == output.random_value
+
+
+@dataclass
+class _IntentWithAttributes:
+    threshold: int
+
+    def sampling_intent(self, *args: object, **kwargs: object) -> SamplingIntent:
+        return SamplingIntent(threshold=self.threshold, attributes={"foo": "bar"})
+
+    def get_description(self) -> str:
+        return f"IntentWithAttributes{{threshold={self.threshold}}}"
+
+
+@pytest.mark.parametrize(
+    "threshold,decision,attributes",
+    (
+        p(0, Decision.RECORD_AND_SAMPLE, {"foo": "bar"}, id="sampled"),
+        p(INVALID_THRESHOLD, Decision.DROP, {}, id="dropped"),
+    ),
+)
+def test_sample_intent_attributes(threshold: int, decision: Decision, attributes: dict[str, str]):
+    result = composite_sampler(_IntentWithAttributes(threshold)).should_sample(None, TRACE_ID, "name")
+
+    assert result.decision == decision
+    assert result.attributes == attributes
