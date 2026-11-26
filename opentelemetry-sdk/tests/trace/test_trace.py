@@ -819,6 +819,13 @@ class TestReadableSpan(unittest.TestCase):
         span = trace.ReadableSpan("test", events=events)
         self.assertEqual(span.events, tuple(events))
 
+    def test_attributes(self):
+        span = trace.ReadableSpan("test")
+        self.assertEqual(span.attributes, {})
+
+        span = trace.ReadableSpan("test", attributes={"foo": "bar"})
+        self.assertEqual(span.attributes, {"foo": "bar"})
+
     def test_event_dropped_attributes(self):
         event1 = trace.Event("foo1", BoundedAttributes(0, attributes={"bar1": "baz1"}))
         self.assertEqual(event1.dropped_attributes, 1)

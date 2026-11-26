@@ -18,7 +18,12 @@ Deprecated: Replaced by `cpu.mode`.
 
 SYSTEM_DEVICE: Final = "system.device"
 """
-The device identifier.
+Deprecated: Replaced by `system.device.name`.
+"""
+
+SYSTEM_DEVICE_NAME: Final = "system.device.name"
+"""
+The OS level identifier for a device, such as disk, partition or network interface.
 """
 
 SYSTEM_FILESYSTEM_MODE: Final = "system.filesystem.mode"
@@ -151,14 +156,16 @@ class SystemMemoryLinuxSlabStateValues(Enum):
 class SystemMemoryStateValues(Enum):
     USED = "used"
     """Actual used virtual memory in bytes."""
+    AVAILABLE = "available"
+    """An estimate of how much memory is available for starting new applications, without causing swapping."""
     FREE = "free"
-    """free."""
+    """Deprecated: Removed, report memory usage with the `used` and `available` states instead."""
     SHARED = "shared"
     """Deprecated: Removed, report shared memory usage with `metric.system.memory.linux.shared` metric."""
     BUFFERS = "buffers"
-    """buffers."""
+    """Deprecated: Removed, report memory usage with the `used` and `available` states instead."""
     CACHED = "cached"
-    """cached."""
+    """Deprecated: Removed, report memory usage with the `used` and `available` states instead."""
 
 
 @deprecated("The attribute system.network.state is deprecated - Replaced by `network.connection.state`")

@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import MISSING, fields, is_dataclass
 from enum import Enum
-from types import UnionType
+from types import NoneType, UnionType
 from typing import Any, TypeVar, Union, get_args, get_origin, get_type_hints
 
 _T = TypeVar("_T")
@@ -27,7 +27,7 @@ def _unwrap_optional(type_hint: Any) -> Any:
     """
     origin = get_origin(type_hint)
     if origin is UnionType or origin is Union:
-        non_none = [t for t in get_args(type_hint) if t is not type(None)]
+        non_none = [t for t in get_args(type_hint) if t is not NoneType]
         if len(non_none) == 1:
             return non_none[0]
     return type_hint

@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: use unit `{log_record}` and update description for `otel.sdk.processor.log.queue.size`
