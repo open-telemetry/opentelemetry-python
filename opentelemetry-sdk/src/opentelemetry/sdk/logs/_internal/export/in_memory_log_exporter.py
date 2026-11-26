@@ -4,10 +4,8 @@
 import collections.abc
 import threading
 
-from typing_extensions import deprecated
-
-from opentelemetry.sdk._logs import ReadableLogRecord
-from opentelemetry.sdk._logs.export import (
+from opentelemetry.sdk.logs import ReadableLogRecord
+from opentelemetry.sdk.logs.export import (
     LogRecordExporter,
     LogRecordExportResult,
 )
@@ -46,8 +44,3 @@ class InMemoryLogRecordExporter(LogRecordExporter):
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
-
-
-@deprecated("Use InMemoryLogRecordExporter. Since logs are not stable yet this WILL be removed in future releases.")
-class InMemoryLogExporter(InMemoryLogRecordExporter):
-    pass
