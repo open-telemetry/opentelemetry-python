@@ -14,7 +14,7 @@ from ._trace_state import serialize_th
 from ._util import INVALID_THRESHOLD, MAX_THRESHOLD, calculate_threshold
 
 
-class ComposableTraceIDRatioBased(ComposableSampler):
+class ComposableProbability(ComposableSampler):
     _threshold: int
     _description: str
 
@@ -29,7 +29,7 @@ class ComposableTraceIDRatioBased(ComposableSampler):
         else:
             intent = SamplingIntent(threshold=INVALID_THRESHOLD, threshold_reliable=False)
         self._intent = intent
-        self._description = f"ComposableTraceIDRatioBased{{threshold={threshold_str}, ratio={ratio}}}"
+        self._description = f"ComposableProbability{{threshold={threshold_str}, ratio={ratio}}}"
 
     def sampling_intent(
         self,
@@ -46,7 +46,7 @@ class ComposableTraceIDRatioBased(ComposableSampler):
         return self._description
 
 
-def composable_traceid_ratio_based(
+def composable_probability(
     ratio: float,
 ) -> ComposableSampler:
     """Returns a composable sampler that samples each span with a fixed ratio.
@@ -64,4 +64,4 @@ def composable_traceid_ratio_based(
     if not 0.0 <= ratio <= 1.0:
         raise ValueError("Sampling ratio must be between 0.0 and 1.0")
 
-    return ComposableTraceIDRatioBased(ratio)
+    return ComposableProbability(ratio)

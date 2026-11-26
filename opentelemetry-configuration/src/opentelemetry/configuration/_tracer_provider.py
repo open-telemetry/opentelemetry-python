@@ -92,8 +92,8 @@ from opentelemetry.sdk.trace._sampling_experimental import (
     composable_always_off,
     composable_always_on,
     composable_parent_threshold,
+    composable_probability,
     composable_rule_based,
-    composable_traceid_ratio_based,
     composite_sampler,
 )
 from opentelemetry.sdk.trace._sampling_experimental._rule_based import (
@@ -330,7 +330,7 @@ def _create_experimental_composable_sampler(
         return composable_parent_threshold(_create_experimental_composable_sampler(config.parent_threshold.root))
     if config.probability is not None:
         ratio = config.probability.ratio
-        return composable_traceid_ratio_based(ratio if ratio is not None else 1.0)
+        return composable_probability(ratio if ratio is not None else 1.0)
     if config.rule_based is not None:
         return composable_rule_based(_create_rule_based_sampler_rules(config.rule_based))
     raise ConfigurationError(

@@ -13,7 +13,7 @@ from opentelemetry.sdk.trace._sampling_experimental import (
     composable_always_off,
     composable_always_on,
     composable_parent_threshold,
-    composable_traceid_ratio_based,
+    composable_probability,
     composite_sampler,
 )
 from opentelemetry.sdk.trace._sampling_experimental._trace_state import (
@@ -118,7 +118,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=composable_traceid_ratio_based(0.5),
+                sampler=composable_probability(0.5),
                 sampled=True,
                 threshold=None,
                 random_value=0x7FFFFFFFFFFFFF,
@@ -132,7 +132,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=composable_traceid_ratio_based(0.5),
+                sampler=composable_probability(0.5),
                 sampled=False,
                 threshold=None,
                 random_value=0x80000000000000,
@@ -146,7 +146,7 @@ class Output:
         ),
         p(
             Input(
-                sampler=composable_traceid_ratio_based(1.0),
+                sampler=composable_probability(1.0),
                 sampled=False,
                 threshold=0x80000000000000,
                 random_value=0x80000000000000,
