@@ -8,7 +8,6 @@ Deprecated alias of :mod:`opentelemetry.logs`.
     :mod:`opentelemetry.logs` instead.
 """
 
-import sys
 import warnings
 
 # pylint: disable-next=useless-import-alias
@@ -20,7 +19,6 @@ from opentelemetry.logs import (
     NoOpLogger,
     NoOpLoggerProvider,
     SeverityNumber,
-    _internal,
     get_logger,
     get_logger_provider,
     set_logger_provider,
@@ -33,8 +31,6 @@ warnings.warn(
     DeprecationWarning,
     stacklevel=2,
 )
-
-sys.modules[f"{__name__}._internal"] = _internal
 
 __all__ = [
     "LogRecord",

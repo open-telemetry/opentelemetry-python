@@ -1,1 +1,1 @@
-`opentelemetry-api`: remove deprecated `LogRecord` constructor arguments `trace_id`, `span_id`, and `trace_flags`; use `context` instead
+`opentelemetry-api`: remove the private `opentelemetry._logs._internal` module and the deprecated `LogRecord` constructor arguments `trace_id`, `span_id`, and `trace_flags` (use `context`)

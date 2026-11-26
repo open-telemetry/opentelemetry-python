@@ -1,7 +1,6 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# pylint: disable=protected-access
 from __future__ import annotations
 
 import importlib
@@ -9,14 +8,11 @@ import pickle
 import sys
 import unittest
 import warnings
-from unittest.mock import Mock, patch
 
 import opentelemetry.logs
-import opentelemetry.logs._internal
 
 _DEPRECATED_MODULES = (
     "opentelemetry._logs",
-    "opentelemetry._logs._internal",
     "opentelemetry._logs.severity",
 )
 
@@ -84,15 +80,6 @@ class TestDeprecatedLogsModule(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertIs(getattr(deprecated, name), getattr(opentelemetry.logs, name))
 
-    def test_internal_submodule_is_aliased(self) -> None:
-        with self.assertWarns(DeprecationWarning):
-            importlib.import_module("opentelemetry._logs")
-
-        self.assertIs(
-            importlib.import_module("opentelemetry._logs._internal"),
-            opentelemetry.logs._internal,
-        )
-
     def test_legacy_severity_reexports_public_enum(self) -> None:
         with self.assertWarns(DeprecationWarning):
             deprecated = importlib.import_module("opentelemetry._logs")
@@ -110,11 +97,3 @@ class TestDeprecatedLogsModule(unittest.TestCase):
         with self.assertWarns(DeprecationWarning):
             severity = pickle.loads(legacy)
         self.assertIs(severity, opentelemetry.logs.SeverityNumber.INFO)
-
-    def test_patching_deprecated_path_patches_new_module(self) -> None:
-        with self.assertWarns(DeprecationWarning):
-            importlib.import_module("opentelemetry._logs")
-
-        mock_load_provider = Mock()
-        with patch("opentelemetry._logs._internal._load_provider", mock_load_provider):
-            self.assertIs(opentelemetry.logs._internal._load_provider, mock_load_provider)
