@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 import importlib
+import pickle
 import sys
 import unittest
 import warnings
@@ -12,7 +13,6 @@ from unittest.mock import Mock, patch
 
 import opentelemetry.logs
 import opentelemetry.logs._internal
-import opentelemetry.logs.severity
 
 _DEPRECATED_MODULES = (
     "opentelemetry._logs",
@@ -84,7 +84,7 @@ class TestDeprecatedLogsModule(unittest.TestCase):
             with self.subTest(name=name):
                 self.assertIs(getattr(deprecated, name), getattr(opentelemetry.logs, name))
 
-    def test_submodules_are_aliased(self) -> None:
+    def test_internal_submodule_is_aliased(self) -> None:
         with self.assertWarns(DeprecationWarning):
             importlib.import_module("opentelemetry._logs")
 
@@ -92,10 +92,24 @@ class TestDeprecatedLogsModule(unittest.TestCase):
             importlib.import_module("opentelemetry._logs._internal"),
             opentelemetry.logs._internal,
         )
+
+    def test_legacy_severity_reexports_public_enum(self) -> None:
+        with self.assertWarns(DeprecationWarning):
+            deprecated = importlib.import_module("opentelemetry._logs")
+
+        severity = importlib.import_module("opentelemetry._logs.severity")
+        self.assertIs(deprecated.severity, severity)
         self.assertIs(
-            importlib.import_module("opentelemetry._logs.severity"),
-            opentelemetry.logs.severity,
+            severity.SeverityNumber,
+            opentelemetry.logs.SeverityNumber,
         )
+
+    def test_loads_legacy_severity_pickle(self) -> None:
+        # Protocol 0 pickle of SeverityNumber.INFO from before the move.
+        legacy = b"copentelemetry._logs.severity\nSeverityNumber\n(I9\ntR."
+        with self.assertWarns(DeprecationWarning):
+            severity = pickle.loads(legacy)
+        self.assertIs(severity, opentelemetry.logs.SeverityNumber.INFO)
 
     def test_patching_deprecated_path_patches_new_module(self) -> None:
         with self.assertWarns(DeprecationWarning):

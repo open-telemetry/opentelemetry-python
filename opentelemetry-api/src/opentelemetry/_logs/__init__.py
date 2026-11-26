@@ -11,6 +11,8 @@ Deprecated alias of :mod:`opentelemetry.logs`.
 import sys
 import warnings
 
+# pylint: disable-next=useless-import-alias
+from opentelemetry._logs import severity as severity
 from opentelemetry.logs import (
     Logger,
     LoggerProvider,
@@ -22,7 +24,6 @@ from opentelemetry.logs import (
     get_logger,
     get_logger_provider,
     set_logger_provider,
-    severity,
 )
 
 warnings.warn(
@@ -34,7 +35,6 @@ warnings.warn(
 )
 
 sys.modules[f"{__name__}._internal"] = _internal
-sys.modules[f"{__name__}.severity"] = severity
 
 __all__ = [
     "LogRecord",
