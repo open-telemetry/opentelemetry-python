@@ -17,7 +17,7 @@ from typing import Any
 
 from google.protobuf.json_format import MessageToDict, ParseDict
 
-from opentelemetry.exporter.otlp.json.common._log_encoder import (
+from opentelemetry.exporter.otlp.json.common.log_encoder import (
     encode_logs as json_encode_logs,
 )
 from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
@@ -26,7 +26,7 @@ from opentelemetry.exporter.otlp.json.common.metrics_encoder import (
 from opentelemetry.exporter.otlp.json.common.trace_encoder import (
     encode_spans as json_encode_spans,
 )
-from opentelemetry.exporter.otlp.proto.common._log_encoder import (
+from opentelemetry.exporter.otlp.proto.common.log_encoder import (
     encode_logs as proto_encode_logs,
 )
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (

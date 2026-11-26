@@ -9,10 +9,10 @@ destinations do not block each other.
 
 import logging
 
-from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.log_exporter import (
     OTLPLogExporter as GrpcLogExporter,
 )
-from opentelemetry.exporter.otlp.proto.http._log_exporter import (
+from opentelemetry.exporter.otlp.proto.http.log_exporter import (
     OTLPLogExporter as HttpLogExporter,
 )
 

@@ -39,7 +39,7 @@ dependencies = [
 ]
 
 [project.entry-points.opentelemetry_logs_exporter]
-otlp_proto_grpc = "opentelemetry.exporter.otlp.proto.grpc._log_exporter:OTLPLogExporter"
+otlp_proto_grpc = "opentelemetry.exporter.otlp.proto.grpc.log_exporter:OTLPLogExporter"
 
 [project.entry-points.opentelemetry_metrics_exporter]
 otlp_proto_grpc = "opentelemetry.exporter.otlp.proto.grpc.metric_exporter:OTLPMetricExporter"

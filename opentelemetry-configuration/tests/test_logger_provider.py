@@ -250,7 +250,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 sys.modules,
                 {
                     "opentelemetry.exporter.otlp.proto.http": None,
-                    "opentelemetry.exporter.otlp.proto.http._log_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.http.log_exporter": None,
                 },
             ),
             self.assertRaises(ConfigurationError),
@@ -264,7 +264,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 sys.modules,
                 {
                     "opentelemetry.exporter.otlp.common.http": None,
-                    "opentelemetry.exporter.otlp.json.http._log_exporter": None,
+                    "opentelemetry.exporter.otlp.json.http.log_exporter": None,
                 },
             ),
             self.assertRaises(ConfigurationError) as ctx,
@@ -279,7 +279,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 sys.modules,
                 {
                     "grpc": None,
-                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": None,
+                    "opentelemetry.exporter.otlp.proto.grpc.log_exporter": None,
                 },
             ),
             self.assertRaises(ConfigurationError),
@@ -292,7 +292,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             patch.dict(
                 sys.modules,
                 {
-                    "opentelemetry.exporter.otlp.json.file._log_exporter": None,
+                    "opentelemetry.exporter.otlp.json.file.log_exporter": None,
                 },
             ),
             self.assertRaises(ConfigurationError) as ctx,
@@ -308,7 +308,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
         with patch.dict(
             sys.modules,
             {
-                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+                "opentelemetry.exporter.otlp.json.file.log_exporter": mock_module,
             },
         ):
             config = LogRecordExporterConfig(otlp_file_development=ExperimentalOtlpFileExporterConfig())
@@ -326,7 +326,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
         with patch.dict(
             sys.modules,
             {
-                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+                "opentelemetry.exporter.otlp.json.file.log_exporter": mock_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -345,7 +345,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
         with patch.dict(
             sys.modules,
             {
-                "opentelemetry.exporter.otlp.json.file._log_exporter": mock_module,
+                "opentelemetry.exporter.otlp.json.file.log_exporter": mock_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -370,7 +370,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.proto.http": mock_module,
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -400,7 +400,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.common.http": mock_common_module,
-                "opentelemetry.exporter.otlp.json.http._log_exporter": mock_exporter_module,
+                "opentelemetry.exporter.otlp.json.http.log_exporter": mock_exporter_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -436,7 +436,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.proto.http": mock_module,
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -460,7 +460,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.proto.http": mock_module,
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
             },
         ):
             config = LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(compression="deflate"))
@@ -480,7 +480,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             sys.modules,
             {
                 "grpc": mock_grpc,
-                "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_grpc_log_module,
+                "opentelemetry.exporter.otlp.proto.grpc.log_exporter": mock_grpc_log_module,
             },
         ):
             config = LogRecordExporterConfig(
@@ -511,7 +511,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                         {
                             "opentelemetry.exporter.otlp.proto.http": MagicMock(),
                             "opentelemetry.exporter.otlp.common.http": MagicMock(),
-                            f"opentelemetry.exporter.otlp.{protocol}.http._log_exporter": mock_log_module,
+                            f"opentelemetry.exporter.otlp.{protocol}.http.log_exporter": mock_log_module,
                         },
                     ),
                 ):
@@ -546,7 +546,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 sys.modules,
                 {
                     "opentelemetry.exporter.otlp.proto.http": MagicMock(),
-                    "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_log_module,
+                    "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_log_module,
                 },
             ),
             self.assertRaises(ConfigurationError) as ctx,
@@ -565,7 +565,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
 
         with patch.dict(
             sys.modules,
-            {"grpc": MagicMock(), "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_grpc_log_module},
+            {"grpc": MagicMock(), "opentelemetry.exporter.otlp.proto.grpc.log_exporter": mock_grpc_log_module},
         ):
             config = LogRecordExporterConfig(
                 otlp_grpc=OtlpGrpcExporterConfig(endpoint="http://collector:4317", tls=GrpcTlsConfig(insecure=False))
@@ -584,7 +584,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                     sys.modules,
                     {
                         "grpc": MagicMock(),
-                        "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_module,
+                        "opentelemetry.exporter.otlp.proto.grpc.log_exporter": mock_module,
                     },
                 ),
             ):
@@ -608,7 +608,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 sys.modules,
                 {
                     "grpc": mock_grpc,
-                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_grpc_log_module,
+                    "opentelemetry.exporter.otlp.proto.grpc.log_exporter": mock_grpc_log_module,
                 },
             ),
         ):
@@ -640,14 +640,14 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
                 LogRecordExporterConfig(otlp_http=OtlpHttpExporterConfig(timeout=0)),
                 {
                     "opentelemetry.exporter.otlp.proto.http": MagicMock(),
-                    "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_exporter_module,
+                    "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_exporter_module,
                 },
             ),
             (
                 LogRecordExporterConfig(otlp_grpc=OtlpGrpcExporterConfig(timeout=0)),
                 {
                     "grpc": MagicMock(),
-                    "opentelemetry.exporter.otlp.proto.grpc._log_exporter": mock_exporter_module,
+                    "opentelemetry.exporter.otlp.proto.grpc.log_exporter": mock_exporter_module,
                 },
             ),
         )
@@ -665,7 +665,7 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
             sys.modules,
             {
                 "opentelemetry.exporter.otlp.proto.http": MagicMock(),
-                "opentelemetry.exporter.otlp.proto.http._log_exporter": mock_exporter_module,
+                "opentelemetry.exporter.otlp.proto.http.log_exporter": mock_exporter_module,
             },
         ):
             _create_log_record_exporter(
@@ -676,11 +676,11 @@ class TestCreateLogRecordExporters(unittest.TestCase):  # pylint: disable=too-ma
     def test_otlp_unsupported_size_limits_warn(self):
         modules = {
             "grpc": MagicMock(),
-            "opentelemetry.exporter.otlp.proto.grpc._log_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.grpc.log_exporter": MagicMock(),
             "opentelemetry.exporter.otlp.proto.http": MagicMock(),
-            "opentelemetry.exporter.otlp.proto.http._log_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.proto.http.log_exporter": MagicMock(),
             "opentelemetry.exporter.otlp.common.http": MagicMock(),
-            "opentelemetry.exporter.otlp.json.http._log_exporter": MagicMock(),
+            "opentelemetry.exporter.otlp.json.http.log_exporter": MagicMock(),
         }
         cases = [
             (
