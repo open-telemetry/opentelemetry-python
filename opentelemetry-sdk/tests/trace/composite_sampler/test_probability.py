@@ -4,7 +4,7 @@
 import pytest
 
 from opentelemetry.sdk.trace._sampling_experimental import (
-    composable_traceid_ratio_based,
+    composable_probability,
     composite_sampler,
 )
 from opentelemetry.sdk.trace._sampling_experimental._trace_state import (
@@ -26,8 +26,8 @@ from opentelemetry.sdk.trace.sampling import Decision
 )
 def test_description(ratio: float, threshold: str):
     assert (
-        composable_traceid_ratio_based(ratio).get_description()
-        == f"ComposableTraceIDRatioBased{{threshold={threshold}, ratio={ratio}}}"
+        composable_probability(ratio).get_description()
+        == f"ComposableProbability{{threshold={threshold}, ratio={ratio}}}"
     )
 
 
@@ -46,7 +46,7 @@ def test_description(ratio: float, threshold: str):
     ),
 )
 def test_sampling(ratio: float, threshold: int):
-    sampler = composite_sampler(composable_traceid_ratio_based(ratio))
+    sampler = composite_sampler(composable_probability(ratio))
 
     num_sampled = 0
     for _ in range(10000):

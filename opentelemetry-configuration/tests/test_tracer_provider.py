@@ -603,7 +603,7 @@ class TestCreateCompositeRuleBasedSampler(unittest.TestCase):
             )
         )
 
-        expected = "ComposableRuleBased{[(AlwaysMatch:ComposableTraceIDRatioBased{threshold=max, ratio=0.0})]}"
+        expected = "ComposableRuleBased{[(AlwaysMatch:ComposableProbability{threshold=max, ratio=0.0})]}"
         self.assertEqual(
             provider.sampler.get_description(),
             expected,
