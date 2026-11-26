@@ -16,11 +16,15 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import grpc
+from google.protobuf.any_pb2 import Any as AnyProto  # pylint: disable=no-name-in-module
 from google.protobuf.duration_pb2 import (  # pylint: disable=no-name-in-module
     Duration,
 )
 from google.rpc.error_details_pb2 import (  # pylint: disable=no-name-in-module
     RetryInfo,
+)
+from google.rpc.status_pb2 import (  # pylint: disable=no-name-in-module
+    Status,
 )
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
@@ -110,27 +114,40 @@ class TraceServiceServicerWithExportParams(TraceServiceServicer):
         optional_retry_nanos: int | None = None,
         optional_export_sleep: float | None = None,
         optional_error_details: str | None = None,
+        optional_status_details_retry_nanos: int | None = None,
     ):
         self.export_result = export_result
         self.optional_export_sleep = optional_export_sleep
         self.optional_retry_nanos = optional_retry_nanos
         self.num_requests = 0
         self.optional_error_details = optional_error_details
+        self.optional_status_details_retry_nanos = optional_status_details_retry_nanos
 
     # pylint: disable=invalid-name,unused-argument
     def Export(self, request, context):
         self.num_requests += 1
         if self.optional_export_sleep:
             time.sleep(self.optional_export_sleep)
-        if self.export_result != StatusCode.OK and self.optional_retry_nanos:
-            context.set_trailing_metadata(
-                (
+        if self.export_result != StatusCode.OK:
+            trailing_metadata = []
+            if self.optional_retry_nanos:
+                trailing_metadata.append(
                     (
                         "google.rpc.retryinfo-bin",
                         RetryInfo(retry_delay=Duration(nanos=self.optional_retry_nanos)).SerializeToString(),
-                    ),
+                    )
                 )
-            )
+            if self.optional_status_details_retry_nanos:
+                detail = AnyProto()
+                detail.Pack(RetryInfo(retry_delay=Duration(nanos=self.optional_status_details_retry_nanos)))
+                trailing_metadata.append(
+                    (
+                        "grpc-status-details-bin",
+                        Status(code=self.export_result.value[0], details=[detail]).SerializeToString(),
+                    )
+                )
+            if trailing_metadata:
+                context.set_trailing_metadata(trailing_metadata)
         context.set_code(self.export_result)
         if self.optional_error_details:
             context.set_details(self.optional_error_details)
@@ -481,6 +498,49 @@ class TestOTLPExporterMixin(TestCase):
             "rpc.response.status_code",
             metrics[2].data.data_points[0].attributes,
         )
+
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
+    def test_retry_info_in_status_details_is_respected(self):
+        mock_trace_service = TraceServiceServicerWithExportParams(
+            StatusCode.UNAVAILABLE,
+            optional_status_details_retry_nanos=200000000,  # .2 seconds
+        )
+        add_TraceServiceServicer_to_server(
+            mock_trace_service,
+            self.server,
+        )
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=10, meter_provider=self.meter_provider)
+        before = time.time()
+        self.assertEqual(
+            exporter.export([self.span]),
+            SpanExportResult.FAILURE,
+        )
+        after = time.time()
+        self.assertEqual(mock_trace_service.num_requests, 6)
+        # 1 second plus wiggle room so the test passes consistently.
+        self.assertAlmostEqual(after - before, 1, delta=0.5)
+
+    @unittest.skipIf(
+        system() == "Windows",
+        "For gRPC + windows there's some added delay in the RPCs which breaks the assertion over amount of time passed.",
+    )
+    def test_retry_info_in_status_details_is_prioritized(self):
+        mock_trace_service = TraceServiceServicerWithExportParams(
+            StatusCode.UNAVAILABLE,
+            optional_retry_nanos=900000000,  # .9 seconds, must be ignored
+            optional_status_details_retry_nanos=200000000,  # .2 seconds
+        )
+        add_TraceServiceServicer_to_server(mock_trace_service, self.server)
+        exporter = OTLPSpanExporterForTesting(insecure=True, timeout=10, meter_provider=self.meter_provider)
+        before = time.time()
+        self.assertEqual(exporter.export([self.span]), SpanExportResult.FAILURE)
+        after = time.time()
+        self.assertEqual(mock_trace_service.num_requests, 6)
+        # 5 retries x .2s; the legacy trailer would take ~4.5s.
+        self.assertAlmostEqual(after - before, 1, delta=0.5)
 
     @unittest.skipIf(
         system() == "Windows",
