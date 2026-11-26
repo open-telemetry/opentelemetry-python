@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """
-The OpenTelemetry metrics API  describes the classes used to generate
+The OpenTelemetry metrics API describes the classes used to generate
 metrics.
 
 The :class:`.MeterProvider` provides users access to the :class:`.Meter` which in
