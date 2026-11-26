@@ -25,6 +25,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 from __future__ import annotations
 
 from abc import abstractmethod
+from enum import IntEnum
 from logging import getLogger
 from os import environ
 from time import time_ns
@@ -33,7 +34,6 @@ from typing import cast, overload
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_LOGGER_PROVIDER
-from opentelemetry.logs.severity import SeverityNumber
 from opentelemetry.trace import get_current_span
 from opentelemetry.util._compat import SignatureCompatABC
 from opentelemetry.util._once import Once
@@ -41,6 +41,46 @@ from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
+
+
+class SeverityNumber(IntEnum):
+    """Numerical value of severity.
+
+    Smaller numerical values correspond to less severe events
+    (such as debug events), larger numerical values correspond
+    to more severe events (such as errors and critical events).
+
+    See the `Log Data Model`_ spec for more info and how to map
+    the severity from source format to OTLP Model.
+
+    .. _Log Data Model: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#field-severitynumber
+    """
+
+    UNSPECIFIED = 0
+    TRACE = 1
+    TRACE2 = 2
+    TRACE3 = 3
+    TRACE4 = 4
+    DEBUG = 5
+    DEBUG2 = 6
+    DEBUG3 = 7
+    DEBUG4 = 8
+    INFO = 9
+    INFO2 = 10
+    INFO3 = 11
+    INFO4 = 12
+    WARN = 13
+    WARN2 = 14
+    WARN3 = 15
+    WARN4 = 16
+    ERROR = 17
+    ERROR2 = 18
+    ERROR3 = 19
+    ERROR4 = 20
+    FATAL = 21
+    FATAL2 = 22
+    FATAL3 = 23
+    FATAL4 = 24
 
 
 class LogRecord:
