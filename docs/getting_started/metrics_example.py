@@ -1,8 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-# metrics.py
-# This is still work in progress as the metrics SDK is being implemented
+# metrics_example.py
 
 from collections.abc import Iterable
 
