@@ -203,6 +203,7 @@ class MetricReaderStorage:
                         )
                     else:
                         raise RuntimeError(
+                            # pylint: disable=protected-access
                             f"Unsupported aggregation type {type(view_instrument_match._aggregation).__name__}"
                         )
 
