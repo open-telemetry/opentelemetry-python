@@ -25,7 +25,7 @@ jobs:
   tests:
     uses: $/.github/workflows/test.yml
   contrib:
-    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@main
+    uses: open-telemetry/opentelemetry-python-contrib/.github/workflows/core_contrib_test.yml@c6bf8f1a85af26e5a07c90862d9976bd0e6ef9c7 # main on 2026-11-27, TODO: use a release instead
     with:
       CORE_REPO_SHA: ${{ github.sha }}
       CONTRIB_REPO_SHA: ${{ github.event_name == 'pull_request' && (
