@@ -31,7 +31,7 @@ can optionally become the new active span::
     with tracer.start_as_current_span("parent"):
         # Attach a new child and update the current span
         with tracer.start_as_current_span("child"):
-            do_work():
+            do_work()
         # Close child span, set parent as current
     # Close parent span, set default span as current
 
