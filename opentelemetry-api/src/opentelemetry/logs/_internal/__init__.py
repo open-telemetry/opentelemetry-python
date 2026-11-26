@@ -15,7 +15,7 @@ with the calling module name and the version of your package.
 
 The following code shows how to obtain a logger using the global :class:`.LoggerProvider`::
 
-    from opentelemetry._logs import get_logger
+    from opentelemetry.logs import get_logger
 
     logger = get_logger("example-logger")
 
@@ -25,25 +25,62 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 from __future__ import annotations
 
 from abc import abstractmethod
+from enum import IntEnum
 from logging import getLogger
 from os import environ
 from time import time_ns
 from typing import cast, overload
 
-from typing_extensions import deprecated
-
-from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
+from opentelemetry.environment_variables import OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace import get_current_span
-from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._compat import SignatureCompatABC
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import AnyValue, Attributes
 
 _logger = getLogger(__name__)
+
+
+class SeverityNumber(IntEnum):
+    """Numerical value of severity.
+
+    Smaller numerical values correspond to less severe events
+    (such as debug events), larger numerical values correspond
+    to more severe events (such as errors and critical events).
+
+    See the `Log Data Model`_ spec for more info and how to map
+    the severity from source format to OTLP Model.
+
+    .. _Log Data Model: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#field-severitynumber
+    """
+
+    UNSPECIFIED = 0
+    TRACE = 1
+    TRACE2 = 2
+    TRACE3 = 3
+    TRACE4 = 4
+    DEBUG = 5
+    DEBUG2 = 6
+    DEBUG3 = 7
+    DEBUG4 = 8
+    INFO = 9
+    INFO2 = 10
+    INFO3 = 11
+    INFO4 = 12
+    WARN = 13
+    WARN2 = 14
+    WARN3 = 15
+    WARN4 = 16
+    ERROR = 17
+    ERROR2 = 18
+    ERROR3 = 19
+    ERROR4 = 20
+    FATAL = 21
+    FATAL2 = 22
+    FATAL3 = 23
+    FATAL4 = 24
 
 
 class LogRecord:
@@ -69,48 +106,12 @@ class LogRecord:
         "exception",
     )
 
-    @overload
     def __init__(
         self,
         *,
         timestamp: int | None = None,
         observed_timestamp: int | None = None,
         context: Context | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: Attributes = None,
-        event_name: str | None = None,
-        exception: BaseException | None = None,
-    ) -> None: ...
-
-    @overload
-    @deprecated(
-        "LogRecord init with `trace_id`, `span_id`, and/or `trace_flags` is deprecated since 1.35.0. Use `context` instead."
-    )
-    def __init__(
-        self,
-        *,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
-        severity_text: str | None = None,
-        severity_number: SeverityNumber | None = None,
-        body: AnyValue = None,
-        attributes: Attributes = None,
-    ) -> None: ...
-
-    def __init__(
-        self,
-        *,
-        timestamp: int | None = None,
-        observed_timestamp: int | None = None,
-        context: Context | None = None,
-        trace_id: int | None = None,
-        span_id: int | None = None,
-        trace_flags: TraceFlags | None = None,
         severity_text: str | None = None,
         severity_number: SeverityNumber | None = None,
         body: AnyValue = None,
@@ -126,9 +127,9 @@ class LogRecord:
             observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
         self.context = context
-        self.trace_id = trace_id or span_context.trace_id
-        self.span_id = span_id or span_context.span_id
-        self.trace_flags = trace_flags or span_context.trace_flags
+        self.trace_id = span_context.trace_id
+        self.span_id = span_context.span_id
+        self.trace_flags = span_context.trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
         self.body = body
@@ -447,11 +448,11 @@ def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
     global _LOGGER_PROVIDER  # pylint: disable=global-variable-not-assigned
     if _LOGGER_PROVIDER is None:
-        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
+        if OTEL_PYTHON_LOGGER_PROVIDER not in environ:
             return _PROXY_LOGGER_PROVIDER
 
         logger_provider: LoggerProvider = _load_provider(  # type: ignore
-            _OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"
+            OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"
         )
         _set_logger_provider(logger_provider, log=False)
 
@@ -490,7 +491,7 @@ def get_logger(
     """Returns a `Logger` for use within a python process.
 
     This function is a convenience wrapper for
-    opentelemetry.sdk._logs.LoggerProvider.get_logger.
+    opentelemetry.sdk.logs.LoggerProvider.get_logger.
 
     If logger_provider param is omitted the current configured one is used.
     """

@@ -6,7 +6,7 @@ import unittest
 from collections.abc import Sequence
 from contextlib import contextmanager
 
-from opentelemetry import _logs as logs_api
+from opentelemetry import logs as logs_api
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk._logs import LoggerProvider

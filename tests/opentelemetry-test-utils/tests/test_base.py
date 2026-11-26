@@ -1,7 +1,7 @@
 # Copyright The OpenTelemetry Authors
 # SPDX-License-Identifier: Apache-2.0
 
-from opentelemetry import _logs as logs_api
+from opentelemetry import logs as logs_api
 from opentelemetry.test.test_base import TestBase
 
 

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from opentelemetry import metrics, trace
-from opentelemetry._logs import get_logger
+from opentelemetry.logs import get_logger
 
 # Literal brackets, bracket-class lookalikes, case sensitivity, and '?' width.
 for scope in ("disabled[bc]", "disabledb", "wild[bc].x", "wildb.x", "Disabled[bc]", "wild[bc].xx"):
