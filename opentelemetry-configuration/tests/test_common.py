@@ -84,6 +84,25 @@ class TestParseHeaders(unittest.TestCase):
         result = _parse_headers(None, "bad,x-key=val")
         self.assertEqual(result, {"x-key": "val"})
 
+    def test_headers_list_is_percent_decoded(self):
+        self.assertEqual(
+            _parse_headers(None, "Authorization=Bearer%20tok,x%2Dkey=a%2Cb"),
+            {"Authorization": "Bearer tok", "x-key": "a,b"},
+        )
+
+    def test_headers_list_keeps_invalid_percent_encoding(self):
+        self.assertEqual(
+            _parse_headers(None, "Authorization=Bearer%zz"),
+            {"Authorization": "Bearer%zz"},
+        )
+
+    def test_struct_header_values_are_not_percent_decoded(self):
+        headers = [SimpleNamespace(name="Authorization", value="Bearer%20tok")]
+        self.assertEqual(
+            _parse_headers(headers, None),
+            {"Authorization": "Bearer%20tok"},
+        )
+
     def test_struct_headers_only(self):
         headers = [
             SimpleNamespace(name="x-api-key", value="secret"),

@@ -1,0 +1,1 @@
+`opentelemetry-configuration`: percent-decode names and values in `headers_list`, which uses the `OTEL_EXPORTER_OTLP_HEADERS` format.

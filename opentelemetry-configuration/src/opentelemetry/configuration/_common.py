@@ -10,7 +10,7 @@ import math
 from collections.abc import Callable
 from fnmatch import fnmatchcase
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypeVar
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from opentelemetry.configuration._exceptions import ConfigurationError
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -249,6 +249,8 @@ def _parse_headers(
     Returns None if neither is set, letting the exporter read env vars.
     headers struct takes priority over headers_list for the same key.
     headers struct entries with a null value are ignored.
+    headers_list uses the OTEL_EXPORTER_OTLP_HEADERS format, so its names
+    and values are percent-decoded. Struct values are used as written.
     """
     if headers is None and headers_list is None:
         return None
@@ -258,7 +260,7 @@ def _parse_headers(
             item = item.strip()
             if "=" in item:
                 key, value = item.split("=", 1)
-                result[key.strip()] = value.strip()
+                result[unquote(key).strip()] = unquote(value).strip()
             elif item:
                 _logger.warning(
                     "Invalid header pair in headers_list (missing '='): %s",
