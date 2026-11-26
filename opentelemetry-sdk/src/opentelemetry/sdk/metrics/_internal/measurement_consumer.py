@@ -12,6 +12,8 @@ from time import time_ns
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
 import opentelemetry.sdk.metrics._internal.instrument
+import opentelemetry.sdk.metrics._internal.sdk_configuration
+import opentelemetry.sdk.metrics.export
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
@@ -53,7 +55,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
         sdk_config: "opentelemetry.sdk.metrics._internal.sdk_configuration.SdkConfiguration",
-        metric_readers: Iterable["opentelemetry.sdk.metrics.MetricReader"],
+        metric_readers: Iterable["opentelemetry.sdk.metrics.export.MetricReader"],
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
@@ -192,7 +194,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             ]
         )
 
-    def add_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.MetricReader") -> None:
+    def add_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader") -> None:
         """Registers a new metric reader."""
         # Build a new mapping and swap it in atomically so that
         # a concurrent consume_measurement never iterates a mapping
@@ -210,7 +212,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             )
             self._reader_storages = new_reader_storages
 
-    def remove_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.MetricReader") -> None:
+    def remove_metric_reader(self, metric_reader: "opentelemetry.sdk.metrics.export.MetricReader") -> None:
         """Unregisters the given metric reader."""
         # Mutate using copy-on-write: see add_metric_reader.
         with self._lock:

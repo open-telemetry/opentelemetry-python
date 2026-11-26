@@ -13,7 +13,7 @@ from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import perf_counter, time_ns
-from typing import IO
+from typing import IO, Protocol
 
 from typing_extensions import final
 
@@ -38,6 +38,7 @@ from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _DEFAULT_CARDINALITY_LIMIT,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
+    Aggregation,
     AggregationTemporality,
     DefaultAggregation,
 )
@@ -232,6 +233,14 @@ class MetricProducer(ABC):
         """
 
 
+class _CollectCallback(Protocol):
+    def __call__(
+        self,
+        metric_reader: MetricReader,
+        timeout_millis: float = 10_000,
+    ) -> MetricsData | None: ...
+
+
 class MetricReader(ABC):
     # pylint: disable=too-many-branches,broad-exception-raised
     """
@@ -286,16 +295,7 @@ class MetricReader(ABC):
         otel_component_type: OtelComponentTypeValues | None = None,
     ) -> None:
         self._metric_producers: tuple[MetricProducer, ...] = tuple(metric_producers)
-        self._collect: (
-            Callable[
-                [
-                    opentelemetry.sdk.metrics.export.MetricReader,
-                    AggregationTemporality,
-                ],
-                Iterable[opentelemetry.sdk.metrics.export.Metric],
-            ]
-            | None
-        ) = None
+        self._collect: _CollectCallback | None = None
 
         self._instrument_class_temporality = {
             _Counter: AggregationTemporality.CUMULATIVE,
@@ -335,7 +335,7 @@ class MetricReader(ABC):
                     raise Exception(f"Invalid instrument class found {typ}")
 
         self._preferred_temporality = preferred_temporality
-        self._instrument_class_aggregation = {
+        self._instrument_class_aggregation: dict[type, Aggregation] = {
             _Counter: DefaultAggregation(),
             _UpDownCounter: DefaultAggregation(),
             _Histogram: DefaultAggregation(),
@@ -417,14 +417,7 @@ class MetricReader(ABC):
     @final
     def _set_collect_callback(
         self,
-        func: Callable[
-            [
-                opentelemetry.sdk.metrics.export.MetricReader,
-                AggregationTemporality,
-            ],
-            MetricsData,
-        ]
-        | None,
+        func: _CollectCallback | None,
     ) -> None:
         """This function is internal to the SDK. It should not be called or overridden by users"""
         self._collect = func

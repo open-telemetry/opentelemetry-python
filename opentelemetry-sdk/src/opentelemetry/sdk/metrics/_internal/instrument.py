@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Sequence
 from logging import getLogger
 from time import time_ns
 from typing import (
@@ -17,7 +17,12 @@ from typing import (
 
 # This kind of import is needed to avoid Sphinx errors.
 from opentelemetry.context import Context, get_current
-from opentelemetry.metrics import Asynchronous, CallbackT, Synchronous
+from opentelemetry.metrics import (
+    Asynchronous,
+    CallbackT,
+    Observation,
+    Synchronous,
+)
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
@@ -49,6 +54,8 @@ _logger = getLogger(__name__)
 
 _NAME_ERROR_MESSAGE = "Expected ASCII string of maximum length 255 characters but got {}"
 _UNIT_ERROR_MESSAGE = "Expected ASCII string of maximum length 63 characters but got {}"
+
+_Callback = Callable[[CallbackOptions], Iterable[Observation]]
 
 
 @runtime_checkable
@@ -136,7 +143,7 @@ class _Asynchronous(_Instrument, Asynchronous):
         self._meter_config = _meter_config
         super().__init__(name, callbacks, unit=unit, description=description)
 
-        self._callbacks: list[CallbackT] = []
+        self._callbacks: list[_Callback] = []
 
         if callbacks is not None:
             for callback in callbacks:
@@ -146,8 +153,8 @@ class _Asynchronous(_Instrument, Asynchronous):
 
                     def inner(
                         options: CallbackOptions,
-                        callback=callback,
-                    ) -> Iterable[Measurement]:
+                        callback: Generator[Iterable[Observation], CallbackOptions, None] = callback,
+                    ) -> Iterable[Observation]:
                         try:
                             return callback.send(options)
                         except StopIteration:

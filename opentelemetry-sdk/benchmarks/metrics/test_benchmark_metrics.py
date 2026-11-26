@@ -75,6 +75,25 @@ def test_up_down_counter_add(benchmark, num_labels):
     benchmark(benchmark_up_down_counter_add)
 
 
+@pytest.mark.parametrize("num_instruments", [100, 1_000, 10_000])
+def test_collect_instruments_in_one_scope(benchmark, num_instruments):
+    reader = InMemoryMetricReader()
+    provider = MeterProvider(metric_readers=[reader])
+    try:
+        meter = provider.get_meter("collection_benchmark")
+        for index in range(num_instruments):
+            meter.create_counter(f"counter_{index}").add(1)
+
+        metrics_data = benchmark(reader.get_metrics_data)
+
+        assert metrics_data is not None
+        (resource_metrics,) = metrics_data.resource_metrics
+        (scope_metrics,) = resource_metrics.scope_metrics
+        assert len(scope_metrics.metrics) == num_instruments
+    finally:
+        provider.shutdown()
+
+
 @pytest.fixture(params=[None, 0, 1, 10, 50])
 def num_meter_configurator_rules(request):
     return request.param

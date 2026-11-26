@@ -22,7 +22,7 @@ class NumberDataPoint:
     """
 
     attributes: Attributes
-    start_time_unix_nano: int
+    start_time_unix_nano: int | None
     time_unix_nano: int
     value: int | float
     exemplars: Sequence[Exemplar] = field(default_factory=list)
