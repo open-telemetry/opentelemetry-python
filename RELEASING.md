@@ -59,8 +59,8 @@ therefore cause this check to fail even when the patch does not change the publi
 API.
 
 Review the reported changes against the pull request's target release branch. If
-the failure is caused by existing differences between branches, ask a maintainer
-to add the `Approve Public API check` label to skip the job. Close and reopen the
+the failure is caused by existing differences between branches, add the
+`Approve Public API check` label to skip the job. Close and reopen the
 pull request after the label is added so CI takes it into account. Public API
 changes introduced by the patch still require the usual review.
 
