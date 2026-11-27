@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: merge sampler attributes into span start attributes
