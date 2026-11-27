@@ -44,12 +44,18 @@ from opentelemetry.sdk.trace import (
     _RuleBasedTracerConfigurator,
     _TracerConfig,
 )
+from opentelemetry.sdk.trace._sampling_experimental import (
+    composable_always_on,
+    composite_sampler,
+)
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
     ALWAYS_ON,
     Decision,
     ParentBased,
+    Sampler,
+    SamplingResult,
     StaticSampler,
     TraceIdRatioBased,
 )
@@ -1013,6 +1019,53 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.attributes["sampler-attr"], "sample-val")
             self.assertEqual(root.attributes["attr-in-both"], "decision-attr")
             self.assertTrue(root.get_span_context().trace_flags.sampled)
+
+    def test_sampler_attributes_are_added_to_start_attributes(self):
+        class AddingSampler(Sampler):
+            def should_sample(
+                self,
+                parent_context,
+                trace_id,
+                name,
+                kind=None,
+                attributes=None,
+                links=None,
+                trace_state=None,
+            ):
+                return SamplingResult(
+                    Decision.RECORD_AND_SAMPLE,
+                    {"sampler-attr": "sampler-val", "attr-in-both": "sampler-val"},
+                )
+
+            def get_description(self):
+                return "AddingSampler"
+
+        tracer = trace.TracerProvider(AddingSampler()).get_tracer(__name__)
+
+        with tracer.start_as_current_span(
+            name="root",
+            attributes={"start-attr": "start-val", "attr-in-both": "start-val"},
+        ) as root:
+            self.assertEqual(
+                dict(root.attributes),
+                {
+                    "start-attr": "start-val",
+                    "sampler-attr": "sampler-val",
+                    "attr-in-both": "sampler-val",
+                },
+            )
+
+        with tracer.start_as_current_span(name="no-start-attributes") as span:
+            self.assertEqual(
+                dict(span.attributes),
+                {"sampler-attr": "sampler-val", "attr-in-both": "sampler-val"},
+            )
+
+    def test_composite_sampler_keeps_start_attributes(self):
+        tracer = trace.TracerProvider(composite_sampler(composable_always_on())).get_tracer(__name__)
+
+        with tracer.start_as_current_span(name="root", attributes={"start-attr": "start-val"}) as root:
+            self.assertEqual(dict(root.attributes), {"start-attr": "start-val"})
 
     def test_events(self):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
