@@ -41,6 +41,18 @@ class TestAttributeNestingDepth(unittest.TestCase):
         with self.assertLogs("opentelemetry.attributes", level="WARNING"):
             self.assertIsNone(_clean_attribute_value(_nested_list(21), None))
 
+    def test_branching_cycle_is_rejected_without_exponential_traversal(self):
+        value = {}
+        value["left"] = value
+        value["right"] = value
+        with self.assertLogs("opentelemetry.attributes", level="WARNING"):
+            self.assertIsNone(_clean_attribute_value(value, None))
+
+    def test_shared_non_cyclic_references_are_preserved(self):
+        shared = ["kept"]
+        cleaned = _clean_attribute_value([shared, shared], None)
+        self.assertEqual(cleaned, (("kept",), ("kept",)))
+
     def test_invalid_value_preserves_sibling_attributes(self):
         with self.assertLogs("opentelemetry.attributes", level="WARNING"):
             attributes = BoundedAttributes(attributes={"good": "kept", "cyclic": _cyclic_list()})

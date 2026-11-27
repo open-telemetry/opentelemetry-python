@@ -22,6 +22,10 @@ class _AttributeValueTooDeepError(Exception):
     """Raised when an attribute value exceeds the supported nesting depth."""
 
 
+class _CyclicAttributeValueError(Exception):
+    """Raised when an attribute value contains an active ancestor container."""
+
+
 # Calling str(x) will use an object's `__str__` method if it exists, otherwise it will use it's `__repr__` method.
 # If neither is defined it uses the base class's `object.__repr__` method, which returns a string that is hard to understand.
 # So in that case we drop the key/value pair.
@@ -58,7 +62,10 @@ def _clean_attribute_value(
         The recursively cleaned AnyValue.
     """
     try:
-        return _clean_attribute_value_impl(value, max_value_length, 0)
+        return _clean_attribute_value_impl(value, max_value_length, 0, set())
+    except _CyclicAttributeValueError:
+        _logger.warning("Cyclic attribute value detected. Replacing value with None.")
+        return None
     except _AttributeValueTooDeepError:
         _logger.warning(
             "Attribute value exceeds the maximum nesting depth of %d. Replacing value with None.",
@@ -71,6 +78,7 @@ def _clean_attribute_value_impl(
     value: types.AnyValue,
     max_value_length: int | None,
     depth: int,
+    ancestors: set[int],
 ) -> types.AnyValue:
     if depth > _MAX_NESTING_DEPTH:
         raise _AttributeValueTooDeepError
@@ -85,15 +93,24 @@ def _clean_attribute_value_impl(
             )
             value = value[:max_value_length]
         return bytes(value) if isinstance(value, bytearray) else value
-    if isinstance(value, Sequence):
-        return tuple(_clean_attribute_value_impl(v, max_value_length, depth + 1) for v in value)
-    if isinstance(value, Mapping):
-        cleaned_mapping: dict[str, types.AnyValue] = {}
-        for key, val in value.items():
-            cleaned_key = _clean_attribute_key(key)
-            if cleaned_key is not None:
-                cleaned_mapping[cleaned_key] = _clean_attribute_value_impl(val, max_value_length, depth + 1)
-        return cleaned_mapping
+    if isinstance(value, (Sequence, Mapping)):
+        value_id = id(value)
+        if value_id in ancestors:
+            raise _CyclicAttributeValueError
+        ancestors.add(value_id)
+        try:
+            if isinstance(value, Sequence):
+                return tuple(_clean_attribute_value_impl(v, max_value_length, depth + 1, ancestors) for v in value)
+            cleaned_mapping: dict[str, types.AnyValue] = {}
+            for key, val in value.items():
+                cleaned_key = _clean_attribute_key(key)
+                if cleaned_key is not None:
+                    cleaned_mapping[cleaned_key] = _clean_attribute_value_impl(
+                        val, max_value_length, depth + 1, ancestors
+                    )
+            return cleaned_mapping
+        finally:
+            ancestors.remove(value_id)
     if TYPE_CHECKING:
         assert_never(value)
     _logger.warning(
