@@ -1,0 +1,1 @@
+Prevent cyclic or excessively nested attribute values from raising `RecursionError`.
