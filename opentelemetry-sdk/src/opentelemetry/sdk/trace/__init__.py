@@ -1277,6 +1277,11 @@ class Tracer(trace_api.Tracer):
 
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
+            span_attributes = attributes
+            if not span_attributes:
+                span_attributes = sampling_result.attributes
+            elif sampling_result.attributes:
+                span_attributes = {**span_attributes, **sampling_result.attributes}
             # pylint:disable=protected-access
             span = _Span(
                 name=name,
@@ -1284,7 +1289,7 @@ class Tracer(trace_api.Tracer):
                 parent=parent_span_context,
                 sampler=self.sampler,
                 resource=self.resource,
-                attributes=sampling_result.attributes,
+                attributes=span_attributes,
                 span_processor=self.span_processor,
                 kind=kind,
                 links=links,
