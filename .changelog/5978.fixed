@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: respect `timeout_millis` in `PeriodicExportingMetricReader.shutdown()`
