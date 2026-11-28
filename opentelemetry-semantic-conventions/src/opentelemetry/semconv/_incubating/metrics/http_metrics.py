@@ -87,6 +87,7 @@ def create_http_client_request_duration(meter: Meter) -> Histogram:
         name=HTTP_CLIENT_REQUEST_DURATION,
         description="Duration of HTTP client requests.",
         unit="s",
+        explicit_bucket_boundaries_advisory=[0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10],
     )
 
 
@@ -155,6 +156,7 @@ def create_http_server_request_duration(meter: Meter) -> Histogram:
         name=HTTP_SERVER_REQUEST_DURATION,
         description="Duration of HTTP server requests.",
         unit="s",
+        explicit_bucket_boundaries_advisory=[0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10],
     )
 
 
