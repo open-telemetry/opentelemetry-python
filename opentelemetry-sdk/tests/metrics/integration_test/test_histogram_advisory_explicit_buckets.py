@@ -13,9 +13,41 @@ from opentelemetry.sdk.metrics.view import (
     ExplicitBucketHistogramAggregation,
     View,
 )
+from opentelemetry.semconv._incubating.metrics.http_metrics import (
+    create_http_client_request_duration,
+    create_http_server_request_duration,
+)
 
 
 class TestHistogramAdvisory(TestCase):
+    def test_http_request_duration_buckets(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[reader])
+        self.addCleanup(meter_provider.shutdown)
+        meter = meter_provider.get_meter("testmeter")
+        for create_histogram in (
+            create_http_client_request_duration,
+            create_http_server_request_duration,
+        ):
+            histogram = create_histogram(meter)
+            for duration in (0.004, 0.06, 0.7):
+                histogram.record(duration)
+
+        metrics = reader.get_metrics_data().resource_metrics[0].scope_metrics[0].metrics
+        self.assertEqual(
+            {metric.name for metric in metrics},
+            {"http.client.request.duration", "http.server.request.duration"},
+        )
+        for metric in metrics:
+            with self.subTest(name=metric.name):
+                self.assertEqual(metric.unit, "s")
+                point = metric.data.data_points[0]
+                self.assertEqual(
+                    point.explicit_bounds,
+                    (0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10),
+                )
+                self.assertEqual(point.bucket_counts, (1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0))
+
     def test_default(self):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(
