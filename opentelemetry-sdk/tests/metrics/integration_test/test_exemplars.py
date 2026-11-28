@@ -300,3 +300,37 @@ class TestExemplars(TestCase):
                 )
             ],
         )
+
+    def test_exemplar_filter_env_normalization(self):
+        from opentelemetry.sdk.metrics import (  # pylint: disable=import-outside-toplevel
+            AlwaysOnExemplarFilter,
+            TraceBasedExemplarFilter,
+        )
+
+        for value, expected_type in (
+            ("", TraceBasedExemplarFilter),
+            ("   ", TraceBasedExemplarFilter),
+            ("TRACE_BASED", TraceBasedExemplarFilter),
+            (" always_on ", AlwaysOnExemplarFilter),
+        ):
+            with self.subTest(value=value):
+                with mock.patch.dict(os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": value}):
+                    provider = MeterProvider(shutdown_on_exit=False)
+                    self.assertIsInstance(
+                        provider._sdk_config.exemplar_filter,
+                        expected_type,
+                    )
+
+    def test_exemplar_filter_env_unknown_warns_and_falls_back(self):
+        from opentelemetry.sdk.metrics import (  # pylint: disable=import-outside-toplevel
+            TraceBasedExemplarFilter,
+        )
+
+        with mock.patch.dict(os.environ, {"OTEL_METRICS_EXEMPLAR_FILTER": "bogus"}):
+            with self.assertLogs("opentelemetry.sdk.metrics._internal", level="WARNING") as logs:
+                provider = MeterProvider(shutdown_on_exit=False)
+            self.assertIsInstance(
+                provider._sdk_config.exemplar_filter,
+                TraceBasedExemplarFilter,
+            )
+            self.assertIn("Unknown exemplar filter", logs.records[0].message)
