@@ -35,6 +35,9 @@ from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     LogRecordExporter,
 )
+from opentelemetry.sdk.environment_variables._internal import (
+    configure_sdk_log_level,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_CONFIG_FILE,
@@ -520,6 +523,7 @@ def _initialize_components(
     logger_configurator: _LoggerConfiguratorT | None = None,
 ):
     # pylint: disable=too-many-locals,too-many-branches
+    configure_sdk_log_level()
     if resource_attributes is None:
         resource_attributes = {}
     # populate version if using auto-instrumentation
