@@ -20,6 +20,7 @@ from opentelemetry.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
+    _EXPORTER_OTLP_JSON_HTTP,
     _EXPORTER_OTLP_PROTO_GRPC,
     _EXPORTER_OTLP_PROTO_HTTP,
     _get_exporter_names,
@@ -1257,6 +1258,21 @@ class TestExporterNames(TestCase):
     def test_otlp_custom_exporter(self):
         self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP])
         self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC])
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_EXPORTER_OTLP_PROTOCOL": "http/json",
+            "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL": "http/protobuf",
+        },
+    )
+    def test_otlp_http_json_protocol(self):
+        self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_JSON_HTTP])
+        self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_JSON_HTTP])
+        self.assertEqual(_get_exporter_names("logs"), [_EXPORTER_OTLP_PROTO_HTTP])
 
     @patch.dict(
         environ,

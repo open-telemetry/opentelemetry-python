@@ -1,0 +1,1 @@
+`opentelemetry-sdk`: map `OTEL_EXPORTER_OTLP_PROTOCOL=http/json` to the `otlp_json_http` exporter instead of raising "Unsupported OTLP protocol"
