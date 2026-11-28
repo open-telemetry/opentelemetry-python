@@ -71,10 +71,12 @@ from opentelemetry.util._importlib_metadata import entry_points
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
 _EXPORTER_OTLP_PROTO_HTTP = "otlp_proto_http"
+_EXPORTER_OTLP_JSON_HTTP = "otlp_json_http"
 
 _EXPORTER_BY_OTLP_PROTOCOL = {
     "grpc": _EXPORTER_OTLP_PROTO_GRPC,
     "http/protobuf": _EXPORTER_OTLP_PROTO_HTTP,
+    "http/json": _EXPORTER_OTLP_JSON_HTTP,
 }
 
 _EXPORTER_ENV_BY_SIGNAL_TYPE = {
