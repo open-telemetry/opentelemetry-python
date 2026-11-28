@@ -246,6 +246,37 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(pmr._shutdown)
         self.assertTrue(exporter._shutdown)
 
+    def test_shutdown_forwards_remaining_timeout_millis(self):
+        received_timeouts: list[float] = []
+
+        class RecordingExporter(FakeMetricsExporter):
+            def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+                self.kwargs = kwargs
+                received_timeouts.append(timeout_millis)
+                super().shutdown(timeout_millis=timeout_millis, **kwargs)
+
+        exporter = RecordingExporter()
+        pmr = self._create_periodic_reader(
+            MetricsData(resource_metrics=[]),
+            exporter,
+            interval=600_000,
+        )
+        pmr.shutdown(timeout_millis=200)
+        self.assertTrue(exporter._shutdown)
+        self.assertEqual(len(received_timeouts), 1)
+        self.assertEqual(exporter.kwargs, {})
+        self.assertGreater(received_timeouts[0], 0.0)
+        self.assertLessEqual(received_timeouts[0], 200.0)
+
+        expired_exporter = RecordingExporter()
+        expired_pmr = self._create_periodic_reader(
+            MetricsData(resource_metrics=[]),
+            expired_exporter,
+            interval=600_000,
+        )
+        expired_pmr.shutdown(timeout_millis=0)
+        self.assertEqual(received_timeouts[1], 0.0)
+
     def test_shutdown_multiple_times(self):
         pmr = self._create_periodic_reader(MetricsData(resource_metrics=[]), FakeMetricsExporter())
         with self.assertLogs(level="WARNING") as w:
